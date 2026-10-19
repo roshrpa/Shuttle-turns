@@ -521,7 +521,6 @@ function viewPlay(){
   const cur=S.games[S.cur];
   const planned=S.games.slice(S.cur+1);
   const nxt=planned[0]||pickGame();
-  const canPlan=!!pickGame();
   const isT=S.mode==='teams';
   const chips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(nm(id))}</span>`).join(''):'<span class="muted">Nobody</span>';
   const tchips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(tname(id))} · ${tpair(id)}</span>`).join(''):'<span class="muted">Nobody</span>';
@@ -571,7 +570,6 @@ function viewPlay(){
     <button class="btn primary block" type="button" data-act="nextgame" ${nxt?'':'disabled'}>Next game</button>
     ${nextCard}
     ${laterCard}
-    <button class="btn block" type="button" data-act="plan" ${canPlan?'':'disabled'}>${planned.length?'Plan 5 more games':'Plan next 5 games'}</button>
     ${switchCard}
     <button class="btn block" type="button" data-act="end">End games for today</button>
     ${n>1?`<button class="linkbtn" type="button" data-act="prev">Previous game</button>`:''}
@@ -672,10 +670,6 @@ const actions={
     S.games[S.cur].at=Date.now();
   },
   prev(){if(S.cur>0)S.cur--;},
-  plan(){
-    if(S.ended)return;
-    for(let i=0;i<5;i++){const g=pickGame();if(!g)break;S.games.push({...g,at:Date.now()});}
-  },
   shareimg(){shareImage();},
   suggest(){S.teamMode=!S.teamMode;},
   modeSolo(){if(!S.games.length)S.mode='solo';},
