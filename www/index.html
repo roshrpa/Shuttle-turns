@@ -1047,7 +1047,7 @@ const actions={
   contactopen(){closeMenu();window.scrollTo(0,0);helpOpen=false;contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
-  gotoreset(){const b=$('#resetBtn');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});return false;},
+  gotoreset(){window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
   confirmreset(){dialog=null;modeNote=false;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;}
 };
