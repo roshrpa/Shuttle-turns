@@ -88,6 +88,12 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .teamform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .teamform .btn{grid-column:1/-1}
 .msg{min-height:20px;font-size:14px;color:var(--danger);margin-top:6px}
+.top{position:relative}
+.top h1{padding-right:54px;font-size:32px;white-space:nowrap}
+.menubtn{position:absolute;right:0;top:0;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.menu{position:absolute;right:0;top:50px;z-index:20;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:12px;font:600 15px var(--font-body);color:var(--ink);cursor:pointer}
+.menu button:hover{background:var(--tab-active)}
 .lbl{display:flex;flex-direction:column;gap:6px;font:600 14px var(--font-body);color:var(--muted)}
 textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit}
 
@@ -199,6 +205,12 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
   <header class="top">
     <p class="kicker">Badminton · Doubles</p>
     <h1>Shuttle Turns</h1>
+    <button id="menuBtn" class="menubtn" type="button" data-act="menutoggle" aria-label="Menu" aria-expanded="false" aria-controls="menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div id="menu" class="menu" hidden>
+      <button type="button" data-act="contactopen">Contact admin</button>
+    </div>
   </header>
   <main id="view"></main>
 </div>
@@ -245,6 +257,7 @@ let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
 let contactOpen=false;
+function closeMenu(){const m=$('#menu');if(m){m.hidden=true;$('#menuBtn').setAttribute('aria-expanded','false');}}
 let cd={kind:'Bug',contact:'',msg:''};
 let cst={s:'idle',m:''};
 const ADMIN='roshrpa@gmail.com';
@@ -728,7 +741,6 @@ function viewPlayers(){
     ${teamsCard}
     <section class="card">${session}</section>
     ${resetLink}
-    <div style="text-align:center"><button class="linkbtn" type="button" data-act="contactopen">Contact admin</button></div>
   </div>`;
 }
 function elapsed(at){
@@ -969,13 +981,15 @@ const actions={
     }
   },
   reset(){dialog='reset';},
-  contactopen(){contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
+  menutoggle(){const m=$('#menu');m.hidden=!m.hidden;$('#menuBtn').setAttribute('aria-expanded',String(!m.hidden));return false;},
+  contactopen(){closeMenu();window.scrollTo(0,0);contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
   confirmreset(){dialog=null;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;}
 };
 document.addEventListener('click',e=>{
+  if(!e.target.closest('#menu,#menuBtn'))closeMenu();
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){contactOpen=false;S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   const f=actions[el.dataset.act];
