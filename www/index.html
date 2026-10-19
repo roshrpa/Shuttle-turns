@@ -95,10 +95,11 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptsrow .pill{flex:none;font:600 13px var(--font-body);padding:3px 10px;border-radius:99px;background:var(--tab-active);color:var(--ink)}
 .ptsrow .pill.on{background:var(--accent);color:var(--on-accent)}
 .ptab{margin:10px 0 4px;font-size:14px}
-.ptab .ph,.ptab .pr{display:grid;grid-template-columns:24px 1fr 30px 30px 30px 44px 44px;gap:6px;align-items:center;padding:8px 0;text-align:center}
+.ptab .ph,.ptab .pr{display:grid;grid-template-columns:18px minmax(96px,1fr) 22px 22px 22px 36px 40px;gap:4px;align-items:center;padding:8px 0;text-align:center}
 .ptab .ph{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
 .ptab .pr{border-bottom:1px solid var(--line)}
-.ptab .n{text-align:left;font-weight:600;min-width:0}
+.ptab .n{text-align:left;font-weight:600;min-width:0;overflow-wrap:break-word;word-break:normal}
+.big .ptab{font-size:13px}
 .ptab .n small{display:block;font-weight:400;color:var(--muted);font-size:12px}
 .ptab .rk{color:var(--muted);font-weight:600}
 .scoreform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -282,6 +283,12 @@ let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
 let contactOpen=false,helpOpen=false,modeNote=false,dropNote=false;
+let scDraft={k:-1,a:'',b:''};
+const scVal=(side,g)=>scDraft.k===S.cur?scDraft[side]:(g['s'+side]!=null?g['s'+side]:'');
+document.addEventListener('input',e=>{
+  const id=e.target&&e.target.id;
+  if(id==='scA'||id==='scB'){if(scDraft.k!==S.cur)scDraft={k:S.cur,a:'',b:''};scDraft[id==='scA'?'a':'b']=e.target.value;}
+});
 function scMsg(t){const el=$('#scMsg');if(el)el.textContent=t;}
 function readScore(){
   const ea=$('#scA'),eb=$('#scB');
@@ -985,8 +992,8 @@ function viewPlay(){
     ${S.pts?`<section class="card">
       <h2>Game ${n} score</h2>
       <div class="scoreform">
-        <label>${esc(isT?tname(cur.tm[0]):rawPair(cur.teams[0]))}<input id="scA" class="field" type="number" inputmode="numeric" min="0" max="99" value="${cur.sa!=null?cur.sa:''}" placeholder="0"></label>
-        <label>${esc(isT?tname(cur.tm[1]):rawPair(cur.teams[1]))}<input id="scB" class="field" type="number" inputmode="numeric" min="0" max="99" value="${cur.sb!=null?cur.sb:''}" placeholder="0"></label>
+        <label>${esc(isT?tname(cur.tm[0]):rawPair(cur.teams[0]))}<input id="scA" class="field" type="number" inputmode="numeric" min="0" max="99" value="${scVal('a',cur)}" placeholder="0"></label>
+        <label>${esc(isT?tname(cur.tm[1]):rawPair(cur.teams[1]))}<input id="scB" class="field" type="number" inputmode="numeric" min="0" max="99" value="${scVal('b',cur)}" placeholder="0"></label>
       </div>
       <p class="msg" id="scMsg" role="status"></p>
       <p class="hint" style="margin:0">Enter the final score, then tap Next game or End games.</p>
@@ -1087,10 +1094,10 @@ function autopair(){
   for(let i=0;i+1<free.length;i+=2)addTeam(free[i].id,free[i+1].id);
 }
 const actions={
-  start(){if(S.mode==='tour'){startTour();return;}const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
+  start(){scDraft={k:-1,a:'',b:''};if(S.mode==='tour'){startTour();return;}const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
   nextgame(){
     if(S.ended)return;
-    if(S.pts){const r=readScore();if(r.err){scMsg(r.err);return false;}if(r.empty){scMsg('Enter the score of this game first.');return false;}S.games[S.cur].sa=r.a;S.games[S.cur].sb=r.b;}
+    if(S.pts){const r=readScore();if(r.err){scMsg(r.err);return false;}if(r.empty){scMsg('Enter the score of this game first.');return false;}S.games[S.cur].sa=r.a;S.games[S.cur].sb=r.b;scDraft={k:-1,a:'',b:''};}
     if(S.cur+1<S.games.length){S.cur++;}
     else{const g=pickGame();if(!g)return;S.games.push({...g,at:Date.now()});S.cur=S.games.length-1;}
     S.games[S.cur].at=Date.now();
@@ -1192,7 +1199,7 @@ const actions={
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
   gotoreset(){window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
-  confirmreset(){dialog=null;modeNote=false;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
+  confirmreset(){dialog=null;modeNote=false;scDraft={k:-1,a:'',b:''};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;dropNote=false;}
 };
 document.addEventListener('click',e=>{
