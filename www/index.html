@@ -701,7 +701,7 @@ function viewPlayers(){
     ?`<p class="muted">${S.tour?'Tournament running. Enter results on the Play tab.':S.ended?'Session ended. The summary is on the History tab.':`Session running. Game ${S.cur+1} is on court.`}</p>`
     :`<button class="btn primary block" type="button" data-act="start" ${canStart?'':'disabled'}>Start game</button>
       <p class="hint">${canStart?(S.mode==='tour'?'Every team plays every other team once. Then the best teams play semi-finals and a final.':isT?'The first two teams play game 1. Teams rotate so every team gets equal turns.':'The first four names play game 1. Put early arrivals at the top.'):(isT?'Make at least 2 teams to start.':'Add at least 4 players to start.')}</p>`;
-  const resetLink=started?`<div style="text-align:center;margin:8px 0 4px"><button class="linkbtn" type="button" data-act="reset">${S.tour?'Clear tournament and start over':S.ended?'Clear and start a new session':'Clear all games and start over'}</button></div>`:'';
+  const resetLink=started?`<div style="margin:4px 0"><button class="btn block" type="button" data-act="reset">${S.tour?'Clear tournament and start over':S.ended?'Clear and start a new session':'Clear all games and start over'}</button></div>`:'';
 
   const modeCard=`<section class="card">
       <h2>Play style</h2>
