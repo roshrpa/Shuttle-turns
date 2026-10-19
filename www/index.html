@@ -211,7 +211,7 @@ const inc=(m,k)=>{m[k]=(m[k]||0)+1;};
 
 function fresh(){
   return {players:SAMPLE.map((n,i)=>({id:i+1,name:n,active:true,base:0})),nextId:SAMPLE.length+1,
-    mode:'solo',teams:[],nextTid:1,games:[],teamMode:false,ended:false,tab:'players',sample:true};
+    mode:'solo',teams:[],nextTid:1,games:[],cur:0,teamMode:false,ended:false,tab:'players',sample:true};
 }
 function load(){
   try{
@@ -220,6 +220,7 @@ function load(){
     if(!d||!Array.isArray(d.players)||!Array.isArray(d.games)) return null;
     if(typeof d.teamMode!=='boolean') d.teamMode=false;
     if(typeof d.ended!=='boolean') d.ended=false;
+    if(typeof d.cur!=='number'||d.cur<0||d.cur>=d.games.length) d.cur=Math.max(0,d.games.length-1);
     if(d.mode!=='teams') d.mode='solo';
     if(!Array.isArray(d.teams)) d.teams=[];
     if(!d.nextTid) d.nextTid=d.teams.reduce((m,t)=>Math.max(m,t.id),0)+1;
@@ -232,6 +233,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
+let shareMsg='';
+let imageUrl='';
 
 const nm=id=>{const p=S.players.find(p=>p.id===id);return p?p.name:'?';};
 const ord=id=>S.players.findIndex(p=>p.id===id);
@@ -244,12 +247,17 @@ const tmembers=tid=>{const t=S.teams.find(x=>x.id===tid);return t?t.members:[];}
 const tpair=tid=>pair(tmembers(tid));
 const playerActive=id=>{const p=S.players.find(p=>p.id===id);return !!(p&&p.active);};
 const teamActive=t=>t.members.every(playerActive);
+const gameWho=g=>g.mode==='teams'?`${tname(g.tm[0])} vs ${tname(g.tm[1])}`:(S.teamMode?`${rawPair(g.teams[0])} vs ${rawPair(g.teams[1])}`:four(g).map(nm).join(', '));
+const gameRest=g=>g.mode==='teams'
+  ?`${rawPair(g.teams[0])} vs ${rawPair(g.teams[1])} \u00B7 `+((g.benchT&&g.benchT.length)?'Resting: '+g.benchT.map(tid=>tname(tid)).join(', '):'No team resting')
+  :(g.bench.length?'Resting: '+g.bench.map(id=>nm(id)).join(', '):'No one resting');
+function dropPlanned(){if(S.games.length>S.cur+1)S.games.length=S.cur+1;}
 
 /* ---- rotation logic: individual players ---- */
-function tally(){
+function tally(upto){
   const c={},last={},partner={},opp={};
   S.players.forEach(p=>{c[p.id]=p.base||0;last[p.id]=-1;});
-  S.games.forEach((g,i)=>{
+  S.games.slice(0,upto===undefined?S.games.length:upto).forEach((g,i)=>{
     g.teams.flat().forEach(id=>{c[id]=(c[id]||0)+1;last[id]=i;});
     const [t1,t2]=g.teams;
     inc(partner,key(t1[0],t1[1]));inc(partner,key(t2[0],t2[1]));
@@ -282,10 +290,10 @@ function pickNext(){
 }
 
 /* ---- rotation logic: fixed teams ---- */
-function tallyT(){
+function tallyT(upto){
   const c={},last={},meet={};
   S.teams.forEach(t=>{c[t.id]=t.base||0;last[t.id]=-1;});
-  S.games.forEach((g,i)=>{
+  S.games.slice(0,upto===undefined?S.games.length:upto).forEach((g,i)=>{
     if(!g.tm)return;
     g.tm.forEach(tid=>{c[tid]=(c[tid]||0)+1;last[tid]=i;});
     inc(meet,key(g.tm[0],g.tm[1]));
@@ -351,12 +359,82 @@ function summaryCard(){
   </section>`;
 }
 
+/* ---- game log as an image ---- */
+function logCanvas(){
+  const games=S.games.slice(0,S.cur+1);
+  const W=1080,P=56,IW=W-2*P;
+  const c=document.createElement('canvas');const ctx=c.getContext('2d');
+  const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
+  const wrap=(text,font,maxW)=>{
+    ctx.font=font;const words=String(text).split(' ');const lines=[];let line='';
+    words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;});
+    if(line)lines.push(line);return lines;
+  };
+  const date=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const blocks=games.map((g,i)=>({
+    n:i+1,
+    who:wrap(gameWho(g),`700 44px ${DISP}`,IW),
+    rest:wrap(gameRest(g),`500 30px ${BODY}`,IW)
+  }));
+  const HEAD=250,GAP=34;
+  let H=HEAD+30;
+  blocks.forEach(b=>{b.h=26+34+8+b.who.length*52+10+b.rest.length*40+26;H+=b.h+GAP;});
+  H+=110;
+  c.width=W;c.height=H;
+  ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1c6b4f';ctx.fillRect(0,0,W,HEAD);
+  ctx.fillStyle='#dff3e7';ctx.font=`600 28px ${BODY}`;ctx.textBaseline='alphabetic';ctx.fillText('BADMINTON \u00B7 DOUBLES',P,82);
+  ctx.fillStyle='#ffffff';ctx.font=`700 96px ${DISP}`;ctx.fillText('GAME LOG',P,170);
+  ctx.fillStyle='#dff3e7';ctx.font=`500 32px ${BODY}`;ctx.fillText(`${date} \u00B7 ${games.length} ${games.length===1?'game':'games'}`,P,222);
+  let y=HEAD+30;
+  blocks.forEach(b=>{
+    ctx.fillStyle='#ffffff';ctx.fillRect(P,y,IW,b.h);
+    ctx.fillStyle='#1c6b4f';ctx.fillRect(P,y,10,b.h);
+    let ty=y+26+30;
+    ctx.fillStyle='#587064';ctx.font=`600 28px ${BODY}`;ctx.fillText('GAME '+b.n,P+34,ty);
+    ty+=8+44;
+    ctx.fillStyle='#13201a';ctx.font=`700 44px ${DISP}`;
+    b.who.forEach(l=>{ctx.fillText(l,P+34,ty);ty+=52;});
+    ty+=10-8;
+    ctx.fillStyle='#587064';ctx.font=`500 30px ${BODY}`;
+    b.rest.forEach(l=>{ctx.fillText(l,P+34,ty);ty+=40;});
+    y+=b.h+GAP;
+  });
+  ctx.fillStyle='#587064';ctx.font=`500 26px ${BODY}`;ctx.fillText('Shuttle Turns',P,H-48);
+  return c;
+}
+async function shareImage(){
+  const say=m=>{shareMsg=m;const el=$('#shareMsg');if(el)el.textContent=m;};
+  if(!S.games.length)return;
+  let canvas;
+  try{canvas=logCanvas();}catch(e){say('Could not draw the image.');return;}
+  const dataUrl=canvas.toDataURL('image/png');
+  const name='badminton-game-log.png';
+  const cap=window.Capacitor;
+  try{
+    const pl=cap&&cap.Plugins;
+    if(pl&&pl.Filesystem&&pl.Share&&(!cap.isNativePlatform||cap.isNativePlatform())){
+      const w=await pl.Filesystem.writeFile({path:name,data:dataUrl.split(',')[1],directory:'CACHE'});
+      await pl.Share.share({title:'Badminton game log',files:[w.uri]});
+      say('');return;
+    }
+  }catch(e){if(/cancel/i.test(String((e&&e.message)||e))){say('');return;}}
+  try{
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    if(blob&&navigator.canShare){
+      const file=new File([blob],name,{type:'image/png'});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Badminton game log'});say('');return;}
+    }
+  }catch(e){if(e&&e.name==='AbortError'){say('');return;}}
+  imageUrl=dataUrl;dialog='image';say('');render();
+}
+
 /* ---- views ---- */
 function viewPlayers(){
   const started=S.games.length>0;
   const isT=S.mode==='teams';
-  const t=tally();
-  const tt=tallyT();
+  const t=tally(S.cur+1);
+  const tt=tallyT(S.cur+1);
   const activeN=S.players.filter(p=>p.active).length;
   const activeTeams=S.teams.filter(teamActive).length;
   const teamOf=id=>S.teams.find(x=>x.members.includes(id));
@@ -398,7 +476,7 @@ function viewPlayers(){
 
   const canStart=isT?activeTeams>=2:activeN>=4;
   const session=started
-    ?`<p class="muted">${S.ended?'Session ended. The summary is on the History tab.':`Session running. Game ${S.games.length} is on court.`}</p>
+    ?`<p class="muted">${S.ended?'Session ended. The summary is on the History tab.':`Session running. Game ${S.cur+1} is on court.`}</p>
       <button class="btn block" type="button" data-act="reset" style="margin-top:12px">${S.ended?'Start a new session':'Reset session'}</button>`
     :`<button class="btn primary block" type="button" data-act="start" ${canStart?'':'disabled'}>Start session</button>
       <p class="hint">${canStart?(isT?'The first two teams play game 1. Teams rotate so every team gets equal turns.':'The first four names play game 1. Put early arrivals at the top.'):(isT?'Make at least 2 teams to start.':'Add at least 4 players to start.')}</p>`;
@@ -439,9 +517,11 @@ function viewPlay(){
   if(S.ended){
     return `<div class="card empty"><h2 style="margin:0">Session ended</h2><p class="muted">Today's summary is ready on the History tab.</p><button class="btn primary" type="button" data-tab="history">View summary</button><button class="linkbtn" type="button" data-act="reopen">Reopen session</button></div>`;
   }
-  const n=S.games.length;
-  const cur=S.games[n-1];
-  const nxt=pickGame();
+  const n=S.cur+1;
+  const cur=S.games[S.cur];
+  const planned=S.games.slice(S.cur+1);
+  const nxt=planned[0]||pickGame();
+  const canPlan=!!pickGame();
   const isT=S.mode==='teams';
   const chips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(nm(id))}</span>`).join(''):'<span class="muted">Nobody</span>';
   const tchips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(tname(id))} · ${tpair(id)}</span>`).join(''):'<span class="muted">Nobody</span>';
@@ -480,17 +560,21 @@ function viewPlay(){
         <div class="rest"><h3>Resting then</h3><div class="chips">${restNext||'<span class="muted">Nobody</span>'}</div></div>
       </section>`
     :`<section class="card next"><h2>Up next</h2><p>${noNext}</p></section>`;
+  const later=planned.slice(1);
+  const laterCard=later.length?`<section class="card"><h2>Planned after that</h2><ul class="log">${later.map((g,i)=>`<li><span><b>Game ${n+2+i}</b> \u00B7 ${esc(gameWho(g))}</span><small>${esc(gameRest(g))}</small></li>`).join('')}</ul></section>`:'';
   return `<div class="stack">
     <section>
       <div class="gamehead"><h2>Game ${n}</h2><span class="elapsed" id="elapsed">${elapsed(cur.at)}</span></div>
       ${onCourt}
       <div class="rest"><h3>Resting now</h3><div class="chips">${restNow}</div></div>
     </section>
-    <button class="btn primary block" type="button" data-act="finish" ${nxt?'':'disabled'}>Game finished · start game ${n+1}</button>
+    <button class="btn primary block" type="button" data-act="nextgame" ${nxt?'':'disabled'}>Next game</button>
     ${nextCard}
+    ${laterCard}
+    <button class="btn block" type="button" data-act="plan" ${canPlan?'':'disabled'}>${planned.length?'Plan 5 more games':'Plan next 5 games'}</button>
     ${switchCard}
     <button class="btn block" type="button" data-act="end">End games for today</button>
-    ${n>1?`<button class="linkbtn" type="button" data-act="undo">Undo, back to game ${n-1}</button>`:''}
+    ${n>1?`<button class="linkbtn" type="button" data-act="prev">Previous game</button>`:''}
   </div>`;
 }
 function viewHistory(){
@@ -498,19 +582,19 @@ function viewHistory(){
     return `<div class="card empty"><h2 style="margin:0">No games yet</h2><p class="muted">Every game, and who played in it, will be listed here once the session starts.</p></div>`;
   }
   const isT=S.mode==='teams';
-  const cur=S.games[S.games.length-1];
+  const cur=S.games[S.cur];
   const frow=(label,sub,c,max,st)=>`<div class="frow"><span class="n">${esc(label)}${sub?`<small>${esc(sub)}</small>`:''}</span><span class="bar"><i style="width:${Math.round(c/max*100)}%"></i></span>${st}<span class="c">${c}</span></div>`;
   const stOn='<span class="pill">On court</span>',stRest='<span class="pill rest-pill">Resting</span>',stLeft='<span class="pill left">Left</span>';
   let rows,spread;
   if(isT){
-    const t=tallyT();
+    const t=tallyT(S.cur+1);
     const onC=new Set(cur.tm||[]);
     const max=Math.max(1,...S.teams.map(x=>t.c[x.id]));
     const act=S.teams.filter(teamActive).map(x=>t.c[x.id]);
     spread=act.length?Math.max(...act)-Math.min(...act):0;
     rows=S.teams.map(x=>frow(tname(x.id),rawPair(x.members),t.c[x.id],max,!teamActive(x)?stLeft:onC.has(x.id)?stOn:stRest)).join('');
   }else{
-    const t=tally();
+    const t=tally(S.cur+1);
     const onC=new Set(cur.teams.flat());
     const max=Math.max(1,...S.players.map(p=>t.c[p.id]));
     const act=S.players.filter(p=>p.active).map(p=>t.c[p.id]);
@@ -521,14 +605,17 @@ function viewHistory(){
   const summary=spread<=1
     ?`<span class="pill">Even</span><span class="muted">Every ${unit} is within 1 turn of each other.</span>`
     :`<span class="pill rest-pill">Gap of ${spread}</span><span class="muted">Whoever rested will play next.</span>`;
-  const who=g=>g.mode==='teams'?`${esc(tname(g.tm[0]))} vs ${esc(tname(g.tm[1]))}`:(S.teamMode?`${pair(g.teams[0])} vs ${pair(g.teams[1])}`:names(four(g)));
-  const rest=g=>g.mode==='teams'
-    ?`${pair(g.teams[0])} vs ${pair(g.teams[1])} · `+((g.benchT&&g.benchT.length)?'Resting: '+g.benchT.map(id=>esc(tname(id))).join(', '):'No team resting')
-    :(g.bench.length?'Resting: '+names(g.bench):'No one resting');
-  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> · ${who(g)}</span><small>${rest(g)}</small></li>`).reverse().join('');
+  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small></li>`).join('');
   return `<div class="stack">
     ${S.ended?summaryCard():''}
-    <section class="card"><h2>Game log</h2><ul class="log">${log}</ul></section>
+    <section class="card">
+      <h2>Game log</h2>
+      <ul class="log">${log}</ul>
+      <div class="btns">
+        <button class="btn primary block" type="button" data-act="shareimg">Share game log as image</button>
+        <p class="hint" id="shareMsg" role="status" style="margin:0;text-align:center">${esc(shareMsg)}</p>
+      </div>
+    </section>
     ${S.ended?'':`<section class="card">
       <h2>Turns per ${unit}</h2>
       <div class="summary">${summary}</div>
@@ -539,6 +626,7 @@ function viewHistory(){
 }
 function dialogHtml(){
   if(!dialog)return '';
+  if(dialog==='image')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Game log image</h3><img src="${imageUrl}" alt="Game log" style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;background:#fff"><p>Press and hold the image to save or share it.</p><button class="btn primary" type="button" data-act="cancel">Close</button></div></div>`;
   const d=dialog==='end'
     ?{t:'End games for today?',b:'This closes the session and shows the summary to share.',y:'End games',a:'confirmend'}
     :{t:'Start a new session?',b:'This clears all games from the current session.',y:'Yes, clear',a:'confirmreset'};
@@ -558,13 +646,15 @@ function render(){
 
 /* ---- actions ---- */
 function addPlayer(name){
-  const t=tally();
+  dropPlanned();
+  const t=tally(S.cur+1);
   const base=S.games.length?minActiveCount(t):0;
   S.players.push({id:S.nextId++,name,active:true,base});
   S.sample=false;
 }
 function addTeam(a,b){
-  const base=S.games.length?minTeamCount(tallyT()):0;
+  dropPlanned();
+  const base=S.games.length?minTeamCount(tallyT(S.cur+1)):0;
   S.teams.push({id:S.nextTid++,members:[a,b],base});
   S.sample=false;
 }
@@ -574,16 +664,26 @@ function autopair(){
   for(let i=0;i+1<free.length;i+=2)addTeam(free[i].id,free[i+1].id);
 }
 const actions={
-  start(){const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.tab='play';},
-  finish(){if(S.ended)return;const g=pickGame();if(!g)return;S.games.push({...g,at:Date.now()});},
-  undo(){if(S.games.length>1)S.games.pop();},
+  start(){const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
+  nextgame(){
+    if(S.ended)return;
+    if(S.cur+1<S.games.length){S.cur++;}
+    else{const g=pickGame();if(!g)return;S.games.push({...g,at:Date.now()});S.cur=S.games.length-1;}
+    S.games[S.cur].at=Date.now();
+  },
+  prev(){if(S.cur>0)S.cur--;},
+  plan(){
+    if(S.ended)return;
+    for(let i=0;i<5;i++){const g=pickGame();if(!g)break;S.games.push({...g,at:Date.now()});}
+  },
+  shareimg(){shareImage();},
   suggest(){S.teamMode=!S.teamMode;},
   modeSolo(){if(!S.games.length)S.mode='solo';},
   modeTeams(){if(!S.games.length){S.mode='teams';if(!S.teams.length)autopair();}},
   autopair(){autopair();},
   removeteam(id){S.teams=S.teams.filter(x=>x.id!==id);},
   end(){dialog='end';},
-  confirmend(){dialog=null;copyMsg='';S.ended=true;S.endedAt=Date.now();S.tab='history';},
+  confirmend(){dialog=null;copyMsg='';dropPlanned();S.ended=true;S.endedAt=Date.now();S.tab='history';},
   reopen(){S.ended=false;S.endedAt=null;copyMsg='';S.tab='play';},
   copy(){
     const text=summaryText();
@@ -600,6 +700,7 @@ const actions={
   clear(){S.players=[];S.teams=[];S.sample=false;},
   toggle(id){
     const p=S.players.find(p=>p.id===id);if(!p)return;
+    dropPlanned();
     if(p.active){p.active=false;return;}
     if(S.mode==='teams'){
       const tt=tallyT();
@@ -612,14 +713,14 @@ const actions={
     }
   },
   reset(){dialog='reset';},
-  confirmreset(){dialog=null;S.games=[];S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
+  confirmreset(){dialog=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;}
 };
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   const f=actions[el.dataset.act];
-  if(f){f(el.dataset.id?+el.dataset.id:undefined);if(el.dataset.act!=='copy')render();if(['start','finish','confirmend','confirmreset'].includes(el.dataset.act))window.scrollTo(0,0);}
+  if(f){f(el.dataset.id?+el.dataset.id:undefined);if(!['copy','shareimg'].includes(el.dataset.act))render();if(['start','nextgame','prev','confirmend','confirmreset'].includes(el.dataset.act))window.scrollTo(0,0);}
 });
 document.addEventListener('submit',e=>{
   if(!e.target)return;
@@ -641,7 +742,7 @@ document.addEventListener('submit',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dialog){dialog=null;render();}});
 setInterval(()=>{
   const el=$('#elapsed');
-  if(el&&S.games.length)el.textContent=elapsed(S.games[S.games.length-1].at);
+  if(el&&S.games.length&&S.games[S.cur])el.textContent=elapsed(S.games[S.cur].at);
 },20000);
 render();
 </script>

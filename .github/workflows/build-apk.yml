@@ -21,6 +21,10 @@ jobs:
         run: npm install
       - name: Create the Android project
         run: npx cap add android
+      - name: Apply the app icon and splash screen
+        run: |
+          cp -r branding/res/. android/app/src/main/res/
+          find android/app/src/main/res -name 'splash.png' -delete
       - name: Copy the app into it
         run: npx cap sync android
       - name: Build the APK
