@@ -89,6 +89,8 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .teamform .btn{grid-column:1/-1}
 .msg{min-height:20px;font-size:14px;color:var(--danger);margin-top:6px}
 .top{position:relative}
+.warn{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--danger);background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger);font:600 14px var(--font-body);display:flex;gap:10px;align-items:center;justify-content:space-between}
+.warn .btn{border-color:var(--danger);color:var(--danger);flex:none}
 .menu .mhead{font:600 12px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 12px 4px}
 .menu .seg{margin:0 6px 6px}
 .menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
@@ -778,7 +780,7 @@ function viewPlayers(){
         <button type="button" data-act="modeTour" aria-pressed="${S.mode==='tour'}" ${started?'aria-disabled="true"':''}>Tournament</button>
       </div>
       <p class="hint">${S.mode==='tour'?'Teams of two play each other once. The best teams go to semi-finals and a final, and you get a champion.':isT?'Two players stay together as a team. Teams rotate so every team gets equal turns.':'Everyone rotates on their own. You choose partners on court.'}${started?' ':''}</p>
-      ${started&&modeNote?`<div class="note" role="status" style="flex-direction:column;align-items:stretch"><span>A game is already in play, so the play style can't be changed now. To switch, clear the current games first: scroll to the bottom and tap <b>${S.tour?'Clear tournament and start over':'Clear all games and start over'}</b>, then pick the new style.</span><button class="btn small" type="button" data-act="gotoreset">Take me to the clear button</button></div>`:''}
+      ${started&&modeNote?`<div class="warn" role="alert"><span><b>Game in play.</b> Clear all games first to change the style.</span><button class="btn small" type="button" data-act="gotoreset">Go to Clear</button></div>`:''}
     </section>`;
 
   return `<div class="stack">
