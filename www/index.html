@@ -337,6 +337,7 @@ function viewContact(){
         <input id="cHoney" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         <p class="msg" role="status">${esc(cst.m)}</p>
         <button class="btn primary block" type="submit" ${busy?'disabled':''}>${busy?'Sending…':'Send request'}</button>
+        ${cst.s==='error'&&cd.msg?`<a class="btn block" style="text-align:center;text-decoration:none" href="mailto:${ADMIN}?subject=${encodeURIComponent('Shuttle Turns: '+cd.kind)}&body=${encodeURIComponent(cd.msg+'\n\nContact: '+cd.contact)}">Send with my email app instead</a>`:''}
       </form>`}
     </section>
     <button class="linkbtn" type="button" data-act="contactclose">Back to the app</button>
@@ -351,8 +352,8 @@ async function sendContact(){
     clearTimeout(to);
     const j=await r.json().catch(()=>({}));
     if(r.ok&&String(j.success)!=='false'){cst={s:'sent',m:''};cd={kind:'Bug',contact:cd.contact,msg:''};}
-    else cst={s:'error',m:'Could not send. Please try again in a moment.'};
-  }catch(e){cst={s:'error',m:'Could not send. Check your internet connection and try again.'};}
+    else cst={s:'error',m:'Could not send ('+(j.message||('error '+r.status))+'). Please try again, or use the email button below.'};
+  }catch(e){cst={s:'error',m:'Could not send ('+(e&&e.name||'network')+'). Check your internet and try again, or use the email button below.'};}
   render();
 }
 let shareMsg='';

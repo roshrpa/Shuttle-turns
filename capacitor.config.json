@@ -1,5 +1,8 @@
 {
   "appId": "com.shuttleturns.app",
   "appName": "Shuttle Turns",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
 }
