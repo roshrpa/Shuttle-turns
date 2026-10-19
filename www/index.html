@@ -819,18 +819,17 @@ function viewTourPlay(){
       </div>
     </section>
     <section class="card">
-      <h2>Who won?</h2>
+      <h2>Score${S.pts?'':' (optional)'}</h2>
+      <div class="scoregrid">
+        <label class="lbl">${esc(tname(m.a))}<input id="sa" class="field" type="text" inputmode="numeric" placeholder="0" aria-label="${esc(tname(m.a))} score"></label>
+        <label class="lbl">${esc(tname(m.b))}<input id="sb" class="field" type="text" inputmode="numeric" placeholder="0" aria-label="${esc(tname(m.b))} score"></label>
+      </div>
+      <p class="msg" id="tourMsg" role="status"></p>
+      <h2 style="margin-top:6px">${S.pts?'Then tap who won':'Who won?'}</h2>
       <div class="btns" style="margin-top:0">
         <button class="btn primary block" type="button" data-act="win" data-id="${m.a}">${esc(tname(m.a))} won</button>
         <button class="btn primary block" type="button" data-act="win" data-id="${m.b}">${esc(tname(m.b))} won</button>
       </div>
-      <p class="slab" style="font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px">Score (${S.pts?'required':'optional'})</p>
-      <div class="scoregrid">
-        <input id="sa" class="field" type="text" inputmode="numeric" placeholder="${esc(tname(m.a))}" aria-label="${esc(tname(m.a))} score">
-        <input id="sb" class="field" type="text" inputmode="numeric" placeholder="${esc(tname(m.b))}" aria-label="${esc(tname(m.b))} score">
-      </div>
-      <p class="msg" id="tourMsg" role="status"></p>
-      <p class="hint" style="margin-top:0">${S.pts?'Enter both scores, then tap the winner.':'Enter the score first if you want it saved, then tap the winner.'}</p>
     </section>
     ${nextCard}
     ${m.round==='rr'?table:''}
