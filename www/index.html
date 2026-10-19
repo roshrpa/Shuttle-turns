@@ -88,6 +88,8 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .teamform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .teamform .btn{grid-column:1/-1}
 .msg{min-height:20px;font-size:14px;color:var(--danger);margin-top:6px}
+.lbl{display:flex;flex-direction:column;gap:6px;font:600 14px var(--font-body);color:var(--muted)}
+textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit}
 
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .seg button{min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:600 14px var(--font-body);cursor:pointer}
@@ -242,6 +244,51 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
+let contactOpen=false;
+let cd={kind:'Bug',contact:'',msg:''};
+let cst={s:'idle',m:''};
+const ADMIN='roshrpa@gmail.com';
+function viewContact(){
+  const kinds=['Bug','Change request','Other'];
+  const busy=cst.s==='sending';
+  const done=cst.s==='sent';
+  return `<div class="stack">
+    <section class="card">
+      <h2>Contact admin</h2>
+      <p class="muted" style="margin-bottom:14px">Found a bug or want a change? Send a request. Leave your phone number or email so the admin can reply.</p>
+      ${done?`<div class="note"><span>Thank you. Your request was sent.</span></div>
+        <button class="btn block" type="button" data-act="contactnew">Send another</button>`
+      :`<form id="contactForm" autocomplete="off" class="stack" style="gap:12px">
+        <label class="lbl">What is it about?
+          <select id="cKind" class="field" ${busy?'disabled':''}>${kinds.map(k=>`<option${k===cd.kind?' selected':''}>${k}</option>`).join('')}</select>
+        </label>
+        <label class="lbl">Your phone number or email
+          <input id="cContact" class="field" type="text" maxlength="80" value="${esc(cd.contact)}" placeholder="Phone number or email" ${busy?'disabled':''}>
+        </label>
+        <label class="lbl">Your request
+          <textarea id="cMsg" class="field" rows="5" maxlength="1000" placeholder="Describe the bug or the change you want" ${busy?'disabled':''} style="resize:vertical">${esc(cd.msg)}</textarea>
+        </label>
+        <input id="cHoney" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <p class="msg" role="status">${esc(cst.m)}</p>
+        <button class="btn primary block" type="submit" ${busy?'disabled':''}>${busy?'Sending…':'Send request'}</button>
+      </form>`}
+    </section>
+    <button class="linkbtn" type="button" data-act="contactclose">Back to the app</button>
+  </div>`;
+}
+async function sendContact(){
+  const body={_subject:'Shuttle Turns: '+cd.kind,_captcha:'false',_template:'table',Type:cd.kind,Contact:cd.contact,Request:cd.msg,_honey:''};
+  cst={s:'sending',m:''};render();
+  try{
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),20000);
+    const r=await fetch('https://formsubmit.co/ajax/'+ADMIN,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body),signal:ctl.signal});
+    clearTimeout(to);
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&String(j.success)!=='false'){cst={s:'sent',m:''};cd={kind:'Bug',contact:cd.contact,msg:''};}
+    else cst={s:'error',m:'Could not send. Please try again in a moment.'};
+  }catch(e){cst={s:'error',m:'Could not send. Check your internet connection and try again.'};}
+  render();
+}
 let shareMsg='';
 let imageUrl='';
 
@@ -681,6 +728,7 @@ function viewPlayers(){
     ${teamsCard}
     <section class="card">${session}</section>
     ${resetLink}
+    <div style="text-align:center"><button class="linkbtn" type="button" data-act="contactopen">Contact admin</button></div>
   </div>`;
 }
 function elapsed(at){
@@ -807,9 +855,9 @@ function dialogHtml(){
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
 function render(){
-  $('#view').innerHTML=S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():viewPlayers();
+  $('#view').innerHTML=contactOpen?viewContact():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():viewPlayers();
   document.querySelectorAll('.tab').forEach(b=>{
-    const on=b.dataset.tab===S.tab;
+    const on=!contactOpen&&b.dataset.tab===S.tab;
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
@@ -921,17 +969,29 @@ const actions={
     }
   },
   reset(){dialog='reset';},
+  contactopen(){contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
+  contactclose(){contactOpen=false;},
+  contactnew(){cst={s:'idle',m:''};},
   confirmreset(){dialog=null;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;}
 };
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
-  if(el.dataset.tab){S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
+  if(el.dataset.tab){contactOpen=false;S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   const f=actions[el.dataset.act];
   if(f){const r=f(el.dataset.id?+el.dataset.id:undefined);if(r!==false&&!['copy','shareimg'].includes(el.dataset.act))render();if(r!==false&&['start','nextgame','prev','confirmend','confirmreset','win','startko'].includes(el.dataset.act))window.scrollTo(0,0);}
 });
 document.addEventListener('submit',e=>{
   if(!e.target)return;
+  if(e.target.id==='contactForm'){
+    e.preventDefault();
+    if($('#cHoney').value)return;
+    cd={kind:$('#cKind').value,contact:$('#cContact').value.trim(),msg:$('#cMsg').value.trim()};
+    const okC=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cd.contact)||cd.contact.replace(/\D/g,'').length>=6;
+    if(!okC){cst={s:'error',m:'Enter a valid phone number or email.'};render();return;}
+    if(cd.msg.length<5){cst={s:'error',m:'Please write your request.'};render();return;}
+    sendContact();return;
+  }
   if(e.target.id==='addForm'){
     e.preventDefault();
     const inp=$('#nameIn');const name=inp.value.trim();if(!name)return;
