@@ -89,9 +89,18 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .teamform .btn{grid-column:1/-1}
 .msg{min-height:20px;font-size:14px;color:var(--danger);margin-top:6px}
 .top{position:relative}
+.menu .mhead{font:600 12px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 12px 4px}
+.menu .seg{margin:0 6px 6px}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+.menu .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.menu .pill{font:600 13px var(--font-body);padding:3px 10px;border-radius:99px;background:var(--tab-active);color:var(--ink)}
+.menu .pill.on{background:var(--accent);color:var(--on-accent)}
+.help h3{font:600 16px var(--font-display);letter-spacing:.08em;text-transform:uppercase;margin:14px 0 4px}
+.help p{margin:0 0 6px;color:var(--ink)}
 .top h1{padding-right:54px;font-size:32px;white-space:nowrap}
+.big .top h1{font-size:27px}
 .menubtn{position:absolute;right:0;top:0;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.menu{position:absolute;right:0;top:50px;z-index:20;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px}
+.menu{position:absolute;right:0;top:50px;z-index:20;min-width:250px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px}
 .menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:12px;font:600 15px var(--font-body);color:var(--ink);cursor:pointer}
 .menu button:hover{background:var(--tab-active)}
 .lbl{display:flex;flex-direction:column;gap:6px;font:600 14px var(--font-body);color:var(--muted)}
@@ -208,9 +217,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     <button id="menuBtn" class="menubtn" type="button" data-act="menutoggle" aria-label="Menu" aria-expanded="false" aria-controls="menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <div id="menu" class="menu" hidden>
-      <button type="button" data-act="contactopen">Contact admin</button>
-    </div>
+    <div id="menu" class="menu" hidden></div>
   </header>
   <main id="view"></main>
 </div>
@@ -256,11 +263,57 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
-let contactOpen=false;
+let contactOpen=false,helpOpen=false;
+const PK='shuttle-turns-prefs';
+let P={theme:'system',big:false,awake:false};
+try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d&&typeof d==='object'){if(['system','light','dark'].includes(d.theme))P.theme=d.theme;P.big=!!d.big;P.awake=!!d.awake;}}catch(e){}
+function savePrefs(){try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}}
+let wl=null;
+const canWake=()=>!!(navigator.wakeLock&&navigator.wakeLock.request);
+async function wake(){
+  try{
+    if(P.awake&&canWake()&&document.visibilityState==='visible'&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null;});}
+    else if(!P.awake&&wl){await wl.release();wl=null;}
+  }catch(e){wl=null;}
+}
+document.addEventListener('visibilitychange',wake);
+function applyPrefs(){
+  const r=document.documentElement;
+  if(P.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',P.theme);
+  document.body.style.zoom=P.big?'1.15':'';r.classList.toggle('big',P.big);
+  wake();
+}
+function renderMenu(){
+  const seg=(k,label)=>`<button type="button" data-act="theme${k}" aria-pressed="${P.theme===k}">${label}</button>`;
+  const tog=(act,label,on)=>`<button type="button" data-act="${act}" role="switch" aria-checked="${on}"><span class="row"><span>${label}</span><span class="pill${on?' on':''}">${on?'On':'Off'}</span></span></button>`;
+  $('#menu').innerHTML=`<div class="mhead">Theme</div>
+    <div class="seg" role="group" aria-label="Theme">${seg('system','Auto')}${seg('light','Light')}${seg('dark','Dark')}</div>
+    ${tog('bigtext','Larger text',P.big)}
+    ${canWake()?tog('awake','Keep screen on',P.awake):''}
+    <hr>
+    <button type="button" data-act="helpopen">How it works</button>
+    <button type="button" data-act="contactopen">Contact admin</button>`;
+}
 function closeMenu(){const m=$('#menu');if(m){m.hidden=true;$('#menuBtn').setAttribute('aria-expanded','false');}}
 let cd={kind:'Bug',contact:'',msg:''};
 let cst={s:'idle',m:''};
 const ADMIN='roshrpa@gmail.com';
+function viewHelp(){
+  return `<div class="stack"><section class="card help">
+    <h2>How it works</h2>
+    <h3>Individual</h3>
+    <p>Add everyone who is here. The app picks four players for each game. Players with the fewest turns go first, so turns stay fair. Tap Next game when a game is finished.</p>
+    <h3>Fixed teams</h3>
+    <p>Make teams of two (Team A, B, C...). Teams always stay together and take turns on court.</p>
+    <h3>Tournament</h3>
+    <p>Make teams. Every team plays every other team once. The best four teams play semi-finals, then the final and a third-place match. Tap the winning team after each match; scores are optional.</p>
+    <h3>Sharing</h3>
+    <p>On the History tab you can share the game log or the tournament results as an image or as text, for example on WhatsApp.</p>
+    <h3>Your data</h3>
+    <p>Names and teams stay on this phone. Nothing is uploaded unless you send a request from Contact admin.</p>
+  </section>
+  <button class="linkbtn" type="button" data-act="helpclose">Back to the app</button></div>`;
+}
 function viewContact(){
   const kinds=['Bug','Change request','Other'];
   const busy=cst.s==='sending';
@@ -867,9 +920,9 @@ function dialogHtml(){
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
 function render(){
-  $('#view').innerHTML=contactOpen?viewContact():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():viewPlayers();
+  $('#view').innerHTML=helpOpen?viewHelp():contactOpen?viewContact():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():viewPlayers();
   document.querySelectorAll('.tab').forEach(b=>{
-    const on=!contactOpen&&b.dataset.tab===S.tab;
+    const on=!contactOpen&&!helpOpen&&b.dataset.tab===S.tab;
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
@@ -981,8 +1034,13 @@ const actions={
     }
   },
   reset(){dialog='reset';},
-  menutoggle(){const m=$('#menu');m.hidden=!m.hidden;$('#menuBtn').setAttribute('aria-expanded',String(!m.hidden));return false;},
-  contactopen(){closeMenu();window.scrollTo(0,0);contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
+  menutoggle(){const m=$('#menu');if(m.hidden)renderMenu();m.hidden=!m.hidden;$('#menuBtn').setAttribute('aria-expanded',String(!m.hidden));return false;},
+  ...Object.fromEntries(['system','light','dark'].map(k=>['theme'+k,()=>{P.theme=k;savePrefs();applyPrefs();renderMenu();return false;}])),
+  bigtext(){P.big=!P.big;savePrefs();applyPrefs();renderMenu();return false;},
+  awake(){P.awake=!P.awake;savePrefs();wake();renderMenu();return false;},
+  helpopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=true;},
+  helpclose(){helpOpen=false;},
+  contactopen(){closeMenu();window.scrollTo(0,0);helpOpen=false;contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
   confirmreset(){dialog=null;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
@@ -991,7 +1049,7 @@ const actions={
 document.addEventListener('click',e=>{
   if(!e.target.closest('#menu,#menuBtn'))closeMenu();
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
-  if(el.dataset.tab){contactOpen=false;S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
+  if(el.dataset.tab){contactOpen=false;helpOpen=false;S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   const f=actions[el.dataset.act];
   if(f){const r=f(el.dataset.id?+el.dataset.id:undefined);if(r!==false&&!['copy','shareimg'].includes(el.dataset.act))render();if(r!==false&&['start','nextgame','prev','confirmend','confirmreset','win','startko'].includes(el.dataset.act))window.scrollTo(0,0);}
 });
@@ -1026,6 +1084,7 @@ setInterval(()=>{
   const el=$('#elapsed');
   if(el&&S.games.length&&S.games[S.cur])el.textContent=elapsed(S.games[S.cur].at);
 },20000);
+applyPrefs();
 render();
 </script>
 
