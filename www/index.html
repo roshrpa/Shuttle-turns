@@ -109,8 +109,8 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .seg button{min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:600 14px var(--font-body);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-.seg button:disabled{cursor:not-allowed}
-.seg button:disabled:not([aria-pressed="true"]){opacity:.5}
+.seg button[aria-disabled="true"]{cursor:not-allowed}
+.seg button[aria-disabled="true"]:not([aria-pressed="true"]){opacity:.5}
 
 .plist{list-style:none;margin:8px 0 0;padding:0}
 .prow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -263,7 +263,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
-let contactOpen=false,helpOpen=false;
+let contactOpen=false,helpOpen=false,modeNote=false;
 const PK='shuttle-turns-prefs';
 let P={theme:'system',big:false,awake:false};
 try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d&&typeof d==='object'){if(['system','light','dark'].includes(d.theme))P.theme=d.theme;P.big=!!d.big;P.awake=!!d.awake;}}catch(e){}
@@ -768,16 +768,17 @@ function viewPlayers(){
     ?`<p class="muted">${S.tour?'Tournament running. Enter results on the Play tab.':S.ended?'Session ended. The summary is on the History tab.':`Session running. Game ${S.cur+1} is on court.`}</p>`
     :`<button class="btn primary block" type="button" data-act="start" ${canStart?'':'disabled'}>Start game</button>
       <p class="hint">${canStart?(S.mode==='tour'?'Every team plays every other team once. Then the best teams play semi-finals and a final.':isT?'The first two teams play game 1. Teams rotate so every team gets equal turns.':'The first four names play game 1. Put early arrivals at the top.'):(isT?'Make at least 2 teams to start.':'Add at least 4 players to start.')}</p>`;
-  const resetLink=started?`<div style="margin:4px 0"><button class="btn block" type="button" data-act="reset">${S.tour?'Clear tournament and start over':S.ended?'Clear and start a new session':'Clear all games and start over'}</button></div>`:'';
+  const resetLink=started?`<div style="margin:4px 0"><button id="resetBtn" class="btn block" type="button" data-act="reset">${S.tour?'Clear tournament and start over':S.ended?'Clear and start a new session':'Clear all games and start over'}</button></div>`:'';
 
   const modeCard=`<section class="card">
       <h2>Play style</h2>
       <div class="seg" role="group" aria-label="Play style">
-        <button type="button" data-act="modeSolo" aria-pressed="${S.mode==='solo'}" ${started?'disabled':''}>Individual</button>
-        <button type="button" data-act="modeTeams" aria-pressed="${S.mode==='teams'}" ${started?'disabled':''}>Fixed teams</button>
-        <button type="button" data-act="modeTour" aria-pressed="${S.mode==='tour'}" ${started?'disabled':''}>Tournament</button>
+        <button type="button" data-act="modeSolo" aria-pressed="${S.mode==='solo'}" ${started?'aria-disabled="true"':''}>Individual</button>
+        <button type="button" data-act="modeTeams" aria-pressed="${S.mode==='teams'}" ${started?'aria-disabled="true"':''}>Fixed teams</button>
+        <button type="button" data-act="modeTour" aria-pressed="${S.mode==='tour'}" ${started?'aria-disabled="true"':''}>Tournament</button>
       </div>
-      <p class="hint">${S.mode==='tour'?'Teams of two play each other once. The best teams go to semi-finals and a final, and you get a champion.':isT?'Two players stay together as a team. Teams rotate so every team gets equal turns.':'Everyone rotates on their own. You choose partners on court.'}${started?' Locked while a session is running.':''}</p>
+      <p class="hint">${S.mode==='tour'?'Teams of two play each other once. The best teams go to semi-finals and a final, and you get a champion.':isT?'Two players stay together as a team. Teams rotate so every team gets equal turns.':'Everyone rotates on their own. You choose partners on court.'}${started?' ':''}</p>
+      ${started&&modeNote?`<div class="note" role="status" style="flex-direction:column;align-items:stretch"><span>A game is already in play, so the play style can't be changed now. To switch, clear the current games first: scroll to the bottom and tap <b>${S.tour?'Clear tournament and start over':'Clear all games and start over'}</b>, then pick the new style.</span><button class="btn small" type="button" data-act="gotoreset">Take me to the clear button</button></div>`:''}
     </section>`;
 
   return `<div class="stack">
@@ -962,9 +963,9 @@ const actions={
   prev(){if(S.cur>0)S.cur--;},
   shareimg(){shareImage();},
   suggest(){S.teamMode=!S.teamMode;},
-  modeSolo(){if(!S.games.length&&!S.tour)S.mode='solo';},
-  modeTeams(){if(!S.games.length&&!S.tour){S.mode='teams';if(!S.teams.length)autopair();}},
-  modeTour(){if(!S.games.length&&!S.tour){S.mode='tour';if(!S.teams.length)autopair();}},
+  modeSolo(){if(!S.games.length&&!S.tour)S.mode='solo';else modeNote=true;},
+  modeTeams(){if(!S.games.length&&!S.tour){S.mode='teams';if(!S.teams.length)autopair();}else modeNote=true;},
+  modeTour(){if(!S.games.length&&!S.tour){S.mode='tour';if(!S.teams.length)autopair();}else modeNote=true;},
   startko(){
     if(!S.tour)return;const I=tourInfo();if(!I.needKo)return;
     const ids=I.st.map(r=>r.id),T=S.tour;
@@ -1044,7 +1045,8 @@ const actions={
   contactopen(){closeMenu();window.scrollTo(0,0);helpOpen=false;contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
-  confirmreset(){dialog=null;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
+  gotoreset(){const b=$('#resetBtn');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});return false;},
+  confirmreset(){dialog=null;modeNote=false;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;}
 };
 document.addEventListener('click',e=>{
