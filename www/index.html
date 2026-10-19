@@ -89,6 +89,21 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .teamform .btn{grid-column:1/-1}
 .msg{min-height:20px;font-size:14px;color:var(--danger);margin-top:6px}
 .top{position:relative}
+.ptsrow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:500 15px var(--font-body);text-align:left;cursor:pointer}
+.ptsrow small{display:block;font-weight:400;color:var(--muted);font-size:13px;margin-top:2px}
+.ptsrow[aria-disabled="true"]{cursor:not-allowed;opacity:.7}
+.ptsrow .pill{flex:none;font:600 13px var(--font-body);padding:3px 10px;border-radius:99px;background:var(--tab-active);color:var(--ink)}
+.ptsrow .pill.on{background:var(--accent);color:var(--on-accent)}
+.ptab{margin:10px 0 4px;font-size:14px}
+.ptab .ph,.ptab .pr{display:grid;grid-template-columns:24px 1fr 30px 30px 30px 44px 44px;gap:6px;align-items:center;padding:8px 0;text-align:center}
+.ptab .ph{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.ptab .pr{border-bottom:1px solid var(--line)}
+.ptab .n{text-align:left;font-weight:600;min-width:0}
+.ptab .n small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.ptab .rk{color:var(--muted);font-weight:600}
+.scoreform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scoreform label{display:flex;flex-direction:column;gap:6px;font:600 13px var(--font-body);color:var(--muted);min-width:0}
+.scoreform input{text-align:center;font-size:22px;font-weight:700}
 .warn{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--danger);background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger);font:600 14px var(--font-body);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .warn .btn{border-color:var(--danger);color:var(--danger);flex:none}
 .menu .mhead{font:600 12px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 12px 4px}
@@ -242,7 +257,7 @@ const inc=(m,k)=>{m[k]=(m[k]||0)+1;};
 
 function fresh(){
   return {players:SAMPLE.map((n,i)=>({id:i+1,name:n,active:true,base:0})),nextId:SAMPLE.length+1,
-    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,teamMode:false,ended:false,tab:'players',sample:true};
+    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,pts:false,teamMode:false,ended:false,tab:'players',sample:true};
 }
 function load(){
   try{
@@ -252,6 +267,7 @@ function load(){
     d.teamMode=false;
     if(!d.tour||typeof d.tour!=='object'||!Array.isArray(d.tour.matches)||!Array.isArray(d.tour.ids)) d.tour=null;
     if(typeof d.ended!=='boolean') d.ended=false;
+    d.pts=!!d.pts;
     if(typeof d.cur!=='number'||d.cur<0||d.cur>=d.games.length) d.cur=Math.max(0,d.games.length-1);
     if(!['teams','tour'].includes(d.mode)) d.mode='solo';
     if(!Array.isArray(d.teams)) d.teams=[];
@@ -265,7 +281,17 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
-let contactOpen=false,helpOpen=false,modeNote=false;
+let contactOpen=false,helpOpen=false,modeNote=false,dropNote=false;
+function scMsg(t){const el=$('#scMsg');if(el)el.textContent=t;}
+function readScore(){
+  const ea=$('#scA'),eb=$('#scB');
+  const va=ea?String(ea.value).trim():'',vb=eb?String(eb.value).trim():'';
+  if(va===''&&vb==='')return {empty:true};
+  const a=Number(va),b=Number(vb);
+  if(va===''||vb===''||!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99)return {err:'Enter both scores as whole numbers.'};
+  if(a===b)return {err:'A game cannot end in a draw. Check the scores.'};
+  return {a,b};
+}
 const PK='shuttle-turns-prefs';
 let P={theme:'system',big:false,awake:false};
 try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d&&typeof d==='object'){if(['system','light','dark'].includes(d.theme))P.theme=d.theme;P.big=!!d.big;P.awake=!!d.awake;}}catch(e){}
@@ -309,6 +335,8 @@ function viewHelp(){
     <p>Make teams of two (Team A, B, C...). Teams always stay together and take turns on court.</p>
     <h3>Tournament</h3>
     <p>Make teams. Every team plays every other team once. The best four teams play semi-finals, then the final and a third-place match. Tap the winning team after each match; scores are optional.</p>
+    <h3>Points table</h3>
+    <p>Before the first game, switch on Points table on the Players tab. Then enter the score after every game. At the end you get a table with games played, wins, losses and points, which you can share as an image.</p>
     <h3>Sharing</h3>
     <p>On the History tab you can share the game log or the tournament results as an image or as text, for example on WhatsApp.</p>
     <h3>Your data</h3>
@@ -447,6 +475,28 @@ function pickNextTeams(){
 const pickGame=()=>S.mode==='teams'?pickNextTeams():pickNext();
 
 /* ---- summary ---- */
+function ptsRows(){
+  const isT=S.mode==='teams';
+  const m=new Map();
+  const ent=(id,name,sub)=>{if(!m.has(id))m.set(id,{name,sub,p:0,w:0,l:0,pf:0,pa:0});return m.get(id);};
+  if(isT)S.teams.forEach(t=>ent(t.id,tname(t.id),rawPair(t.members)));else S.players.forEach(p=>ent(p.id,p.name,''));
+  S.games.forEach(g=>{
+    if(g.sa==null||g.sb==null)return;
+    const sides=[{ids:isT?[g.tm[0]]:g.teams[0],f:g.sa,a:g.sb},{ids:isT?[g.tm[1]]:g.teams[1],f:g.sb,a:g.sa}];
+    sides.forEach(sd=>sd.ids.forEach(id=>{
+      const r=m.get(id)||ent(id,isT?tname(id):nm(id),'');
+      r.p++;r.pf+=sd.f;r.pa+=sd.a;if(sd.f>sd.a)r.w++;else r.l++;
+    }));
+  });
+  const order=[...m.keys()];
+  return [...m.entries()].map(([id,r])=>({...r,id,d:r.pf-r.pa})).filter(r=>r.p>0).sort((x,y)=>y.w-x.w||y.d-x.d||y.pf-x.pf||order.indexOf(x.id)-order.indexOf(y.id));
+}
+const scoredGames=()=>S.games.filter(g=>g.sa!=null&&g.sb!=null).length;
+function pointsSpec(){
+  const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const n=scoredGames();
+  return {table:true,title:'POINTS TABLE',sub:`${date} \u00B7 ${n} ${n===1?'game':'games'}`,rows:ptsRows(),isT:S.mode==='teams'};
+}
 function summaryRows(){
   if(S.mode==='teams'){
     const played={};
@@ -460,11 +510,39 @@ function summaryRows(){
   return S.players.map((p,i)=>({name:p.name,sub:'',n:played[p.id],i})).sort((a,b)=>b.n-a.n||a.i-b.i);
 }
 function summaryText(){
+  if(S.pts&&scoredGames()){
+    const d0=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    const n=scoredGames();
+    return `\u{1F3F8} Badminton, ${d0}\nGames: ${n}\n\nPoints table\n`+ptsRows().map((r,i)=>`${i+1}. ${r.name}${r.sub?' ('+r.sub+')':''}: played ${r.p}, won ${r.w}, lost ${r.l}, points ${r.pf} (${r.d>0?'+':''}${r.d})`).join('\n');
+  }
   const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   const total=S.games.length;
   return `\u{1F3F8} Badminton, ${date}\nTotal games: ${total}\n\n`+summaryRows().map(r=>`${r.name}${r.sub?' ('+r.sub+')':''}: ${r.n} ${r.n===1?'game':'games'}`).join('\n');
 }
+function ptsCard(){
+  const rows=ptsRows();
+  const n=scoredGames();
+  const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
+  const text=summaryText();
+  return `<section class="card">
+    <h2>Points table</h2>
+    <div class="sumhead"><strong>${n} ${n===1?'game':'games'}</strong><span class="muted">${date}</span></div>
+    <div class="ptab"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span><span>Pts</span><span>+/-</span></div>
+    ${rows.map((r,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(r.name)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</span><span>${r.p}</span><span>${r.w}</span><span>${r.l}</span><span><b>${r.pf}</b></span><span>${r.d>0?'+':''}${r.d}</span></div>`).join('')}</div>
+    <p class="hint">P = games played, W = won, L = lost, Pts = points scored, +/- = points scored minus points conceded.</p>
+    <pre class="share" id="sumText">${esc(text)}</pre>
+    <div class="btns">
+      <button class="btn primary block" type="button" data-act="shareimg">Share table as image</button>
+      <button class="btn block" type="button" data-act="copy">Copy text</button>
+      <a class="btn block" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share text on WhatsApp</a>
+      <p class="hint" id="shareMsg" role="status" style="margin:0;text-align:center">${esc(shareMsg)}</p>
+      <p class="hint" id="copyMsg" role="status" style="margin:0;text-align:center">${esc(copyMsg)}</p>
+      <button class="linkbtn" type="button" data-act="reopen">Reopen session</button>
+    </div>
+  </section>`;
+}
 function summaryCard(){
+  if(S.pts&&scoredGames())return ptsCard();
   const rows=summaryRows();
   const max=Math.max(1,...rows.map(r=>r.n));
   const total=S.games.length;
@@ -487,10 +565,54 @@ function summaryCard(){
 /* ---- game log as an image ---- */
 function gameLogSpec(){
   const games=S.games.slice(0,S.cur+1);
-  return {title:'GAME LOG',sub:`${fullDate()} \u00B7 ${games.length} ${games.length===1?'game':'games'}`,blocks:games.map((g,i)=>({n:'GAME '+(i+1),who:gameWho(g),rest:gameRest(g)}))};
+  return {title:'GAME LOG',sub:`${fullDate()} \u00B7 ${games.length} ${games.length===1?'game':'games'}`,blocks:games.map((g,i)=>({n:'GAME '+(i+1)+(g.sa!=null?'  \u00B7  SCORE '+g.sa+' - '+g.sb:''),who:gameWho(g),rest:gameRest(g)}))};
+}
+function tableCanvas(spec){
+  const W=1080,P=48,IW=W-2*P;
+  const c=document.createElement('canvas');const ctx=c.getContext('2d');
+  const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
+  const rows=spec.rows,HEAD=250,TH=70,RH=spec.isT?112:92;
+  const H=HEAD+30+TH+rows.length*RH+60+110;
+  c.width=W;c.height=H;
+  ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1c6b4f';ctx.fillRect(0,0,W,HEAD);
+  ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#dff3e7';ctx.font=`600 28px ${BODY}`;ctx.fillText('BADMINTON \u00B7 DOUBLES',P,82);
+  ctx.fillStyle='#ffffff';ctx.font=`700 96px ${DISP}`;ctx.fillText(spec.title,P,170);
+  ctx.fillStyle='#dff3e7';ctx.font=`500 32px ${BODY}`;ctx.fillText(spec.sub,P,222);
+  const cols=[{k:'p',l:'P',x:W-P-470},{k:'w',l:'W',x:W-P-385},{k:'l',l:'L',x:W-P-300},{k:'pf',l:'PTS',x:W-P-195},{k:'d',l:'+/-',x:W-P-60}];
+  let y=HEAD+30;
+  ctx.fillStyle='#1c6b4f';ctx.fillRect(P,y,IW,TH);
+  ctx.fillStyle='#ffffff';ctx.font=`700 30px ${BODY}`;ctx.textAlign='left';ctx.fillText('#  NAME',P+22,y+46);
+  ctx.textAlign='center';cols.forEach(co=>ctx.fillText(co.l,co.x,y+46));
+  y+=TH;
+  rows.forEach((r,i)=>{
+    ctx.fillStyle=i===0?'#fff3cf':(i%2?'#f7faf7':'#ffffff');ctx.fillRect(P,y,IW,RH);
+    ctx.strokeStyle='#d6e0d8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(P,y+RH);ctx.lineTo(P+IW,y+RH);ctx.stroke();
+    ctx.textAlign='left';
+    ctx.fillStyle='#587064';ctx.font=`700 36px ${DISP}`;ctx.fillText(String(i+1),P+22,y+(spec.isT?52:58));
+    ctx.fillStyle='#13201a';ctx.font=`700 44px ${DISP}`;
+    let nm2=r.name;const maxW=cols[0].x-40-(P+76);
+    while(ctx.measureText(nm2).width>maxW&&nm2.length>3)nm2=nm2.slice(0,-1);
+    if(nm2!==r.name)nm2=nm2.slice(0,-1)+'\u2026';
+    ctx.fillText(nm2,P+76,y+(spec.isT?52:58));
+    if(spec.isT&&r.sub){ctx.fillStyle='#587064';ctx.font=`500 28px ${BODY}`;let sb2=r.sub;while(ctx.measureText(sb2).width>maxW&&sb2.length>3)sb2=sb2.slice(0,-1);ctx.fillText(sb2,P+76,y+92);}
+    ctx.textAlign='center';
+    cols.forEach(co=>{
+      let v=r[co.k];if(co.k==='d')v=(v>0?'+':'')+v;
+      ctx.fillStyle=co.k==='pf'?'#1c6b4f':'#13201a';ctx.font=co.k==='pf'?`700 46px ${DISP}`:`600 40px ${DISP}`;
+      ctx.fillText(String(v),co.x,y+(spec.isT?60:62));
+    });
+    y+=RH;
+  });
+  ctx.textAlign='left';ctx.fillStyle='#587064';ctx.font=`500 26px ${BODY}`;
+  ctx.fillText('P played \u00B7 W won \u00B7 L lost \u00B7 PTS points scored \u00B7 +/- difference',P,y+46);
+  ctx.fillText('Shuttle Turns',P,H-48);
+  return c;
 }
 function logCanvas(spec){
   spec=spec||gameLogSpec();
+  if(spec.table)return tableCanvas(spec);
   const W=1080,P=56,IW=W-2*P;
   const c=document.createElement('canvas');const ctx=c.getContext('2d');
   const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
@@ -535,9 +657,9 @@ async function shareImage(){
   const say=m=>{shareMsg=m;const el=$('#shareMsg');if(el)el.textContent=m;};
   if(!S.games.length&&!S.tour)return;
   let canvas;
-  try{canvas=logCanvas(S.mode==='tour'&&S.tour?tourSpec():undefined);}catch(e){say('Could not draw the image.');return;}
+  try{canvas=logCanvas(S.mode==='tour'&&S.tour?tourSpec():(S.pts&&S.ended&&scoredGames()?pointsSpec():undefined));}catch(e){say('Could not draw the image.');return;}
   const dataUrl=canvas.toDataURL('image/png');
-  const name='badminton-game-log.png';
+  const name=(S.pts&&S.ended&&S.mode!=='tour')?'badminton-points-table.png':'badminton-game-log.png';
   const cap=window.Capacitor;
   try{
     const pl=cap&&cap.Plugins;
@@ -695,13 +817,13 @@ function viewTourPlay(){
         <button class="btn primary block" type="button" data-act="win" data-id="${m.a}">${esc(tname(m.a))} won</button>
         <button class="btn primary block" type="button" data-act="win" data-id="${m.b}">${esc(tname(m.b))} won</button>
       </div>
-      <p class="slab" style="font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px">Score (optional)</p>
+      <p class="slab" style="font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px">Score (${S.pts?'required':'optional'})</p>
       <div class="scoregrid">
         <input id="sa" class="field" type="text" inputmode="numeric" placeholder="${esc(tname(m.a))}" aria-label="${esc(tname(m.a))} score">
         <input id="sb" class="field" type="text" inputmode="numeric" placeholder="${esc(tname(m.b))}" aria-label="${esc(tname(m.b))} score">
       </div>
       <p class="msg" id="tourMsg" role="status"></p>
-      <p class="hint" style="margin-top:0">Enter the score first if you want it saved, then tap the winner.</p>
+      <p class="hint" style="margin-top:0">${S.pts?'Enter both scores, then tap the winner.':'Enter the score first if you want it saved, then tap the winner.'}</p>
     </section>
     ${nextCard}
     ${m.round==='rr'?table:''}
@@ -780,7 +902,8 @@ function viewPlayers(){
         <button type="button" data-act="modeTour" aria-pressed="${S.mode==='tour'}" ${started?'aria-disabled="true"':''}>Tournament</button>
       </div>
       <p class="hint">${S.mode==='tour'?'Teams of two play each other once. The best teams go to semi-finals and a final, and you get a champion.':isT?'Two players stay together as a team. Teams rotate so every team gets equal turns.':'Everyone rotates on their own. You choose partners on court.'}${started?' ':''}</p>
-      ${started&&modeNote?`<div class="warn" role="alert"><span><b>Game in play.</b> Clear all games first to change the style.</span><button class="btn small" type="button" data-act="gotoreset">Go to Clear</button></div>`:''}
+      <button class="ptsrow" type="button" data-act="togglepts" role="switch" aria-checked="${S.pts}" ${started?'aria-disabled="true"':''}><span><b>Points table</b><small>Enter the score after every game and get a points table at the end.</small></span><span class="pill${S.pts?' on':''}">${S.pts?'On':'Off'}</span></button>
+      ${started&&modeNote?`<div class="warn" role="alert"><span><b>Game in play.</b> Clear all games first to change this.</span><button class="btn small" type="button" data-act="gotoreset">Go to Clear</button></div>`:''}
     </section>`;
 
   return `<div class="stack">
@@ -859,6 +982,15 @@ function viewPlay(){
       ${onCourt}
       <div class="rest"><h3>Resting now</h3><div class="chips">${restNow}</div></div>
     </section>
+    ${S.pts?`<section class="card">
+      <h2>Game ${n} score</h2>
+      <div class="scoreform">
+        <label>${esc(isT?tname(cur.tm[0]):rawPair(cur.teams[0]))}<input id="scA" class="field" type="number" inputmode="numeric" min="0" max="99" value="${cur.sa!=null?cur.sa:''}" placeholder="0"></label>
+        <label>${esc(isT?tname(cur.tm[1]):rawPair(cur.teams[1]))}<input id="scB" class="field" type="number" inputmode="numeric" min="0" max="99" value="${cur.sb!=null?cur.sb:''}" placeholder="0"></label>
+      </div>
+      <p class="msg" id="scMsg" role="status"></p>
+      <p class="hint" style="margin:0">Enter the final score, then tap Next game or End games.</p>
+    </section>`:''}
     <button class="btn primary block" type="button" data-act="nextgame" ${nxt?'':'disabled'}>Next game</button>
     ${nextCard}
     ${laterCard}
@@ -896,7 +1028,7 @@ function viewHistory(){
   const summary=spread<=1
     ?`<span class="pill">Even</span><span class="muted">Every ${unit} is within 1 turn of each other.</span>`
     :`<span class="pill rest-pill">Gap of ${spread}</span><span class="muted">Whoever rested will play next.</span>`;
-  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small></li>`).join('');
+  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${g.sa!=null?` <b>${g.sa}-${g.sb}</b>`:''}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small></li>`).join('');
   return `<div class="stack">
     ${S.ended?summaryCard():''}
     <section class="card">
@@ -919,7 +1051,7 @@ function dialogHtml(){
   if(!dialog)return '';
   if(dialog==='image')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Game log image</h3><img src="${imageUrl}" alt="Game log" style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;background:#fff"><p>Press and hold the image to save or share it.</p><button class="btn primary" type="button" data-act="cancel">Close</button></div></div>`;
   const d=dialog==='end'
-    ?{t:'End games for today?',b:'This closes the session and shows the summary to share.',y:'End games',a:'confirmend'}
+    ?{t:'End games for today?',b:(S.pts&&dropNote?`Game ${S.cur+1} has no score, so it will not be counted. `:'')+'This closes the session and shows the summary to share.',y:'End games',a:'confirmend'}
     :{t:S.tour?'Reset the tournament?':'Start a new session?',b:S.tour?'This clears all matches and results. Players and teams stay.':'This clears all games from the current session.',y:'Yes, clear',a:'confirmreset'};
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
@@ -958,6 +1090,7 @@ const actions={
   start(){if(S.mode==='tour'){startTour();return;}const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
   nextgame(){
     if(S.ended)return;
+    if(S.pts){const r=readScore();if(r.err){scMsg(r.err);return false;}if(r.empty){scMsg('Enter the score of this game first.');return false;}S.games[S.cur].sa=r.a;S.games[S.cur].sb=r.b;}
     if(S.cur+1<S.games.length){S.cur++;}
     else{const g=pickGame();if(!g)return;S.games.push({...g,at:Date.now()});S.cur=S.games.length-1;}
     S.games[S.cur].at=Date.now();
@@ -965,6 +1098,7 @@ const actions={
   prev(){if(S.cur>0)S.cur--;},
   shareimg(){shareImage();},
   suggest(){S.teamMode=!S.teamMode;},
+  togglepts(){if(!S.games.length&&!S.tour)S.pts=!S.pts;else modeNote=true;},
   modeSolo(){if(!S.games.length&&!S.tour)S.mode='solo';else modeNote=true;},
   modeTeams(){if(!S.games.length&&!S.tour){S.mode='teams';if(!S.teams.length)autopair();}else modeNote=true;},
   modeTour(){if(!S.games.length&&!S.tour){S.mode='tour';if(!S.teams.length)autopair();}else modeNote=true;},
@@ -982,6 +1116,7 @@ const actions={
     const ea=$('#sa'),eb=$('#sb');
     const va=ea?String(ea.value).trim():'',vb=eb?String(eb.value).trim():'';
     let sa=null,sb=null;
+    if(S.pts&&(va===''||vb==='')){msg('Enter the score of both teams first.');return false;}
     if(va!==''||vb!==''){
       const na=Number(va),nb=Number(vb);
       if(va===''||vb===''||!Number.isInteger(na)||!Number.isInteger(nb)||na<0||nb<0){msg('Enter both scores as whole numbers, or leave both empty.');return false;}
@@ -1007,8 +1142,17 @@ const actions={
   },
   autopair(){autopair();},
   removeteam(id){S.teams=S.teams.filter(x=>x.id!==id);},
-  end(){dialog='end';},
-  confirmend(){dialog=null;copyMsg='';dropPlanned();S.ended=true;S.endedAt=Date.now();S.tab='history';},
+  end(){
+    dropNote=false;
+    if(S.pts){
+      const r=readScore();
+      if(r.err){scMsg(r.err);return false;}
+      if(r.empty){if(S.cur===0){scMsg('Enter the score of this game first.');return false;}dropNote=true;}
+      else{S.games[S.cur].sa=r.a;S.games[S.cur].sb=r.b;}
+    }
+    dialog='end';
+  },
+  confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else dropPlanned();dropNote=false;S.ended=true;S.endedAt=Date.now();S.tab='history';},
   reopen(){S.ended=false;S.endedAt=null;copyMsg='';S.tab='play';},
   copy(){
     const text=shareText();
@@ -1049,7 +1193,7 @@ const actions={
   contactnew(){cst={s:'idle',m:''};},
   gotoreset(){window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
   confirmreset(){dialog=null;modeNote=false;S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
-  cancel(){dialog=null;}
+  cancel(){dialog=null;dropNote=false;}
 };
 document.addEventListener('click',e=>{
   if(!e.target.closest('#menu,#menuBtn'))closeMenu();
