@@ -967,6 +967,7 @@ function viewPlay(){
     noNext='At least 2 available teams are needed for the next game. Tap Back on the Players tab for anyone returning.';
   }else{
     onCourt=court('Pair 1','Pair 2')+(S.ended?'':`<p class="hint" style="margin:8px 0 0">${swapSel.i===S.cur&&swapSel.id?`Now tap the player to swap with ${esc(nm(swapSel.id))}.`:'To change partners or bring a resting player in, tap one player, then another to swap them.'}</p>`);
+    if(!S.ended){const onN=new Set(cur.teams.flat());cur.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id);}
     restNow=cur.bench.length?cur.bench.map(id=>S.ended?`<span class="chip">${esc(nm(id))}</span>`:`<button type="button" class="chip pickc${swapSel.i===S.cur&&swapSel.id===id?' sel':''}" data-act="pickp" data-id="${id}" aria-pressed="${swapSel.i===S.cur&&swapSel.id===id}">${esc(nm(id))}</button>`).join(''):'<span class="muted">Nobody. All active players are on court.</span>';
     nextBody=nxt?`<div class="versus"><span>${pair(nxt.teams[0])}</span><em>vs</em><span>${pair(nxt.teams[1])}</span></div>`:'';
     restNext=nxt?chips(nxt.bench):'';
@@ -1110,7 +1111,7 @@ const actions={
     const onC=x=>g.teams.some(t=>t.includes(x));
     if(!onC(a)&&!onC(b)){swapSel={i:S.cur,id:b};return;}
     g.teams=g.teams.map(t=>t.map(x=>x===a?b:x===b?a:x));
-    g.bench=(g.bench||[]).map(x=>x===a?b:x===b?a:x);
+    { const onN=new Set(g.teams.flat()); g.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id); }
     swapSel={i:-1,id:0};
   },
   shareimg(){shareImage();},
