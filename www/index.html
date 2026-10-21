@@ -170,6 +170,8 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
   position:relative;z-index:1;display:flex;align-items:center;justify-content:center;text-align:center;
   padding:30px 8px;font:700 clamp(22px,7vw,32px)/1.05 var(--font-display);color:var(--court-ink);overflow-wrap:anywhere;min-width:0;
 }
+.pickp{border:0;background:transparent;cursor:pointer;width:100%;font-family:inherit}
+.pickp.sel{outline:4px solid var(--shuttle);outline-offset:-6px;border-radius:10px;background:rgba(255,255,255,.12)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-weight:600;overflow-wrap:anywhere}
 .rest{margin-top:14px;display:flex;flex-direction:column;gap:8px}
@@ -282,7 +284,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 let S=load()||fresh();
 let dialog=null;
 let copyMsg='';
-let contactOpen=false,helpOpen=false,modeNote=false,dropNote=false;
+let contactOpen=false,helpOpen=false,modeNote=false,dropNote=false,swapSel={i:-1,id:0};
 let scDraft={k:-1,a:'',b:''};
 const scVal=(side,g)=>scDraft.k===S.cur?scDraft[side]:(g['s'+side]!=null?g['s'+side]:'');
 document.addEventListener('input',e=>{
@@ -407,7 +409,7 @@ const tmembers=tid=>{const t=S.teams.find(x=>x.id===tid);return t?t.members:[];}
 const tpair=tid=>pair(tmembers(tid));
 const playerActive=id=>{const p=S.players.find(p=>p.id===id);return !!(p&&p.active);};
 const teamActive=t=>t.members.every(playerActive);
-const gameWho=g=>g.mode==='teams'?`${tname(g.tm[0])} vs ${tname(g.tm[1])}`:(S.pts?`${rawPair(g.teams[0])} vs ${rawPair(g.teams[1])}`:four(g).map(nm).join(', '));
+const gameWho=g=>g.mode==='teams'?`${tname(g.tm[0])} vs ${tname(g.tm[1])}`:`${rawPair(g.teams[0])} vs ${rawPair(g.teams[1])}`;
 const gameRest=g=>g.mode==='teams'
   ?`${rawPair(g.teams[0])} vs ${rawPair(g.teams[1])} \u00B7 `+((g.benchT&&g.benchT.length)?'Resting: '+g.benchT.map(tid=>tname(tid)).join(', '):'No team resting')
   :(g.bench.length?'Resting: '+g.bench.map(id=>nm(id)).join(', '):'No one resting');
@@ -948,7 +950,7 @@ function viewPlay(){
   const isT=S.mode==='teams';
   const chips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(nm(id))}</span>`).join(''):'<span class="muted">Nobody</span>';
   const tchips=ids=>ids.length?ids.map(id=>`<span class="chip">${esc(tname(id))} · ${tpair(id)}</span>`).join(''):'<span class="muted">Nobody</span>';
-  const slots=team=>team.map(id=>`<div class="slot">${esc(nm(id))}</div>`).join('');
+  const slots=team=>team.map(id=>isT?`<div class="slot">${esc(nm(id))}</div>`:`<button type="button" class="slot pickp${swapSel.i===S.cur&&swapSel.id===id?' sel':''}" data-act="pickp" data-id="${id}" aria-pressed="${swapSel.i===S.cur&&swapSel.id===id}">${esc(nm(id))}</button>`).join('');
   const court=(l1,l2)=>`<div class="court" role="group" aria-label="Game ${n} court">
         <div class="half a"><span class="tag">${esc(l1)}</span>${slots(cur.teams[0])}</div>
         <div class="net" aria-hidden="true"></div>
@@ -962,13 +964,9 @@ function viewPlay(){
     restNext=nxt?tchips(nxt.benchT):'';
     noNext='At least 2 available teams are needed for the next game. Tap Back on the Players tab for anyone returning.';
   }else{
-    onCourt=S.pts
-      ?court('Pair 1','Pair 2')
-      :`<div class="onc" role="group" aria-label="Game ${n} players">${four(cur).map(id=>`<div class="pl">${esc(nm(id))}</div>`).join('')}</div>`;
+    onCourt=court('Pair 1','Pair 2')+(S.ended?'':`<p class="hint" style="margin:8px 0 0">${swapSel.i===S.cur&&swapSel.id?`Now tap the player to swap with ${esc(nm(swapSel.id))}.`:'To change partners, tap one player, then another to swap them.'}</p>`);
     restNow=cur.bench.length?chips(cur.bench):'<span class="muted">Nobody. All active players are on court.</span>';
-    nextBody=nxt?(S.pts
-      ?`<div class="versus"><span>${pair(nxt.teams[0])}</span><em>vs</em><span>${pair(nxt.teams[1])}</span></div>`
-      :`<div class="chips">${chips(four(nxt))}</div>`):'';
+    nextBody=nxt?`<div class="versus"><span>${pair(nxt.teams[0])}</span><em>vs</em><span>${pair(nxt.teams[1])}</span></div>`:'';
     restNext=nxt?chips(nxt.bench):'';
     noNext='At least 4 active players are needed for the next game. Tap Back on the Players tab for anyone returning.';
     switchCard='';
@@ -1093,7 +1091,7 @@ function autopair(){
   for(let i=0;i+1<free.length;i+=2)addTeam(free[i].id,free[i+1].id);
 }
 const actions={
-  start(){scDraft={k:-1,a:'',b:''};if(S.mode==='tour'){startTour();return;}const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
+  start(){scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};if(S.mode==='tour'){startTour();return;}const g=pickGame();if(!g)return;S.games=[{...g,at:Date.now()}];S.cur=0;S.tab='play';},
   nextgame(){
     if(S.ended)return;
     if(S.pts){const r=readScore();if(r.err){scMsg(r.err);return false;}if(r.empty){scMsg('Enter the score of this game first.');return false;}S.games[S.cur].sa=r.a;S.games[S.cur].sb=r.b;scDraft={k:-1,a:'',b:''};}
@@ -1102,6 +1100,14 @@ const actions={
     S.games[S.cur].at=Date.now();
   },
   prev(){if(S.cur>0)S.cur--;},
+  pickp(id){
+    const g=S.games[S.cur];if(!g||S.ended||g.mode==='teams')return false;
+    if(swapSel.i!==S.cur||!swapSel.id){swapSel={i:S.cur,id};return;}
+    if(swapSel.id===id){swapSel={i:-1,id:0};return;}
+    const a=swapSel.id,b=id;
+    g.teams=g.teams.map(t=>t.map(x=>x===a?b:x===b?a:x));
+    swapSel={i:-1,id:0};
+  },
   shareimg(){shareImage();},
   suggest(){S.teamMode=!S.teamMode;},
   togglepts(){if(!S.games.length&&!S.tour)S.pts=!S.pts;else modeNote=true;},
@@ -1198,7 +1204,7 @@ const actions={
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
   gotoreset(){window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
-  confirmreset(){dialog=null;modeNote=false;scDraft={k:-1,a:'',b:''};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
+  confirmreset(){dialog=null;modeNote=false;scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;dropNote=false;}
 };
 document.addEventListener('click',e=>{
