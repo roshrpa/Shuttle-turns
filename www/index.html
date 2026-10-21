@@ -171,6 +171,8 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
   padding:30px 8px;font:700 clamp(22px,7vw,32px)/1.05 var(--font-display);color:var(--court-ink);overflow-wrap:anywhere;min-width:0;
 }
 .pickp{border:0;background:transparent;cursor:pointer;width:100%;font-family:inherit}
+.pickc{cursor:pointer;font-family:inherit;font-size:inherit;color:inherit}
+.pickc.sel{outline:3px solid var(--shuttle);background:var(--shuttle-bg)}
 .pickp.sel{outline:4px solid var(--shuttle);outline-offset:-6px;border-radius:10px;background:rgba(255,255,255,.12)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-weight:600;overflow-wrap:anywhere}
@@ -964,8 +966,8 @@ function viewPlay(){
     restNext=nxt?tchips(nxt.benchT):'';
     noNext='At least 2 available teams are needed for the next game. Tap Back on the Players tab for anyone returning.';
   }else{
-    onCourt=court('Pair 1','Pair 2')+(S.ended?'':`<p class="hint" style="margin:8px 0 0">${swapSel.i===S.cur&&swapSel.id?`Now tap the player to swap with ${esc(nm(swapSel.id))}.`:'To change partners, tap one player, then another to swap them.'}</p>`);
-    restNow=cur.bench.length?chips(cur.bench):'<span class="muted">Nobody. All active players are on court.</span>';
+    onCourt=court('Pair 1','Pair 2')+(S.ended?'':`<p class="hint" style="margin:8px 0 0">${swapSel.i===S.cur&&swapSel.id?`Now tap the player to swap with ${esc(nm(swapSel.id))}.`:'To change partners or bring a resting player in, tap one player, then another to swap them.'}</p>`);
+    restNow=cur.bench.length?cur.bench.map(id=>S.ended?`<span class="chip">${esc(nm(id))}</span>`:`<button type="button" class="chip pickc${swapSel.i===S.cur&&swapSel.id===id?' sel':''}" data-act="pickp" data-id="${id}" aria-pressed="${swapSel.i===S.cur&&swapSel.id===id}">${esc(nm(id))}</button>`).join(''):'<span class="muted">Nobody. All active players are on court.</span>';
     nextBody=nxt?`<div class="versus"><span>${pair(nxt.teams[0])}</span><em>vs</em><span>${pair(nxt.teams[1])}</span></div>`:'';
     restNext=nxt?chips(nxt.bench):'';
     noNext='At least 4 active players are needed for the next game. Tap Back on the Players tab for anyone returning.';
@@ -1105,7 +1107,10 @@ const actions={
     if(swapSel.i!==S.cur||!swapSel.id){swapSel={i:S.cur,id};return;}
     if(swapSel.id===id){swapSel={i:-1,id:0};return;}
     const a=swapSel.id,b=id;
+    const onC=x=>g.teams.some(t=>t.includes(x));
+    if(!onC(a)&&!onC(b)){swapSel={i:S.cur,id:b};return;}
     g.teams=g.teams.map(t=>t.map(x=>x===a?b:x===b?a:x));
+    g.bench=(g.bench||[]).map(x=>x===a?b:x===b?a:x);
     swapSel={i:-1,id:0};
   },
   shareimg(){shareImage();},
