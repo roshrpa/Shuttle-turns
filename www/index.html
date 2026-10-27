@@ -73,6 +73,21 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 }
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn.block{width:100%}
+.payfields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.payfields .field{padding:0 10px}
+.lbl{display:flex;flex-direction:column;gap:4px;font:600 13px var(--font-body);color:var(--muted)}
+.payrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.gck{display:inline-flex;align-items:center;gap:4px;font:600 12px var(--font-body);color:var(--muted)}.gck input{width:18px;height:18px}.gline{padding:4px 0 10px}.gline label{display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 13px var(--font-body);color:var(--muted)}.gline .field{width:110px;min-height:40px}.payitem{border-bottom:1px solid var(--line)}.payitem .payrow{border-bottom:0}.chip.unpaid{border-color:var(--danger);color:var(--danger)}.chip .x,.pk.no{color:var(--danger);font-weight:700}.pk.ok{color:var(--accent);font-weight:700}
+.pendbtn{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:56px;padding:0 8px;border:1px solid var(--danger);border-radius:12px;background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger);font:700 15px/1.1 var(--font-body);cursor:pointer}.pendbtn small{font-size:11px;font-weight:600}
+.sesitem{display:flex;flex-direction:column}.pendlink{margin-top:6px;align-self:flex-start;border:1px solid var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--surface));color:var(--danger);border-radius:999px;min-height:36px;padding:0 14px;font:600 13px var(--font-body);cursor:pointer}
+.payrow .who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.payrow .sub{margin:12px 0 2px;font:700 12px var(--font-body);text-transform:uppercase;color:var(--muted)}.chip.gst{min-height:30px;padding:0 10px;font-size:12px;opacity:.75}.chip.gst.sel{opacity:1}.payrow .chip{cursor:pointer}.payrow.off .chip{opacity:.5;text-decoration:line-through}
+.chip.sel{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.stepper{display:flex;align-items:center;gap:10px}.stepper b{min-width:52px;text-align:center}
+.payh,.payr{display:grid;grid-template-columns:minmax(90px,1fr) 56px 104px;gap:4px;align-items:center;padding:8px 0;font-size:15px}
+.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
+.payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
+.payh span:not(.n),.payr span:not(.n){text-align:right}
+.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
+.okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
 .btn.small{min-height:40px;padding:0 12px;font-size:14px}
 .btn.icon{min-width:40px;padding:0}
 .btn:disabled{opacity:.4;cursor:not-allowed}
@@ -229,8 +244,10 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
   position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
   padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
 }
-.nav-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tab{min-height:48px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:600 14px var(--font-body);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.nav-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{min-height:48px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:600 13px var(--font-body);letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.sesbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-6px 0 14px;font:600 14px var(--font-body);color:var(--muted)}.sesbar[hidden],.nav[hidden]{display:none}.sesback{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;min-height:36px;padding:0 14px;font:600 14px var(--font-body);cursor:pointer}
+.sescard{display:flex;gap:8px;align-items:stretch;margin-top:10px}.sesmain{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 16px var(--font-body);cursor:pointer}.sesmain small{font-weight:400;color:var(--muted);font-size:13px}.sescard .btn.icon{min-height:auto;height:auto;align-self:stretch}
 .tab.on{background:var(--tab-active);color:var(--accent)}
 </style>
 
@@ -244,6 +261,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     </button>
     <div id="menu" class="menu" hidden></div>
   </header>
+  <div id="sesbar" class="sesbar" hidden></div>
   <main id="view"></main>
 </div>
 <nav class="nav" aria-label="Sections">
@@ -251,6 +269,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     <button class="tab" data-tab="players" type="button">Players</button>
     <button class="tab" data-tab="play" type="button">Play</button>
     <button class="tab" data-tab="history" type="button">History</button>
+    <button class="tab" data-tab="pay" type="button">Pay</button>
   </div>
 </nav>
 <div id="modal"></div>
@@ -266,12 +285,11 @@ const inc=(m,k)=>{m[k]=(m[k]||0)+1;};
 
 function fresh(){
   return {players:SAMPLE.map((n,i)=>({id:i+1,name:n,active:true,base:0})),nextId:SAMPLE.length+1,
-    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,pts:false,teamMode:false,ended:false,tab:'players',sample:true};
+    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,pts:false,teamMode:false,ended:false,tab:'players',sample:true,pay:payDefault(),guestFee:'2'};
 }
-function load(){
+function load(){try{const raw=localStorage.getItem(KEY);return raw?normalize(JSON.parse(raw)):null;}catch(e){return null;}}
+function normalize(d){
   try{
-    const raw=localStorage.getItem(KEY); if(!raw) return null;
-    const d=JSON.parse(raw);
     if(!d||!Array.isArray(d.players)||!Array.isArray(d.games)) return null;
     d.teamMode=false;
     if(!d.tour||typeof d.tour!=='object'||!Array.isArray(d.tour.matches)||!Array.isArray(d.tour.ids)) d.tour=null;
@@ -282,17 +300,178 @@ function load(){
     if(!Array.isArray(d.teams)) d.teams=[];
     if(!d.nextTid) d.nextTid=d.teams.reduce((m,t)=>Math.max(m,t.id),0)+1;
     if(!d.nextId) d.nextId=d.players.reduce((m,p)=>Math.max(m,p.id),0)+1;
-    if(!['players','play','history'].includes(d.tab)) d.tab='players';
+    if(!['players','play','history','pay'].includes(d.tab)) d.tab='players';
+    if(typeof d.guestFee!=='string')d.guestFee='2';
+    if(!d.pay||typeof d.pay!=='object')d.pay=payDefault();else d.pay={...payDefault(),...d.pay};
     return d;
   }catch(e){return null;}
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-let S=load()||fresh();
+/* ---- payments ---- */
+function payDefault(){return {court:'',hours:'',shuttle:'',admin:0,hrs:{},out:{},paid:{},round:false,final:false,guest:{}};}
+const fmtM=(v,rd)=>v.toFixed(2)+' AED';
+const payH=(id,H)=>{const v=S.pay.hrs[id];return v===undefined?H:Math.min(H,Math.max(0,v));};
+function payCalc(){
+  const P=S.pay,court=parseFloat(P.court),H=parseFloat(P.hours),shuttle=0;
+  if(!(court>0)||!(H>0))return {err:'Enter the court fee and the booked hours.'};
+  const feeOf=id=>{const v=parseFloat(S.guestFee);return v>0?v:0;};
+  const att=S.players.filter(p=>!P.out[p.id]).map(p=>({id:p.id,name:p.name,guest:!!(P.guest&&P.guest[p.id]),h:payH(p.id,H),share:0})).filter(a=>a.h>0);
+  if(!att.length)return {err:'Mark at least one player as played.'};
+  const Hm=Math.max(...att.map(a=>a.h)),rate=court/Hm;
+  const ts=[...new Set(att.map(a=>a.h))].sort((a,b)=>a-b);let prev=0;
+  ts.forEach(t=>{const m=att.filter(a=>a.h>=t);const seg=rate*(t-prev)/m.length;m.forEach(a=>{a.share+=seg;});prev=t;});
+  const regs=att.filter(a=>!a.guest),gs=att.filter(a=>a.guest);
+  const useG=regs.length>0&&gs.length>0;
+  const credit=useG?gs.reduce((q,a)=>q+feeOf(a.id),0):0;
+  const pool=regs.length?regs:att;
+  const perReg=(shuttle-credit)/pool.length;
+  att.forEach(a=>{a.shut=(useG&&a.guest)?feeOf(a.id):(regs.length&&a.guest?0:perReg);a.raw=Math.max(0,a.share+a.shut);});
+  if(!useG)att.forEach(a=>{a.shut=shuttle/att.length;a.raw=a.share+a.shut;});
+  if(P.round)att.forEach(a=>{a.total=Math.ceil(a.raw*2-1e-7)/2;});
+  else{
+    att.forEach(a=>{a.c=Math.floor(a.raw*100+1e-7);a.f=a.raw*100-a.c;});
+    let left=Math.round((court+shuttle)*100)-att.reduce((q,a)=>q+a.c,0);
+    [...att].sort((x,y)=>y.f-x.f).forEach(a=>{if(left>0){a.c++;left--;}});
+    att.forEach(a=>{a.total=a.c/100;});
+  }
+  const sum=att.reduce((s,a)=>s+a.total,0);
+  return {rows:att,court,shuttle,H,Hm,sum,spent:court+shuttle,rd:P.round,useG,credit};
+}
+function payErr(c){return c.err||'';}
+const hrTxt=h=>(Math.round(h*100)/100)+' h';
+function payText(){
+  const c=payCalc();if(c.err)return '';const P=S.pay;
+  const d=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  return `\u{1F3F8} Badminton payments, ${d}\nCourt ${fmtM(c.court,false)} (${hrTxt(c.H)})`+(c.shuttle?` + shuttles ${fmtM(c.shuttle,false)}`:'')+`\n\n`+
+    c.rows.map(r=>`${r.name}${r.guest?' (guest)':''}: ${fmtM(r.total,c.rd)} (${hrTxt(r.h)})${P.paid[r.id]?' ✅ paid':' ❌ not paid'}`).join('\n')+
+    (c.useG?`\n\nGuest extra amounts are included and lower the others' share.`:'')+'';
+}
+function payInner(){
+  const P=S.pay,c=payCalc(),lock=P.final;
+  const H=parseFloat(P.hours);
+  const rowOf=(p,isG)=>{
+    const out=!!P.out[p.id],h=H>0?payH(p.id,H):0;
+    const isGuest=!!(P.guest&&P.guest[p.id]);
+    return `<div class="payitem"><div class="payrow${out?' off':''}"><span class="who"><button type="button" class="chip payin${out?'':' sel'}" data-act="payin" data-id="${p.id}" aria-pressed="${!out}" ${lock?'aria-disabled="true"':''}>${esc(p.name)}</button>${out?'':`<button type="button" class="chip gst${isGuest?' sel':''}" data-act="payguest" data-id="${p.id}" aria-pressed="${isGuest}" ${lock?'aria-disabled="true"':''}>Guest</button>`}</span>
+      ${out?'<span class="muted">Absent</span>':`<span class="stepper"><button type="button" class="btn small icon" data-act="payhm" data-id="${p.id}" aria-label="Less time for ${esc(p.name)}" ${lock?'aria-disabled="true"':''}>−</button><b>${H>0?hrTxt(h):'-'}</b><button type="button" class="btn small icon" data-act="payhp" data-id="${p.id}" aria-label="More time for ${esc(p.name)}" ${lock?'aria-disabled="true"':''}>+</button></span>`}</div></div>`;
+  };
+  const pl=S.players.map(p=>rowOf(p,false)).join('');
+  const err=payErr(c);let res;
+  if(c.err){res=`<p class="hint">${esc(c.err)}</p>`;}
+  else{
+    res=`<div class="ptab"><div class="payh"><span class="n">Name</span><span>Hours</span><span>Amount</span></div>`+
+      c.rows.map(r=>`<div class="payr"><span class="n">${lock?(P.paid[r.id]?'<span class="pk ok">\u2713</span> ':'<span class="pk no">\u2717</span> '):''}${esc(r.name)}${r.guest?'<small>Guest</small>':''}</span><span>${hrTxt(r.h)}</span><span><b>${fmtM(r.total,c.rd)}</b></span></div>`).join('')+`</div>
+      <p class="hint">Total to collect: <b>${fmtM(c.sum,c.rd)}</b>. Bill: ${fmtM(c.spent,false)}${c.useG?`. Guest extra amounts (${fmtM(c.credit,false)}) reduce the others' share`:''}${c.Hm<c.H?` (court split over the ${hrTxt(c.Hm)} actually played)`:''}.</p>`+
+      (lock?`<div class="paidlist"><h3>Who has paid?</h3><p class="hint" style="margin:0 0 6px">When someone pays, tap <b>Mark as paid</b> next to their name. Tap <b>Paid</b> again to undo.</p>${c.rows.map(r=>`<div class="prow"><span class="pn">${esc(r.name)}<small>${fmtM(r.total,c.rd)}</small></span><button type="button" class="pst ${P.paid[r.id]?'yes':'no'}" data-act="paytick" data-id="${r.id}" aria-pressed="${!!P.paid[r.id]}">${P.paid[r.id]?'\u2713 Paid':'Mark as paid'}</button></div>`).join('')}</div>`:'');
+  }
+  let acts;
+  if(!lock)acts=`<p class="hint" style="margin:0">Draft. Check the amounts, then confirm to finalise.</p><button class="btn primary block" type="button" data-act="payfinal" ${err?'disabled':''}>Review and confirm</button>${err&&!c.err?`<p class="hint" style="margin:0">${esc(err)}</p>`:''}`;
+  else{const t=payText();acts=`<div class="okbox" role="status"><b>Confirmed.</b> These amounts are final.</div><pre class="share" id="payTxt">${esc(t)}</pre>
+    <button class="btn primary block" type="button" data-act="sharepayimg">Share as image</button>
+    <button class="btn block" type="button" data-act="paycopy">Copy text</button>
+    <a class="btn block" href="https://wa.me/?text=${encodeURIComponent(t)}" target="_blank" rel="noopener">Share text on WhatsApp</a>
+    <p class="hint" id="payMsg" role="status" style="margin:0;text-align:center"></p>
+    <button class="linkbtn" type="button" data-act="payedit">Edit amounts again</button>`;}
+  return {pl,res:`<h2>${lock?'Final payments':'Payments'}</h2>${res}<div class="btns">${acts}</div>`};
+}
+function viewPay(){
+  const P=S.pay,lock=P.final,inner=payInner();
+  const fld=(id,lab,val,ph)=>`<label class="lbl">${lab}<input id="${id}" class="field" type="number" inputmode="decimal" min="0" step="any" value="${esc(val)}" placeholder="${ph}" ${lock?'disabled':''}></label>`;
+  return `<div class="stack">
+    <section class="card"><h2>Bill</h2>
+      <div class="payfields">${fld('payCourt','Court fee',P.court,'0')}${fld('payHours','Hours',P.hours,'0')}
+      ${fld('payGuestFee','Guest extra',S.guestFee,'2')}</div>
+      <p class="hint" style="margin:8px 0 0">All amounts are in AED. Guest extra is what each guest pays on top; it lowers everyone else's share.</p>
+      <button class="ptsrow" type="button" data-act="payround" role="switch" aria-checked="${P.round}" ${lock?'aria-disabled="true"':''}><span>Round up to 0.50 AED<small>Easier to pay: 17.15 becomes 17.50, 17.60 becomes 18.00. The total may be slightly more than the bill.</small></span><span class="pill${P.round?' on':''}">${P.round?'ON':'OFF'}</span></button>
+    </section>
+    <section class="card"><h2>Who played, and for how long</h2>
+      <p class="hint" style="margin-top:0">Tap a name to mark absent. Use + and − if someone played less (1 hour at a time). Switch Guest on for an occasional visitor: they pay the Guest extra amount on top of their share, and it lowers everyone else's share.</p>
+      <div id="payPl">${inner.pl}</div></section>
+    <section class="card" id="payRes">${inner.res}</section>
+  </div>`;
+}
+function refreshPay(onlyRes){const i=payInner();const a=$('#payPl'),b=$('#payRes');if(a&&!onlyRes)a.innerHTML=i.pl;if(b)b.innerHTML=i.res;save();}
+function payCanvas(){
+  const c0=payCalc(),P=S.pay;
+  const W=1080,Pd=48,IW=W-2*Pd,HEAD=250,TH=70,RH=84,rows=c0.rows;
+  const c=document.createElement('canvas');const ctx=c.getContext('2d');
+  const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
+  const H=HEAD+30+TH+rows.length*RH+170;c.width=W;c.height=H;
+  ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1c6b4f';ctx.fillRect(0,0,W,HEAD);ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#dff3e7';ctx.font=`600 28px ${BODY}`;ctx.fillText('BADMINTON · DOUBLES',Pd,82);
+  ctx.fillStyle='#ffffff';ctx.font=`700 96px ${DISP}`;ctx.fillText('PAYMENTS',Pd,170);
+  ctx.fillStyle='#dff3e7';ctx.font=`500 32px ${BODY}`;ctx.fillText(fullDate(),Pd,222);
+  let y=HEAD+30;ctx.fillStyle='#1c6b4f';ctx.fillRect(Pd,y,IW,TH);
+  ctx.fillStyle='#ffffff';ctx.font=`700 30px ${BODY}`;ctx.textAlign='left';ctx.fillText('NAME',Pd+22,y+46);
+  ctx.textAlign='center';ctx.fillText('HOURS',W-Pd-330,y+46);ctx.textAlign='right';ctx.fillText('AMOUNT',W-Pd-22,y+46);y+=TH;
+  rows.forEach((r,i)=>{
+    ctx.fillStyle=i%2?'#f7faf7':'#ffffff';ctx.fillRect(Pd,y,IW,RH);
+    ctx.strokeStyle='#d6e0d8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(Pd,y+RH);ctx.lineTo(Pd+IW,y+RH);ctx.stroke();
+    ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 44px ${DISP}`;
+    let n=r.name+(r.guest?' (guest)':'');const mw=W-Pd-330-110-(Pd+22);
+    while(ctx.measureText(n).width>mw&&n.length>3)n=n.slice(0,-1);
+    ctx.fillText(n,Pd+22,y+56);
+    { const nw=ctx.measureText(n).width;ctx.fillStyle=P.paid[r.id]?'#1c6b4f':'#c0392b';ctx.font=`700 44px ${DISP}`;ctx.fillText(P.paid[r.id]?'\u2713':'\u2717',Pd+22+nw+14,y+56); }
+    ctx.textAlign='center';ctx.fillStyle='#587064';ctx.font=`600 36px ${DISP}`;ctx.fillText(hrTxt(r.h),W-Pd-330,y+56);
+    ctx.textAlign='right';ctx.fillStyle='#1c6b4f';ctx.font=`700 46px ${DISP}`;ctx.fillText(fmtM(r.total,c0.rd),W-Pd-22,y+58);
+    y+=RH;
+  });
+  ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 40px ${DISP}`;ctx.fillText(`Total: ${fmtM(c0.sum,c0.rd)}`,Pd,y+56);
+  ctx.fillStyle='#587064';ctx.font=`500 26px ${BODY}`;
+  ctx.fillText(`Court ${fmtM(c0.court,false)}`+(c0.shuttle?` · shuttles ${fmtM(c0.shuttle,false)}`:'')+(c0.useG?` · guest extra amounts included`:''),Pd,y+100);
+  ctx.fillText('Shuttle Turns',Pd,H-40);
+  return c;
+}
+
+const KEY3='shuttle-turns-v3';
+const sesName=ts=>new Date(ts).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function setOpen(v){try{v?sessionStorage.setItem('st-open','1'):sessionStorage.removeItem('st-open');}catch(e){}}
+function loadStore(){
+  try{const raw=localStorage.getItem(KEY3);if(raw){const st=JSON.parse(raw);if(st&&Array.isArray(st.sessions)){st.sessions=st.sessions.map(x=>({...x,data:normalize(x.data)})).filter(x=>x.data);if(!st.nextSid)st.nextSid=st.sessions.reduce((m,x)=>Math.max(m,x.id),0)+1;if(!st.sessions.some(x=>x.id===st.cur))st.cur=null;return st;}}}catch(e){}
+  const st={sessions:[],cur:null,nextSid:1};const old=load();
+  if(old&&(old.games.length||old.tour||!old.sample)){const ts=old.endedAt||Date.now();st.sessions.push({id:1,name:sesName(ts),created:ts,data:old});st.nextSid=2;}
+  return st;
+}
+let store=loadStore();
+let home=false;
+try{home=store.sessions.length>0&&!sessionStorage.getItem('st-open');}catch(e){home=store.sessions.length>0;}
+if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:fresh()});store.cur=1;store.nextSid=2;home=false;setOpen(true);}
+let S=(store.sessions.find(x=>x.id===store.cur)||store.sessions[store.sessions.length-1]).data;
+function save(){try{localStorage.setItem(KEY3,JSON.stringify(store));}catch(e){}}
+let sesForm=false,sesTarget=0;
+function uniqueName(base){let n=base,k=2;while(store.sessions.some(x=>x.name===n))n=base+' ('+(k++)+')';return n;}
+function newSessionData(src){
+  const d=fresh();d.sample=false;
+  if(!src){d.players=[];d.nextId=1;return d;}
+  const m={};d.players=src.players.map((q,i)=>{m[q.id]=i+1;return {id:i+1,name:q.name,active:true,base:0};});d.nextId=d.players.length+1;
+  d.teams=src.teams.map(t=>({...t,members:t.members.map(id=>m[id]).filter(Boolean),base:0})).filter(t=>t.members.length===2);d.nextTid=src.nextTid||1;
+  d.mode=src.mode;d.pts=!!src.pts;d.guestFee=src.guestFee||'2';
+  return d;
+}
+function sesInfo(x){
+  const d=x.data;let n=0,st='Not started';
+  if(d.mode==='tour'&&d.tour){n=d.tour.matches.filter(m=>m.w!=null).length;st=d.tour.matches.length&&d.tour.matches.every(m=>m.w!=null)?'Finished':'In progress';}
+  else if(d.games.length){n=d.cur+1;st=d.ended?'Ended':'In progress';}
+  return `${d.players.length} players \u00B7 ${n} ${d.mode==='tour'?(n===1?'match':'matches'):(n===1?'game':'games')} \u00B7 ${st}`;
+}
+function pendingPay(x){
+  const d=x.data;if(!d.pay||!d.pay.final)return 0;
+  const o=S;S=d;try{const c=payCalc();return c.rows?c.rows.filter(r=>!d.pay.paid[r.id]).length:0;}catch(e){return 0;}finally{S=o;}
+}
+function viewHome(){
+  const list=store.sessions.slice().sort((a,b)=>b.created-a.created);
+  const form=sesForm?`<form id="sesForm" class="card stack" autocomplete="off" style="gap:12px"><h2 style="margin:0">New badminton game</h2>
+    <label class="lbl">Name<input id="sesName" class="field" type="text" maxlength="30" value="${esc(uniqueName(sesName(Date.now())))}"></label>
+    <label class="lbl">Players from<select id="sesSrc" class="field"><option value="0">Empty list</option>${list.map((x,i)=>`<option value="${x.id}" ${i===0?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+    <div class="dbtns"><button class="btn" type="button" data-act="sescancel">Cancel</button><button class="btn primary" type="submit">Create</button></div></form>`:`<button class="btn primary block" type="button" data-act="newsession">+ New badminton game</button>`;
+  return `<div class="stack">${form}
+    <section><h2>Your badminton games</h2>${list.length?list.map(x=>{const pn=pendingPay(x);return `<div class="sesitem"><div class="sescard"><button type="button" class="sesmain" data-act="opensession" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(sesInfo(x))}</small></button>${pn?`<button type="button" class="pendbtn" data-act="openpay" data-id="${x.id}" aria-label="Payments pending: ${pn} not paid. Open Pay">\u26A0<b>${pn}</b><small>unpaid</small></button>`:''}<button type="button" class="btn small icon" data-act="sesren" data-id="${x.id}" aria-label="Rename ${esc(x.name)}">\u270E</button><button type="button" class="btn small icon" data-act="sesdel" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">\u00D7</button></div></div>`;}).join(''):'<p class="muted">Nothing here yet.</p>'}</section>
+    <p class="hint">Each badminton game keeps its own players, games, points and payments on this phone. Tap one to open or edit it.</p></div>`;
+}
 let dialog=null;
 let copyMsg='';
 let renameId=0;
 let contactOpen=false,helpOpen=false,dropNote=false,swapSel={i:-1,id:0};
-let toastT=0;
+let toastT=0,guestAdd=false;
 function hideToast(){clearTimeout(toastT);const t=$('#toast');if(t){t.hidden=true;t.innerHTML='';}}
 function toast(msg,go){const t=$('#toast');if(!t)return;t.innerHTML=`<span>${esc(msg)}</span>${go?'<button class="btn small" type="button" data-act="gotoreset">Go to Clear</button>':''}`;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(hideToast,4500);}
 function lockToast(what){toast(what||'Game in play. Clear all games first to change this.',true);}
@@ -330,6 +509,8 @@ let scDraft={k:-1,a:'',b:''};
 const scVal=(side,g)=>scDraft.k===S.cur?scDraft[side]:(g['s'+side]!=null?g['s'+side]:'');
 document.addEventListener('input',e=>{
   const id=e.target&&e.target.id;
+  if(id==='payGuestFee'){S.guestFee=e.target.value;refreshPay(true);return;}
+  if(id==='payCourt'||id==='payHours'||id==='payShuttle'){S.pay[{payCourt:'court',payHours:'hours',payShuttle:'shuttle'}[id]]=e.target.value;refreshPay();return;}
   if(id==='scA'||id==='scB'){if(scDraft.k!==S.cur)scDraft={k:S.cur,a:'',b:''};scDraft[id==='scA'?'a':'b']=e.target.value;}
 });
 function scMsg(t){const el=$('#scMsg');if(el)el.textContent=t;}
@@ -379,6 +560,8 @@ const ADMIN='roshrpa@gmail.com';
 function viewHelp(){
   return `<div class="stack"><section class="card help">
     <h2>How it works</h2>
+    <h3>Your badminton games</h3>
+    <p>Each time you play, tap + New badminton game on the first screen. Each one keeps its own players, games, points and payments. Tap an old one to look at it or change it.</p>
     <h3>Individual</h3>
     <p>Add everyone who is here. The app picks four players for each game. Players with the fewest turns go first, so turns stay fair. Tap Next game when a game is finished.</p>
     <h3>Fixed teams</h3>
@@ -705,11 +888,11 @@ function logCanvas(spec){
 }
 async function shareImage(kind){
   const say=m=>{shareMsg=m;const el=$('#shareMsg');if(el)el.textContent=m;};
-  if(!S.games.length&&!S.tour)return;
+  if(kind!=='pay'&&!S.games.length&&!S.tour)return;
   let canvas;
-  try{canvas=logCanvas(S.mode==='tour'&&S.tour?tourSpec():(kind==='pts'&&scoredGames()?pointsSpec():undefined));}catch(e){say('Could not draw the image.');return;}
+  try{canvas=kind==='pay'?payCanvas():logCanvas(S.mode==='tour'&&S.tour?tourSpec():(kind==='pts'&&scoredGames()?pointsSpec():undefined));}catch(e){say('Could not draw the image.');return;}
   const dataUrl=canvas.toDataURL('image/png');
-  const name=(kind==='pts'&&S.mode!=='tour')?'badminton-points-table.png':'badminton-game-log.png';
+  const name=kind==='pay'?'badminton-payments.png':(kind==='pts'&&S.mode!=='tour')?'badminton-points-table.png':'badminton-game-log.png';
   const cap=window.Capacitor;
   try{
     const pl=cap&&cap.Plugins;
@@ -1113,13 +1296,27 @@ function dialogHtml(){
     return `<div class="scrim"><form id="renameForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Edit name</h3><input id="renameIn" class="field" type="text" maxlength="20" value="${esc(p?p.name:'')}" aria-label="Player name"><p class="msg" id="renameMsg" role="status"></p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
   }
   if(dialog==='image')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Game log image</h3><img src="${imageUrl}" alt="Game log" style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;background:#fff"><p>Press and hold the image to save or share it.</p><button class="btn primary" type="button" data-act="cancel">Close</button></div></div>`;
+  if(dialog==='sesren'){const x=store.sessions.find(q=>q.id===sesTarget);
+    return `<div class="scrim"><form id="sesRenForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename</h3><input id="sesRenIn" class="field" type="text" maxlength="30" value="${esc(x?x.name:'')}" aria-label="Name"><p class="msg" id="sesRenMsg" role="status"></p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;}
+  if(dialog==='sesdel'){const x=store.sessions.find(q=>q.id===sesTarget);
+    return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete this badminton game?</h3><p>${esc(x?x.name:'')} and all its games, points and payments will be removed from this phone. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmsesdel">Yes, delete</button></div></div></div>`;}
+  if(dialog==='payfinal'||dialog==='payedit'){
+    const c=payCalc();
+    const d2=dialog==='payfinal'
+      ?{t:'Confirm payments?',b:`${c.rows?c.rows.length:0} players will pay ${c.rows?fmtM(c.sum,c.rd):''} in total. Please check the hours and amounts once more. After confirming, the list is final and ready to share.`,y:'Yes, confirm',a:'payconfirm'}
+      :{t:'Edit payments again?',b:'This unlocks the amounts and clears the Paid ticks. You will need to confirm again.',y:'Yes, edit',a:'payunlock'};
+    return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d2.t}</h3><p>${d2.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d2.a}">${d2.y}</button></div></div></div>`;
+  }
   const d=dialog==='end'
     ?{t:'End games for today?',b:(S.pts&&dropNote?`Game ${S.cur+1} has no score, so it will not be counted. `:'')+'This closes the session and shows the summary to share.',y:'End games',a:'confirmend'}
     :{t:S.tour?'Reset the tournament?':'Start a new session?',b:S.tour?'This clears all matches and results. Players and teams stay.':'This clears all games from the current session.',y:'Yes, clear',a:'confirmreset'};
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
 function render(){
-  $('#view').innerHTML=helpOpen?viewHelp():contactOpen?viewContact():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():viewPlayers();
+  const sb=$('#sesbar');const cs=store.sessions.find(x=>x.data===S);
+  if(sb){sb.hidden=home||!cs;sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
+  const nv=document.querySelector('.nav');if(nv)nv.hidden=home&&!helpOpen&&!contactOpen;
+  $('#view').innerHTML=helpOpen?viewHelp():contactOpen?viewContact():home?viewHome():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():S.tab==='pay'?viewPay():viewPlayers();
   document.querySelectorAll('.tab').forEach(b=>{
     const on=!contactOpen&&!helpOpen&&b.dataset.tab===S.tab;
     b.classList.toggle('on',on);
@@ -1243,6 +1440,31 @@ const actions={
   },
   confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else dropPlanned();dropNote=false;S.ended=true;S.endedAt=Date.now();S.tab='history';},
   reopen(){S.ended=false;S.endedAt=null;copyMsg='';S.tab='play';},
+  gohome(){hideToast();home=true;setOpen(false);contactOpen=false;helpOpen=false;window.scrollTo(0,0);},
+  opensession(id){const x=store.sessions.find(q=>q.id===id);if(!x)return false;S=x.data;store.cur=id;home=false;setOpen(true);scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};copyMsg='';shareMsg='';window.scrollTo(0,0);},
+  openpay(id){const x=store.sessions.find(q=>q.id===id);if(!x)return false;x.data.tab='pay';const r=actions.opensession(id);render();const pl=document.querySelector('.paidlist');if(pl)pl.scrollIntoView({block:'center'});return false;},
+  newsession(){sesForm=true;},
+  sescancel(){sesForm=false;},
+  sesren(id){sesTarget=id;dialog='sesren';},
+  sesdel(id){sesTarget=id;dialog='sesdel';},
+  confirmsesdel(){dialog=null;store.sessions=store.sessions.filter(x=>x.id!==sesTarget);if(store.cur===sesTarget){store.cur=null;}if(!store.sessions.length){sesForm=true;}},
+  payin(id){if(S.pay.final)return false;S.pay.out[id]=!S.pay.out[id];},
+  payhm(id){if(S.pay.final)return false;const H=parseFloat(S.pay.hours);if(!(H>0))return false;S.pay.hrs[id]=Math.max(0,Math.ceil(payH(id,H)-1e-9)-1);},
+  payhp(id){if(S.pay.final)return false;const H=parseFloat(S.pay.hours);if(!(H>0))return false;S.pay.hrs[id]=Math.min(H,Math.floor(payH(id,H)+1e-9)+1);},
+  payguest(id){if(S.pay.final)return false;const P=S.pay;if(!P.guest)P.guest={};if(P.guest[id])delete P.guest[id];else P.guest[id]=true;},
+  payround(){if(S.pay.final)return false;S.pay.round=!S.pay.round;},
+  paytick(id){S.pay.paid[id]=!S.pay.paid[id];},
+  payfinal(){if(payErr(payCalc()))return false;dialog='payfinal';},
+  payconfirm(){dialog=null;S.pay.final=true;},
+  payedit(){dialog='payedit';},
+  payunlock(){dialog=null;S.pay.final=false;S.pay.paid={};},
+  sharepayimg(){shareImage('pay');return false;},
+  paycopy(){
+    const say=m=>{const el=$('#payMsg');if(el)el.textContent=m;};
+    const fail=()=>{say('Copy was blocked. Select the text above and copy it.');const pre=$('#payTxt');if(pre&&window.getSelection){try{const r=document.createRange();r.selectNodeContents(pre);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}catch(e){}}};
+    try{navigator.clipboard.writeText(payText()).then(()=>say('Copied. Paste it in the group.'),fail);}catch(e){fail();}
+    return false;
+  },
   copy(){
     const text=shareText();
     const say=m=>{copyMsg=m;const el=$('#copyMsg');if(el)el.textContent=m;};
@@ -1281,7 +1503,7 @@ const actions={
   contactclose(){contactOpen=false;},
   contactnew(){cst={s:'idle',m:''};},
   gotoreset(){hideToast();window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
-  confirmreset(){dialog=null;hideToast();scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
+  confirmreset(){dialog=null;guestAdd=false;S.pay=payDefault();hideToast();scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
   cancel(){dialog=null;dropNote=false;},
   rename(id){renameId=id;dialog='rename';}
 };
@@ -1294,6 +1516,27 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{
   if(!e.target)return;
+  if(e.target.id==='guestForm'){
+    e.preventDefault();
+    const name=$('#guestName').value.trim();if(!name)return;
+    const P=S.pay;if(!Array.isArray(P.guests))P.guests=[];
+    P.gid=(P.gid||0)+1;P.guests.push({id:-P.gid,name});guestAdd=false;render();return;
+  }
+  if(e.target.id==='sesForm'){
+    e.preventDefault();
+    const nm0=$('#sesName').value.trim()||sesName(Date.now());
+    const src=store.sessions.find(x=>x.id===+$('#sesSrc').value);
+    const id=store.nextSid++;
+    store.sessions.push({id,name:uniqueName(nm0),created:Date.now(),data:newSessionData(src?src.data:null)});
+    S=store.sessions[store.sessions.length-1].data;store.cur=id;sesForm=false;home=false;setOpen(true);S.tab='players';
+    scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};render();window.scrollTo(0,0);return;
+  }
+  if(e.target.id==='sesRenForm'){
+    e.preventDefault();
+    const nm0=$('#sesRenIn').value.trim();if(!nm0){$('#sesRenMsg').textContent='Enter a name.';return;}
+    if(store.sessions.some(x=>x.id!==sesTarget&&x.name===nm0)){$('#sesRenMsg').textContent='That name is already used.';return;}
+    const x=store.sessions.find(q=>q.id===sesTarget);if(x)x.name=nm0;dialog=null;render();return;
+  }
   if(e.target.id==='renameForm'){
     e.preventDefault();
     const name=$('#renameIn').value.trim();
