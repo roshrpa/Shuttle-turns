@@ -1,0 +1,39 @@
+name: Publish web app
+on:
+  push:
+    branches: [main, master]
+    paths: ['www/**', 'pwa/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the web app
+        run: |
+          mkdir site
+          cp pwa/* site/
+          python3 - <<'PY'
+          s=open('www/index.html').read()
+          tags='<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="apple-touch-icon.png">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Shuttle Turns">\n<meta name="apple-mobile-web-app-status-bar-style" content="default">\n<meta name="theme-color" content="#1c6b4f">\n'
+          s=s.replace('<title>',tags+'<title>',1)
+          reg="<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>\n"
+          s=s.replace('</body>',reg+'</body>',1)
+          open('site/index.html','w').write(s)
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

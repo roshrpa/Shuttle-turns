@@ -2,6 +2,7 @@ name: Build APK
 on:
   push:
     branches: [main, master]
+    paths-ignore: ['pwa/**', '.github/workflows/pages.yml', '.github/workflows/build-apk.yml']
   workflow_dispatch:
 permissions:
   contents: write
