@@ -34,9 +34,13 @@ jobs:
         run: |
           if [ -n "$KS" ]; then
             mkdir -p ~/.android
-            echo "$KS" | base64 -d > ~/.android/debug.keystore
+            echo "$KS" | tr -d ' \r\n' | base64 -d > ~/.android/debug.keystore || true
+            KFP=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>&1 | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
+            [ -z "$KFP" ] && KFP="could not be read as a keystore"
+            echo "KEYNOTE=Secret found (length ${#KS}). Decoded key: ${KFP}." >> "$GITHUB_ENV"
             echo "Using the fixed signing key"
           else
+            echo "KEYNOTE=Secret DEBUG_KEYSTORE_B64 was EMPTY in this run, so a random key was used." >> "$GITHUB_ENV"
             echo "No signing key secret found, so this build uses a random key"
           fi
       - name: Build the APK
@@ -51,6 +55,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          FP=$(keytool -printcert -jarfile android/app/build/outputs/apk/debug/app-debug.apk | grep 'SHA256:' | head -1 | sed 's/.*SHA256: *//')
           gh release create "apk-${{ github.run_number }}" android/app/build/outputs/apk/debug/app-debug.apk \
             --title "Shuttle Turns APK ${{ github.run_number }}" \
-            --notes "Android debug APK. Open this file on your phone to install."
+            --notes "Android debug APK. Open this file on your phone to install. ${KEYNOTE} Signed with key SHA-256: ${FP}"
