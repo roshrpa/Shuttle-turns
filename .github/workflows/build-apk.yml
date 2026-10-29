@@ -2,7 +2,7 @@ name: Build APK
 on:
   push:
     branches: [main, master]
-    paths-ignore: ['pwa/**', '.github/workflows/pages.yml', '.github/workflows/build-apk.yml']
+    paths-ignore: ['pwa/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -37,6 +37,7 @@ jobs:
             echo "$KS" | tr -d ' \r\n' | base64 -d > ~/.android/debug.keystore || true
             KFP=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>&1 | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
             [ -z "$KFP" ] && KFP="could not be read as a keystore"
+            echo "KS_OK=1" >> "$GITHUB_ENV"
             echo "KEYNOTE=Secret found (length ${#KS}). Decoded key: ${KFP}." >> "$GITHUB_ENV"
             echo "Using the fixed signing key"
           else
@@ -45,7 +46,16 @@ jobs:
           fi
       - name: Build the APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          if [ -f "$HOME/.android/debug.keystore" ] && [ -n "$KS_OK" ]; then
+            ./gradlew assembleDebug \
+              -Pandroid.injected.signing.store.file="$HOME/.android/debug.keystore" \
+              -Pandroid.injected.signing.store.password=android \
+              -Pandroid.injected.signing.key.alias=androiddebugkey \
+              -Pandroid.injected.signing.key.password=android
+          else
+            ./gradlew assembleDebug
+          fi
       - name: Save the APK
         uses: actions/upload-artifact@v4
         with:
