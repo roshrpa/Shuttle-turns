@@ -93,7 +93,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .rrow .n{flex:1;min-width:0;text-align:left;font-weight:600;overflow-wrap:anywhere}
 .pendp{border-bottom:1px solid var(--line);padding:8px 0}
 .pendh{display:flex;justify-content:space-between;font-size:16px}
-.pendi{display:flex;justify-content:space-between;width:100%;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:6px 0;text-align:left;cursor:pointer}
+.pendi{display:flex;align-items:center;gap:8px;width:100%;padding:4px 0}.pgame{flex:1;min-width:0;display:flex;justify-content:space-between;gap:8px;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:6px 0;text-align:left;cursor:pointer}.pst.sm{min-height:36px;min-width:92px;padding:0 8px;font-size:13px}
 .pendbtn{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:56px;padding:0 8px;border:1px solid var(--danger);border-radius:12px;background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger);font:700 15px/1.1 var(--font-body);cursor:pointer}.pendbtn small{font-size:11px;font-weight:600}
 .sesitem{display:flex;flex-direction:column}.pendlink{margin-top:6px;align-self:flex-start;border:1px solid var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--surface));color:var(--danger);border-radius:999px;min-height:36px;padding:0 14px;font:600 13px var(--font-body);cursor:pointer}
 .payrow .who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.payrow .sub{margin:12px 0 2px;font:700 12px var(--font-body);text-transform:uppercase;color:var(--muted)}.chip.gst{min-height:30px;padding:0 10px;font-size:12px;opacity:.75}.chip.gst.sel{opacity:1}.payrow .chip{cursor:pointer}.payrow.off .chip{opacity:.5;text-decoration:line-through}
@@ -463,12 +463,17 @@ function pendCanvas(v){
     ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 50px ${DISP}`;
     let n=e.name;while(ctx.measureText(n).width>IW-330&&n.length>3)n=n.slice(0,-1);
     ctx.fillText(n,Pd+22,y+58);
-    ctx.textAlign='right';ctx.fillStyle='#c0392b';ctx.font=`700 52px ${DISP}`;ctx.fillText(fmtM(e.sum),W-Pd-22,y+60);
+    ctx.textAlign='right';ctx.fillStyle=(v.mark&&e.items.every(q=>q.paid))?'#1c6b4f':'#c0392b';ctx.font=`700 52px ${DISP}`;ctx.fillText(fmtM(e.sum),W-Pd-22,y+60);
     e.items.forEach((it,k)=>{
       const yy=y+110+k*LH;
       ctx.textAlign='left';ctx.fillStyle=v.mark?(it.paid?'#1c6b4f':'#c0392b'):'#587064';ctx.font=`500 30px ${BODY}`;
-      let g=(v.mark?(it.paid?'\u2713 ':'\u2717 '):'')+it.game;while(ctx.measureText(g).width>IW-330&&g.length>3)g=g.slice(0,-1);
-      ctx.fillText(g,Pd+22,yy);
+      let tx=Pd+22;
+      if(v.mark){const cx=Pd+22+16,cy=yy-10;ctx.fillStyle=it.paid?'#1c6b4f':'#c0392b';ctx.beginPath();ctx.arc(cx,cy,16,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#ffffff';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+        if(it.paid){ctx.moveTo(cx-7,cy+0.5);ctx.lineTo(cx-2,cy+6);ctx.lineTo(cx+8,cy-6);}else{ctx.moveTo(cx-6,cy-6);ctx.lineTo(cx+6,cy+6);ctx.moveTo(cx+6,cy-6);ctx.lineTo(cx-6,cy+6);}
+        ctx.stroke();tx=Pd+22+44;ctx.fillStyle=it.paid?'#1c6b4f':'#c0392b';}
+      let g=it.game;while(ctx.measureText(g).width>IW-330-(tx-Pd-22)&&g.length>3)g=g.slice(0,-1);
+      ctx.fillText(g,tx,yy);
       ctx.textAlign='right';ctx.fillText(fmtM(it.amt),W-Pd-22,yy);
     });
     y+=h;
@@ -583,7 +588,7 @@ function viewExtra(){
   if(extraPage==='pays')return `<div class="stack"><div class="toprow">${back.replace('class="sesback"','class="sesback" style="flex:1"')}<button type="button" class="btn primary" data-act="newfrompay">+ New game</button></div>${paysPage()}</div>`;
   return viewMonth();
 }
-let pfStatus='unpaid',pfMonth='',pfPerson='',pfFrom='',pfTo='';
+const pfKeep=new Set();let pdTarget=null;let pfStatus='unpaid',pfMonth='',pfPerson='',pfFrom='',pfTo='';
 const ymd=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const fmtD=v=>{const a=String(v).split('-');return a.length===3?new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';};
 function payRowsAll(){
@@ -592,7 +597,7 @@ function payRowsAll(){
     const d=x.data;if(!d.pay||!d.pay.final)return;
     const o=S;S=d;let c;try{c=payCalc();}catch(e){c=null;}finally{S=o;}
     if(!c||!c.rows)return;
-    c.rows.forEach(r=>{const nm=(r.name||'').trim();if(!nm||!(r.total>0))return;out.push({name:nm,sid:x.id,game:x.name,created:x.created,amt:r.total,paid:!!d.pay.paid[r.id]});});
+    c.rows.forEach(r=>{const nm=(r.name||'').trim();if(!nm||!(r.total>0))return;out.push({name:nm,pid:r.id,sid:x.id,game:x.name,created:x.created,amt:r.total,paid:!!d.pay.paid[r.id]});});
   });
   return out;
 }
@@ -602,9 +607,9 @@ function payView(){
   const names=[...new Set(all.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));
   const mon=months.includes(pfMonth)?pfMonth:'';
   const per=names.includes(pfPerson)?pfPerson:'';
-  const rows=all.filter(r=>(!mon||monKey(r.created)===mon)&&(!pfFrom||ymd(r.created)>=pfFrom)&&(!pfTo||ymd(r.created)<=pfTo)&&(!per||r.name===per)&&(pfStatus==='all'||(pfStatus==='paid')===r.paid));
+  const rows=all.filter(r=>(!mon||monKey(r.created)===mon)&&(!pfFrom||ymd(r.created)>=pfFrom)&&(!pfTo||ymd(r.created)<=pfTo)&&(!per||r.name===per)&&(pfStatus==='all'||(pfStatus==='paid')===r.paid||pfKeep.has(r.sid+':'+r.pid)));
   const m=new Map();
-  rows.forEach(r=>{const k=nkey(r.name);if(!m.has(k))m.set(k,{name:r.name,sum:0,items:[]});const e=m.get(k);e.sum+=r.amt;e.items.push({sid:r.sid,game:r.game,amt:r.amt,paid:r.paid});});
+  rows.forEach(r=>{const k=nkey(r.name);if(!m.has(k))m.set(k,{name:r.name,sum:0,items:[]});const e=m.get(k);e.sum+=r.amt;e.items.push({sid:r.sid,pid:r.pid,game:r.game,amt:r.amt,paid:r.paid});});
   const list=[...m.values()].sort((a,b)=>b.sum-a.sum||a.name.localeCompare(b.name));
   const title=pfStatus==='unpaid'?'PENDING PAYMENTS':pfStatus==='paid'?'PAID PAYMENTS':'PAYMENTS';
   const sumPaid=rows.filter(r=>r.paid).reduce((q,r)=>q+r.amt,0),sumUn=rows.filter(r=>!r.paid).reduce((q,r)=>q+r.amt,0);
@@ -614,7 +619,7 @@ function payView(){
 function paysPage(){
   const v=payView();
   const chip=(k,l)=>`<button type="button" class="chip${pfStatus===k?' sel':''}" data-act="pfstatus" data-k="${k}" aria-pressed="${pfStatus===k}">${l}</button>`;
-  const body=v.list.length?v.list.map(e=>`<div class="pendp"><div class="pendh"><b>${esc(e.name)}</b><b>${fmtM(e.sum)}</b></div>${e.items.map(it=>`<button type="button" class="pendi" data-act="openpay" data-id="${it.sid}"><span>${pfStatus==='all'?(it.paid?'<span class="pk ok">\u2713</span> ':'<span class="pk no">\u2717</span> '):''}${esc(it.game)}</span><span>${fmtM(it.amt)}</span></button>`).join('')}</div>`).join(''):`<p class="muted" style="margin:6px 0 0">${v.months.length||pfStatus!=='unpaid'?'Nothing matches these filters.':'No confirmed payments yet. Confirm the amounts in a game\'s Pay tab and they will be listed here.'}</p>`;
+  const body=v.list.length?v.list.map(e=>`<div class="pendp"><div class="pendh"><b>${esc(e.name)}</b><b>${fmtM(e.sum)}</b></div>${e.items.some(it=>!it.paid)?`<button type="button" class="linkbtn" data-act="markall" data-name="${esc(e.name)}" style="align-self:flex-start;margin:2px 0 4px">Mark all paid</button>`:''}${e.items.map(it=>`<div class="pendi"><button type="button" class="pgame" data-act="openpay" data-id="${it.sid}"><span>${esc(it.game)}</span><span>${fmtM(it.amt)}</span></button><button type="button" class="pst sm ${it.paid?'yes':'no'}" data-act="paystat" data-sid="${it.sid}" data-pid="${it.pid}" aria-pressed="${it.paid}" aria-label="${esc(e.name)}, ${esc(it.game)}: ${it.paid?'Paid':'Not paid'}">${it.paid?'\u2713 Paid':'Not paid'}</button></div>`).join('')}</div>`).join(''):`<p class="muted" style="margin:6px 0 0">${v.months.length||pfStatus!=='unpaid'?'Nothing matches these filters.':'No confirmed payments yet. Confirm the amounts in a game\'s Pay tab and they will be listed here.'}</p>`;
   const sel=(id,label,opts,cur)=>`<label class="lbl">${label}<select id="${id}" class="field">${opts}</select></label>`;
   const text=pendText(v);
   return `<section class="card"><h2>Payments</h2>
@@ -838,7 +843,8 @@ function applyPrefs(){
 function renderMenu(){
   const seg=(k,label)=>`<button type="button" data-act="theme${k}" aria-pressed="${P.theme===k}">${label}</button>`;
   const tog=(act,label,on)=>`<button type="button" data-act="${act}" role="switch" aria-checked="${on}"><span class="row"><span>${label}</span><span class="pill${on?' on':''}">${on?'On':'Off'}</span></span></button>`;
-  $('#menu').innerHTML=`<button type="button" data-act="menuplayers">Players</button>
+  $('#menu').innerHTML=`<button type="button" data-act="menugames">All games</button>
+    <button type="button" data-act="menuplayers">Players</button>
     <button type="button" data-act="paysopen">Payments</button>
     <button type="button" data-act="monthopen">Points table</button>
     <button type="button" data-act="backupopen">Backup</button>
@@ -854,20 +860,32 @@ const ADMIN='roshrpa@gmail.com';
 function viewHelp(){
   return `<div class="stack"><section class="card help">
     <h2>How it works</h2>
+    <h3>Menu (≡ at the top)</h3>
+    <p>All games, Players, Payments, Points table, Backup, Settings, How it works and Contact admin are all in the menu.</p>
     <h3>Your badminton games</h3>
-    <p>Each time you play, tap + New badminton game on the first screen. Each one keeps its own players, games, points and payments. Tap an old one to look at it or change it.</p>
+    <p>Each time you play, tap + New badminton game on the first screen. Tick who is here today, or add new names. Each game keeps its own players, matches, points and payments. Tap an old one to look at it or change it. You can add players while a game is on.</p>
+    <h3>Players</h3>
+    <p>Open Players from the home icon next to + New badminton game, or from the menu. Add names (several at once, separated by commas), rename someone everywhere, or remove them. A player who is in a game in progress, or who still has to pay, cannot be removed.</p>
     <h3>Individual</h3>
-    <p>Add everyone who is here. The app picks four players for each game. Players with the fewest turns go first, so turns stay fair. Tap Next game when a game is finished.</p>
+    <p>The app picks four players for each game. The first four players in the list play game 1. After that, players with the fewest turns go first, so turns stay fair, and nobody plays three games in a row when others are waiting. The order is mixed up by itself. Tap Next game when a game is finished. To change who is on court, tap a player and then the one to swap with.</p>
     <h3>Fixed teams</h3>
-    <p>Make teams of two (Team A, B, C...). Teams always stay together and take turns on court.</p>
+    <p>Make teams of two (Team A, B, C...). Teams always stay together and take turns on court. You can swap players between teams.</p>
     <h3>Tournament</h3>
     <p>Make teams. Every team plays every other team once. The best four teams play semi-finals, then the final and a third-place match. Tap the winning team after each match; scores are optional.</p>
+    <h3>Who won</h3>
+    <p>Without scores, tap the winning team after each game. The app moves to the next game by itself. To fix a mistake, tap Previous game and choose again. The History tab shows a win / loss table.</p>
     <h3>Points table</h3>
-    <p>You can also tap who won each game without scores, and the History tab shows a win / loss table. For full scores, before the first game switch on Points table on the Players tab. Then enter the score after every game. At the end you get a table with games played, wins, losses and points, which you can share as an image.</p>
+    <p>For full scores, switch on Points table on the Players tab before the first game, then enter the score after every game. At the end you get a table with games played, wins, losses and points. In the menu, Points table shows the weekly or monthly totals of all your games.</p>
+    <h3>Payments</h3>
+    <p>On the Pay tab enter the court cost, hours and shuttle cost. Check the amounts, then confirm. After that, tap the Paid / Not paid button next to each name when they pay. The menu Payments page shows who still has to pay across all games. Filter by status, person, month or dates. You can also tap Paid / Not paid there, or Mark all paid for one person, and share the list as an image.</p>
     <h3>Sharing</h3>
-    <p>On the History tab you can share the game log or the tournament results as an image or as text, for example on WhatsApp.</p>
+    <p>Game logs, final payments, pending payments and tournament results can be shared as an image, for example on WhatsApp.</p>
+    <h3>Backup</h3>
+    <p>Menu, Backup: save a backup file now and then. To restore, pick that file. Restoring adds to what you have and never removes anything.</p>
+    <h3>Settings</h3>
+    <p>Menu, Settings: light or dark theme, larger text, and keep the screen on.</p>
     <h3>Your data</h3>
-    <p>Names and teams stay on this phone. Nothing is uploaded unless you send a request from Contact admin.</p>
+    <p>Names and games stay on this phone. Nothing is uploaded unless you send a request from Contact admin.</p>
   </section>
   <button class="linkbtn" type="button" data-act="helpclose">Back to the app</button></div>`;
 }
@@ -1651,6 +1669,7 @@ function dialogHtml(){
   if(dialog==='leave'){const q=S.players.find(x=>x.id===leaveId),onC=!!(q&&S.games[S.cur]&&S.games[S.cur].teams.flat().includes(q.id));
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${esc(q?q.name:'This player')} leaves the game?</h3><p>${onC?'They are on court now, so a resting player will take their place straight away. ':''}They will be listed under Game left. You can bring them back with Back.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmleave">Yes, leave</button></div></div></div>`;}
   if(dialog==='prename')return `<div class="scrim"><form id="prenameForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename player</h3><input id="prenameIn" class="field" type="text" maxlength="24" value="${esc(prTarget)}" aria-label="Name"><p class="msg" id="prenameMsg" role="status"></p><p class="hint" style="margin:0">The name changes in all games.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
+  if(dialog==='markall'){const v=payView();const e=v.list.find(q=>nkey(q.name)===nkey(pdTarget||''));const its=e?e.items.filter(i=>!i.paid):[];return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Mark all paid?</h3><p>${esc(pdTarget||'')}: ${its.length} ${its.length===1?'game':'games'}, ${fmtM(its.reduce((q,i)=>q+i.amt,0))} will be marked as paid.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No</button><button class="btn primary" type="button" data-act="confirmmarkall">Yes, mark paid</button></div></div></div>`;}
   if(dialog==='pdel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove ${esc(prTarget)}?</h3><p>${esc(prTarget)} will not be offered when you start a new game, and is taken out of games that have not started yet. Games already started keep the name and the results.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep</button><button class="btn primary" type="button" data-act="confirmpdel">Yes, remove</button></div></div></div>`;
   if(dialog==='sesren'){const x=store.sessions.find(q=>q.id===sesTarget);
     return `<div class="scrim"><form id="sesRenForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename</h3><input id="sesRenIn" class="field" type="text" maxlength="30" value="${esc(x?x.name:'')}" aria-label="Name"><p class="msg" id="sesRenMsg" role="status"></p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;}
@@ -1831,9 +1850,11 @@ const actions={
   addfromlist(i){const n=rosterAvail()[i];if(n)addPlayer(n);},
   playersopen(){playersOpen=true;window.scrollTo(0,0);},
   playersback(){playersOpen=false;extraPage='';window.scrollTo(0,0);},
+  menugames(){closeMenu();actions.gohome();},
   menuplayers(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='players';},
   prename(i){prTarget=rosterNames()[i]||'';if(prTarget)dialog='prename';},
   pdel(i){prTarget=rosterNames()[i]||'';if(!prTarget)return;const m=playerBlock(prTarget);if(m){toast(m);return;}dialog='pdel';},
+  confirmmarkall(){dialog=null;const v=payView();const e=v.list.find(q=>nkey(q.name)===nkey(pdTarget||''));if(e)e.items.forEach(i=>{if(i.paid)return;const x=store.sessions.find(q=>q.id===i.sid);if(x&&x.data.pay){x.data.pay.paid[i.pid]=true;pfKeep.add(i.sid+':'+i.pid);}});},
   confirmpdel(){dialog=null;if(playerBlock(prTarget))return;const k=nkey(prTarget);store.roster=(store.roster||[]).filter(n=>nkey(n)!==k);store.hidden=(store.hidden||[]).concat([prTarget]);
     let n=0;
     store.sessions.forEach(x=>{const d=x.data;if(d.games.length||d.tour||d.ended)return;
@@ -1923,7 +1944,7 @@ const actions={
   pfstatus(){return false;},
   payclear(){pfFrom='';pfTo='';},
   newfrompay(){extraPage='';helpOpen=false;contactOpen=false;playersOpen=false;home=true;setOpen(false);sesForm=true;window.scrollTo(0,0);},
-  paysopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='pays';},
+  paysopen(){pfKeep.clear();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='pays';},
   helpclose(){helpOpen=false;},
   contactopen(){closeMenu();window.scrollTo(0,0);helpOpen=false;extraPage='';contactOpen=true;if(cst.s==='sent')cst={s:'idle',m:''};},
   contactclose(){contactOpen=false;},
@@ -1938,7 +1959,9 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){hideToast();contactOpen=false;helpOpen=false;extraPage='';S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';render();return;}
-  if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;render();return;}
+  if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;pfKeep.clear();render();return;}
+  if(el.dataset.act==='paystat'){const x=store.sessions.find(q=>q.id===+el.dataset.sid);if(x&&x.data.pay){const pid=el.dataset.pid;x.data.pay.paid[pid]=!x.data.pay.paid[pid];pfKeep.add(el.dataset.sid+':'+pid);}render();return;}
+  if(el.dataset.act==='markall'){pdTarget=el.dataset.name;dialog='markall';render();return;}
   const f=actions[el.dataset.act];
   if(f){const r=f(el.dataset.id?+el.dataset.id:undefined);if(r!==false&&!['copy','shareimg','shareptsimg','sharependimg'].includes(el.dataset.act))render();if(r!==false&&['start','nextgame','prev','confirmend','confirmreset','win','startko'].includes(el.dataset.act))window.scrollTo(0,0);}
 });
@@ -2027,10 +2050,10 @@ document.addEventListener('submit',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t&&t.id==='monSel'){monSel=t.value;render();return;}
-  if(t&&t.id==='payMon'){pfMonth=t.value;if(pfMonth){pfFrom='';pfTo='';}render();return;}
-  if(t&&t.id==='payFrom'){pfFrom=t.value;if(pfFrom)pfMonth='';render();return;}
-  if(t&&t.id==='payTo'){pfTo=t.value;if(pfTo)pfMonth='';render();return;}
-  if(t&&t.id==='payPer'){pfPerson=t.value;render();return;}
+  if(t&&t.id==='payMon'){pfMonth=t.value;pfKeep.clear();if(pfMonth){pfFrom='';pfTo='';}render();return;}
+  if(t&&t.id==='payFrom'){pfFrom=t.value;pfKeep.clear();if(pfFrom)pfMonth='';render();return;}
+  if(t&&t.id==='payTo'){pfTo=t.value;pfKeep.clear();if(pfTo)pfMonth='';render();return;}
+  if(t&&t.id==='payPer'){pfPerson=t.value;pfKeep.clear();render();return;}
   if(t&&t.id==='restoreFile'&&t.files&&t.files[0]){
     const fr=new FileReader();
     fr.onload=()=>{const r=readRestore(String(fr.result||''));if(r.err){toast(r.err);return;}pendRestore=r;dialog='restore';render();};
