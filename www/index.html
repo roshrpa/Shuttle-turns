@@ -274,6 +274,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
   </div>
 </nav>
 <div id="modal"></div>
+<input id="restoreFile" type="file" accept=".json,application/json,text/plain" hidden>
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
@@ -503,17 +504,9 @@ function monthCard(){
     <a class="btn block" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share text on WhatsApp</a>
     <p class="hint" id="monMsg" role="status" style="margin:0;text-align:center"></p></div></section>`;
 }
-function backupCard(){
-  return `<section class="card"><h2>Backup</h2>
-    <p class="hint" style="margin:0 0 8px">Your games are saved only on this phone. Save a backup file now and then, for example to Google Drive or WhatsApp. If you change phones or reinstall the app, restore it here.</p>
-    <div class="btns"><button class="btn block" type="button" data-act="savebackup">Save backup</button>
-    <button class="btn block" type="button" data-act="pickrestore">Restore from backup</button>
-    <input id="restoreFile" type="file" accept=".json,application/json,text/plain" hidden>
-    <p class="hint" id="bkMsg" role="status" style="margin:0;text-align:center">${esc(backupMsg)}</p></div></section>`;
-}
 function backupData(){return JSON.stringify({app:'shuttle-turns',v:1,at:Date.now(),sessions:store.sessions,nextSid:store.nextSid});}
 async function saveBackup(){
-  const say=m=>{backupMsg=m;const el=$('#bkMsg');if(el)el.textContent=m;};
+  const say=m=>{if(m)toast(m);};
   if(!store.sessions.length){say('Nothing to back up yet.');return;}
   const txt=backupData();const name='shuttle-turns-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const cap=window.Capacitor;
@@ -557,7 +550,7 @@ function viewHome(){
   return `<div class="stack">${form}
     <section><h2>Your badminton games</h2>${list.length?list.map(x=>{const pn=pendingPay(x);return `<div class="sesitem"><div class="sescard"><button type="button" class="sesmain" data-act="opensession" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(sesInfo(x))}</small></button>${pn?`<button type="button" class="pendbtn" data-act="openpay" data-id="${x.id}" aria-label="Payments pending: ${pn} not paid. Open Pay">\u26A0<b>${pn}</b><small>unpaid</small></button>`:''}<button type="button" class="btn small icon" data-act="sesren" data-id="${x.id}" aria-label="Rename ${esc(x.name)}">\u270E</button><button type="button" class="btn small icon" data-act="sesdel" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">\u00D7</button></div></div>`;}).join(''):'<p class="muted">Nothing here yet.</p>'}</section>
     <p class="hint">Each badminton game keeps its own players, games, points and payments on this phone. Tap one to open or edit it.</p>
-    ${monthCard()}${backupCard()}</div>`;
+    ${monthCard()}</div>`;
 }
 let dialog=null;
 let copyMsg='';
@@ -642,6 +635,8 @@ function renderMenu(){
     ${tog('bigtext','Larger text',P.big)}
     ${canWake()?tog('awake','Keep screen on',P.awake):''}
     <hr>
+    <button type="button" data-act="savebackup">Save backup</button>
+    <button type="button" data-act="pickrestore">Restore from backup</button>
     <button type="button" data-act="helpopen">How it works</button>
     <button type="button" data-act="contactopen">Contact admin</button>`;
 }
@@ -1618,11 +1613,11 @@ const actions={
     try{navigator.clipboard.writeText(pre.textContent).then(()=>say('Copied. Paste it in the group.'),()=>say('Copy was blocked. Use WhatsApp share instead.'));}catch(e){say('Copy was blocked. Use WhatsApp share instead.');}
     return false;
   },
-  savebackup(){saveBackup();return false;},
-  pickrestore(){const f=$('#restoreFile');if(f){f.value='';f.click();}return false;},
+  savebackup(){closeMenu();saveBackup();return false;},
+  pickrestore(){closeMenu();const f=$('#restoreFile');if(f){f.value='';f.click();}return false;},
   confirmrestore(){
     dialog=null;
-    if(pendRestore){pendRestore.add.forEach(x=>{store.sessions.push({id:store.nextSid++,name:uniqueName(x.name),created:x.created,data:x.data});});backupMsg=pendRestore.add.length+' '+(pendRestore.add.length===1?'game':'games')+' restored.';}
+    if(pendRestore){pendRestore.add.forEach(x=>{store.sessions.push({id:store.nextSid++,name:uniqueName(x.name),created:x.created,data:x.data});});toast(pendRestore.add.length+' '+(pendRestore.add.length===1?'game':'games')+' restored.');}
     pendRestore=null;
   },
   sesdel(id){sesTarget=id;dialog='sesdel';},
@@ -1760,8 +1755,8 @@ document.addEventListener('change',e=>{
   if(t&&t.id==='monSel'){monSel=t.value;render();return;}
   if(t&&t.id==='restoreFile'&&t.files&&t.files[0]){
     const fr=new FileReader();
-    fr.onload=()=>{const r=readRestore(String(fr.result||''));if(r.err){backupMsg=r.err;render();return;}pendRestore=r;dialog='restore';render();};
-    fr.onerror=()=>{backupMsg='Could not read the file.';render();};
+    fr.onload=()=>{const r=readRestore(String(fr.result||''));if(r.err){toast(r.err);return;}pendRestore=r;dialog='restore';render();};
+    fr.onerror=()=>{toast('Could not read the file.');};
     fr.readAsText(t.files[0]);
   }
 });
