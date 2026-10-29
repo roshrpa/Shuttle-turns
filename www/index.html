@@ -103,7 +103,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab.lk .payh,.ptab.lk .payr{grid-template-columns:minmax(60px,1fr) 40px 78px 92px}.ptab.lk .pst{min-height:36px;min-width:0;width:100%;padding:0 6px;font-size:13px}.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
 .payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
 .payh span:not(.n),.payr span:not(.n){text-align:right}
-.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
+#menuBtn[hidden]{display:none!important}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
 .okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
 .btn.small{min-height:40px;padding:0 12px;font-size:14px}
 .btn.icon{min-width:40px;padding:0}
@@ -502,7 +502,260 @@ let home=false;
 try{home=store.sessions.length>0&&!sessionStorage.getItem('st-open');}catch(e){home=store.sessions.length>0;}
 if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:fresh()});store.cur=1;store.nextSid=2;home=false;setOpen(true);}
 let S=(store.sessions.find(x=>x.id===store.cur)||store.sessions[store.sessions.length-1]).data;
-function save(){try{localStorage.setItem(KEY3,JSON.stringify(store));}catch(e){}}
+function save(){if(viewing)return;try{stamp();localStorage.setItem(KEY3,JSON.stringify(store));}catch(e){}gsyncLater(2500);}
+/* ---- Account and sync (Firebase REST) ---- */
+const FB={p:'shuttle-turns',k:'AIzaSyD1qN7agPFRhQs-K_KMUOcmvsIqLEFUuR8'};
+const AKEY='shuttle-turns-auth';
+const acct={user:null,mode:'in',msg:'',shared:[],sharedMsg:''};
+const gsync={state:'off',msg:'',at:0,busy:false,tm:0,again:false,defer:false};
+const NOGATE=/[?&]nogate\b/.test(location.search);
+const gateOn=()=>!NOGATE&&!acct.user;
+let viewing=null,myStore=null,myS=null,viewSig='',pendAcct=null;
+try{const j=JSON.parse(localStorage.getItem(AKEY)||'null');if(j&&j.uid&&j.refresh){acct.user=j;gsync.state='idle';}}catch(e){}
+function saveAuth(){try{if(acct.user)localStorage.setItem(AKEY,JSON.stringify(acct.user));else localStorage.removeItem(AKEY);}catch(e){}}
+function hsh(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h;}
+function newGid(){const a=new Uint8Array(9);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<9;i++)a[i]=Math.random()*256;}return Array.from(a,b=>b.toString(36).padStart(2,'0')).join('').slice(0,12);}
+function stamp(){
+  store.sessions.forEach(x=>{if(!x.gid)x.gid=newGid();const h=hsh(JSON.stringify(x.data)+'|'+x.name+'|'+x.created);if(x.h!==h){x.h=h;x.mod=Date.now();}});
+  const rh=hsh(JSON.stringify(store.hidden||[]));if(store.rh!==rh){store.rh=rh;store.rmod=Date.now();}
+}
+/* --- sign in --- */
+const AUTH_ERR={EMAIL_EXISTS:'This email already has an account. Sign in instead.',INVALID_LOGIN_CREDENTIALS:'Wrong email or password.',INVALID_PASSWORD:'Wrong email or password.',EMAIL_NOT_FOUND:'Wrong email or password.',WEAK_PASSWORD:'Use at least 6 characters for the password.',INVALID_EMAIL:'This email does not look right.',MISSING_PASSWORD:'Enter a password.',MISSING_EMAIL:'Enter your email.',TOO_MANY_ATTEMPTS_TRY_LATER:'Too many tries. Wait a little and try again.',OPERATION_NOT_ALLOWED:'Email sign-in is not turned on in Firebase yet.',USER_DISABLED:'This account is turned off.'};
+async function authCall(path,body){
+  let r;try{r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+path+'?key='+FB.k,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  catch(e){throw new Error('Could not reach the server. Check the internet and try again.');}
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok){const c=String((j.error&&j.error.message)||'').split(' ')[0];throw new Error(AUTH_ERR[c]||'Something went wrong ('+(c||r.status)+').');}
+  return j;
+}
+function setSession(j,keepName){
+  const u=acct.user&&acct.user.uid===j.localId?acct.user:{};
+  acct.user={uid:j.localId,email:String(j.email||u.email||'').toLowerCase(),name:j.displayName!=null?j.displayName:(u.name||''),refresh:j.refreshToken||u.refresh,id:j.idToken,exp:Date.now()+(Math.max(60,+j.expiresIn||3600)-60)*1000,verified:!!u.verified};
+  saveAuth();
+}
+async function idToken(){
+  const u=acct.user;if(!u)throw new Error('denied');
+  if(u.exp>Date.now()+5000)return u.id;
+  let r;try{r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FB.k,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(u.refresh)});}catch(e){throw new Error('offline');}
+  if(r.status===400||r.status===401){acct.user=null;saveAuth();throw new Error('signedout');}
+  if(!r.ok)throw new Error('offline');
+  const j=await r.json();u.id=j.id_token;u.refresh=j.refresh_token||u.refresh;u.exp=Date.now()+(Math.max(60,+j.expires_in||3600)-60)*1000;saveAuth();return u.id;
+}
+async function lookupUser(){
+  const j=await authCall('lookup',{idToken:acct.user.id});const x=(j.users||[])[0];
+  if(x){acct.user.verified=!!x.emailVerified;if(x.displayName!=null)acct.user.name=x.displayName;acct.user.email=String(x.email||acct.user.email).toLowerCase();saveAuth();}
+}
+async function acSignIn(email,pass){const j=await authCall('signInWithPassword',{email,password:pass,returnSecureToken:true});setSession(j);try{await lookupUser();}catch(e){}}
+async function acSignUp(name,email,pass){
+  const j=await authCall('signUp',{email,password:pass,returnSecureToken:true});setSession(j);
+  try{const k=await authCall('update',{idToken:acct.user.id,displayName:name,returnSecureToken:true});setSession(k);}catch(e){}
+  acct.user.name=name;saveAuth();
+  try{await authCall('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:acct.user.id});}catch(e){}
+}
+/* --- Firestore --- */
+const docUrl=uid=>`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents/workspaces/${encodeURIComponent(uid)}`;
+async function fbFetch(url,opt){
+  const t=await idToken();opt=opt||{};opt.headers=Object.assign({'Authorization':'Bearer '+t},opt.headers||{});
+  try{return await fetch(url,opt);}catch(e){throw new Error('offline');}
+}
+async function fbGet(uid){
+  const r=await fbFetch(docUrl(uid)+'?key='+FB.k);
+  if(r.status===404)return {rem:null,ut:null};
+  if(r.status===401||r.status===403)throw new Error('denied');
+  if(!r.ok)throw new Error('http '+r.status);
+  const j=await r.json();const f=j.fields||{};const s=f.data&&f.data.stringValue;
+  let rem=null;try{rem=JSON.parse(s);}catch(e){}
+  if(!rem||!Array.isArray(rem.sessions))throw new Error('bad data');
+  return {rem,ut:j.updateTime,ownerName:(f.ownerName&&f.ownerName.stringValue)||'',ownerEmail:(f.ownerEmail&&f.ownerEmail.stringValue)||''};
+}
+async function fbPut(obj,ut){
+  const u=acct.user;
+  const q=ut?'currentDocument.updateTime='+encodeURIComponent(ut):'currentDocument.exists=false';
+  const body={fields:{data:{stringValue:JSON.stringify(obj)},updated:{integerValue:String(Date.now())},ownerEmail:{stringValue:u.email},ownerName:{stringValue:u.name||''},members:{arrayValue:{values:(obj.members||[]).map(m=>({stringValue:m}))}}}};
+  const r=await fbFetch(docUrl(u.uid)+'?key='+FB.k+'&'+q,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok)return 'ok';
+  if(r.status===401||r.status===403)throw new Error('denied');
+  if(r.status===400||r.status===409)return 'conflict';
+  throw new Error('http '+r.status);
+}
+async function listShared(){
+  const u=acct.user;if(!u)return;
+  try{
+    const r=await fbFetch(`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents:runQuery?key=${FB.k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'workspaces'}],where:{fieldFilter:{field:{fieldPath:'members'},op:'ARRAY_CONTAINS',value:{stringValue:u.email}}}}})});
+    if(!r.ok){acct.sharedMsg=r.status===403||r.status===401?'Verify your email to see games shared with you.':'Could not load shared games.';return;}
+    const j=await r.json();acct.sharedMsg='';
+    acct.shared=(j||[]).filter(x=>x.document).map(x=>{const f=x.document.fields||{};const uid=x.document.name.split('/').pop();return {uid,name:(f.ownerName&&f.ownerName.stringValue)||'',email:(f.ownerEmail&&f.ownerEmail.stringValue)||''};}).filter(x=>x.uid!==u.uid);
+  }catch(e){acct.sharedMsg='Could not load shared games.';}
+}
+function buildRemote(){
+  return {v:1,sessions:store.sessions.slice().sort((a,b)=>a.gid<b.gid?-1:1).map(x=>({gid:x.gid,name:x.name,created:x.created,mod:x.mod||0,data:x.data})),
+    roster:store.roster||[],hidden:store.hidden||[],rmod:store.rmod||0,del:store.del||[],members:store.members||[],mmod:store.mmod||0};
+}
+function needPush(rem){
+  const rs=new Map((rem.sessions||[]).map(x=>[x.gid,x]));
+  if(store.sessions.some(x=>{const r=rs.get(x.gid);return !r||(x.mod||0)>(r.mod||0);}))return true;
+  const rd=new Set((rem.del||[]).map(d=>d.gid+':'+d.at));
+  if((store.del||[]).some(d=>!rd.has(d.gid+':'+d.at)))return true;
+  const rr=new Set((rem.roster||[]).map(nkey));
+  if((store.roster||[]).some(n=>!rr.has(nkey(n))))return true;
+  if((store.rmod||0)>(rem.rmod||0))return true;
+  if((store.mmod||0)>(rem.mmod||0))return true;
+  return false;
+}
+function mergeRemote(rem){
+  let ch=false;
+  const dm=new Map();(store.del||[]).concat(rem.del||[]).forEach(d=>{if(!d||!d.gid)return;const o=dm.get(d.gid);if(!o||d.at>o.at)dm.set(d.gid,d);});
+  store.del=[...dm.values()].sort((a,b)=>a.at-b.at).slice(-300);
+  const n0=store.sessions.length;
+  store.sessions=store.sessions.filter(x=>{const d=dm.get(x.gid);return !(d&&(x.mod||0)<=d.at);});
+  if(store.sessions.length!==n0){ch=true;
+    if(!store.sessions.some(x=>x.data===S)){
+      home=true;extraPage=extraPage==='account'?'account':'';
+      if(!store.sessions.length)store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:fresh()});
+      const f=store.sessions[store.sessions.length-1];S=f.data;store.cur=f.id;
+    }
+  }
+  (rem.sessions||[]).forEach(r=>{
+    if(!r||!r.gid||!r.data||typeof r.name!=='string')return;
+    const d=dm.get(r.gid);if(d&&(r.mod||0)<=d.at)return;
+    let nd;try{nd=normalize(r.data);}catch(e){nd=null;}if(!nd)return;
+    const l=store.sessions.find(x=>x.gid===r.gid);
+    if(!l){store.sessions.push({id:store.nextSid++,gid:r.gid,name:r.name,created:+r.created||Date.now(),data:nd,mod:r.mod||0,h:hsh(JSON.stringify(nd)+'|'+r.name+'|'+(+r.created||0))});ch=true;}
+    else if((r.mod||0)>(l.mod||0)){
+      const was=(S===l.data);l.name=r.name;l.created=+r.created||l.created;l.data=nd;l.mod=r.mod||0;l.h=hsh(JSON.stringify(nd)+'|'+l.name+'|'+l.created);if(was)S=nd;ch=true;
+    }
+  });
+  const have=new Set((store.roster||[]).map(nkey));
+  (rem.roster||[]).forEach(n=>{if(typeof n==='string'&&!have.has(nkey(n))){store.roster=(store.roster||[]).concat([n]);have.add(nkey(n));ch=true;}});
+  if((rem.rmod||0)>(store.rmod||0)&&Array.isArray(rem.hidden)){store.hidden=rem.hidden.filter(n=>typeof n==='string');store.rmod=rem.rmod;store.rh=hsh(JSON.stringify(store.hidden));ch=true;}
+  if((rem.mmod||0)>(store.mmod||0)&&Array.isArray(rem.members)){store.members=rem.members.filter(n=>typeof n==='string');store.mmod=rem.mmod;ch=true;}
+  return ch;
+}
+function gsErr(e){
+  const m=String((e&&e.message)||e);
+  if(m==='signedout')return 'Please sign in again.';
+  if(m==='denied')return 'The server refused this. Please sign in again, or check the rules in Firebase.';
+  if(m==='bad data')return 'The online data could not be read.';
+  return 'Could not reach the server. It will try again.';
+}
+function busyNow(){const a=document.activeElement;return !!dialog||!!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));}
+async function syncNow(){
+  if(!acct.user||viewing)return;
+  if(gsync.busy){gsync.again=true;return;}
+  gsync.busy=true;gsync.state='sync';let rerender=false;
+  try{
+    for(let t=0;t<4;t++){
+      stamp();
+      const g=await fbGet(acct.user.uid);
+      if(g.rem&&mergeRemote(g.rem)){rerender=true;save();}
+      stamp();
+      if(!g.rem||needPush(g.rem)){
+        const res=await fbPut(buildRemote(),g.ut);
+        if(res==='conflict'){if(t===3)throw new Error('busy');continue;}
+        save();
+      }
+      break;
+    }
+    store.owner=acct.user.uid;gsync.state='ok';gsync.at=Date.now();gsync.msg='';
+  }catch(e){gsync.state=(e&&(e.message==='denied'||e.message==='signedout'))?'err':'offline';gsync.msg=gsErr(e);}
+  gsync.busy=false;
+  if(rerender){if(busyNow())gsync.defer=true;else render();}
+  else if(extraPage==='account'&&!busyNow())render();
+  if(gsync.again){gsync.again=false;gsyncLater(1500);}
+}
+function gsyncLater(ms){if(!acct.user||viewing)return;clearTimeout(gsync.tm);gsync.tm=setTimeout(syncNow,ms||2000);}
+function gsyncTime(){return new Date(gsync.at).toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true});}
+/* --- viewing someone else's games (view only) --- */
+function buildViewStore(rem){
+  const ss=[];(rem.sessions||[]).forEach((r,i)=>{let d=null;try{d=normalize(r.data);}catch(e){}if(d&&typeof r.name==='string')ss.push({id:ss.length+1,gid:r.gid,name:r.name,created:+r.created||0,data:d,mod:r.mod||0});});
+  return {sessions:ss,cur:null,nextSid:ss.length+1,roster:Array.isArray(rem.roster)?rem.roster:[],hidden:Array.isArray(rem.hidden)?rem.hidden:[]};
+}
+async function openShared(i){
+  const o=acct.shared[i];if(!o)return;
+  try{
+    const g=await fbGet(o.uid);if(!g.rem){toast('Nothing to show yet.');return;}
+    const cs=store.sessions.find(x=>x.data===S);
+    myStore=store;myS=S;store=buildViewStore(g.rem);viewing={uid:o.uid,name:o.name||o.email,email:o.email};viewSig=hsh(JSON.stringify(g.rem))+'';
+    S=(store.sessions[store.sessions.length-1]||{data:fresh()}).data;home=true;extraPage='';helpOpen=false;contactOpen=false;window.scrollTo(0,0);render();
+  }catch(e){toast(gsErr(e));}
+}
+function exitShared(){
+  if(!viewing)return;store=myStore;S=myS;myStore=null;myS=null;viewing=null;home=true;extraPage='';window.scrollTo(0,0);render();gsyncLater(500);
+}
+async function refreshShared(){
+  if(!viewing||busyNow())return;
+  try{
+    const g=await fbGet(viewing.uid);if(!g.rem||!viewing)return;
+    const sig=hsh(JSON.stringify(g.rem))+'';if(sig===viewSig)return;viewSig=sig;
+    const cur=store.sessions.find(x=>x.data===S),gid=cur&&cur.gid,tab=S.tab;
+    store=buildViewStore(g.rem);const k=gid&&store.sessions.find(x=>x.gid===gid);
+    if(k){S=k.data;S.tab=tab;}else{S=(store.sessions[store.sessions.length-1]||{data:fresh()}).data;home=true;}
+    if(!busyNow())render();
+  }catch(e){}
+}
+const VIEW_OK=new Set(['gohome','opensession','openpay','shareimg','shareptsimg','sharependimg','sharepayimg','paycopy','copy','copymon','monthopen','monthclose','pfstatus','payclear','paysopen','helpopen','helpclose','contactopen','contactclose','contactnew','settingsopen','menutoggle','bigtext','awake','cancel','accountopen','menugames','viewexit','menuplayers','playersback']);
+/* --- pages --- */
+function accountPage(){
+  const u=acct.user;
+  const gate=gateOn();
+  const info=gate?'<p class="hint">Sign in, or create an account, to use Shuttle Turns. Your games are saved under your account, so you can open them on any phone.</p>':'<p class="hint">An account keeps your games on every phone you sign in on, and lets you share them with others.</p>';
+  if(!u){
+    const up=acct.mode==='up';
+    return `<section class="card"><h2>${gate?(up?'Create account':'Sign in'):'Account'}</h2>${info}
+      <div class="chips" style="gap:8px;margin:6px 0 10px"><button type="button" class="chip${up?'':' sel'}" data-act="acmode" data-k="in" aria-pressed="${!up}">Sign in</button><button type="button" class="chip${up?' sel':''}" data-act="acmode" data-k="up" aria-pressed="${up}">Create account</button></div>
+      <form id="acForm" novalidate autocomplete="on" class="stack" style="gap:8px">
+        ${up?'<label class="lbl">Your name<input id="acName" class="field" type="text" maxlength="40" autocomplete="name"></label>':''}
+        <label class="lbl">Email<input id="acEmail" class="field" type="email" inputmode="email" autocapitalize="none" autocomplete="email"></label>
+        <label class="lbl">Password<input id="acPass" class="field" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
+        <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p>
+        <button class="btn primary block" type="submit">${up?'Create account':'Sign in'}</button></form>
+      ${up?'':'<button class="linkbtn" type="button" data-act="acreset" style="align-self:flex-start;margin-top:8px">Forgot password?</button>'}</section>`;
+  }
+  const st=gsync.state==='sync'?'Syncing…':gsync.state==='ok'?'Synced at '+gsyncTime():(gsync.state==='offline'||gsync.state==='err')?gsync.msg:'Not synced yet';
+  const mem=(store.members||[]);
+  return `<section class="card"><h2>Account</h2>
+    <p style="margin:0;font-weight:700">${esc(u.name||'No name')}</p><p class="muted" style="margin:2px 0 8px">${esc(u.email)}</p>
+    ${u.verified?'<p class="hint" style="margin:0 0 6px"><span class="pk ok">✓</span> Email verified</p>':'<p class="hint" style="margin:0 0 6px">Your email is not verified yet. Open the email we sent, tap the link, then tap Check again.</p><div class="btns"><button class="btn block" type="button" data-act="acverify">Send the email again</button><button class="btn block" type="button" data-act="accheck">Check again</button></div>'}
+    <p class="hint" id="syncMsg" role="status" style="margin:10px 0 0">${esc(st)}</p>
+    <div class="btns"><button class="btn primary block" type="button" data-act="syncnow" ${gsync.state==='sync'?'disabled':''}>Sync now</button></div>
+    <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p></section>
+  <section class="card"><h2>Share with others</h2>
+    <p class="hint" style="margin:0 0 8px">People you add here can see your games, players and payments, but cannot change them. They need an account with the same email, and must verify it.</p>
+    ${mem.length?mem.map((m,i)=>`<div class="rrow"><span class="n">${esc(m)}</span><button type="button" class="btn small icon" data-act="memdel" data-id="${i}" aria-label="Remove ${esc(m)}">×</button></div>`).join(''):'<p class="muted" style="margin:0 0 8px">Nobody yet.</p>'}
+    <form id="memForm" novalidate autocomplete="off" class="stack" style="gap:8px;margin-top:8px"><label class="lbl">Add by email<input id="memEmail" class="field" type="email" inputmode="email" autocapitalize="none" placeholder="name@example.com"></label>
+    <p class="msg" id="memMsg" role="status"></p><button class="btn block" type="submit">Add</button></form></section>
+  <section class="card"><h2>Shared with me</h2>
+    ${acct.shared.length?acct.shared.map((o,i)=>`<div class="rrow"><span class="n">${esc(o.name||o.email)}<small style="display:block;font-weight:500;color:var(--muted)">${esc(o.email)}</small></span><button type="button" class="btn small" data-act="viewshared" data-id="${i}">View</button></div>`).join(''):`<p class="muted" style="margin:0">${esc(acct.sharedMsg||'Nothing shared with you yet.')}</p>`}
+    <div class="btns"><button class="btn block" type="button" data-act="acrefresh">Check for shared games</button></div></section>
+  <section class="card"><button class="btn block" type="button" data-act="acout">Sign out</button><p class="hint" style="margin:8px 0 0">Signing out keeps the games on this phone.</p></section>`;
+}
+function viewBar(){return viewing?`<div class="viewbar"><span>Viewing <b>${esc(viewing.name)}</b>’s games. View only.</span><button type="button" class="btn small" data-act="viewexit">Back to my games</button></div>`:'';}
+async function acDo(fn){
+  const msg=m=>{acct.msg=m;const e=$('#acMsg');if(e)e.textContent=m;};
+  try{msg('Please wait…');await fn(msg);}catch(e){msg(String((e&&e.message)||e));}
+}
+function acAfterSignIn(){
+  const other=store.owner&&store.owner!==acct.user.uid&&store.sessions.some(x=>x.data.games.length||x.data.tour);
+  if(other){dialog='otheracct';render();return;}
+  acStart();
+}
+async function acStart(){acct.msg='';gsync.state='idle';render();await syncNow();await listShared();render();}
+function acSubmit(){
+  const email=$('#acEmail').value.trim().toLowerCase(),pass=$('#acPass').value;
+  if(!email||!pass){acDo(async m=>{throw new Error(!email?'Enter your email.':'Enter a password.');});return;}
+  acDo(async m=>{
+    if(acct.mode==='up'){const nm=($('#acName').value||'').trim().slice(0,40);if(!nm)throw new Error('Enter your name.');await acSignUp(nm,email,pass);toast('Account created. Check your email and tap the link to verify it.');}
+    else await acSignIn(email,pass);
+    m('');acAfterSignIn();
+  });
+}
+function acOut(){
+  if(viewing)exitShared();
+  acct.user=null;acct.shared=[];acct.msg='';saveAuth();clearTimeout(gsync.tm);gsync.state='off';
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshShared();}});
+window.addEventListener('online',()=>{syncNow();refreshShared();});
+setInterval(()=>{if(document.visibilityState!=='visible')return;if(viewing){refreshShared();return;}if(acct.user){if(gsync.defer&&!busyNow()){gsync.defer=false;render();}syncNow();}},12000);
 let sesForm=false,sesTarget=0;
 function uniqueName(base){let n=base,k=2;while(store.sessions.some(x=>x.name===n))n=base+' ('+(k++)+')';return n;}
 function newSessionData(src){
@@ -584,6 +837,7 @@ function viewExtra(){
   const back=`<button type="button" class="sesback" data-act="monthclose">\u2039 Back</button>`;
   if(extraPage==='settings')return `<div class="stack">${back}${settingsPage()}</div>`;
   if(extraPage==='backup')return `<div class="stack">${back}${backupPage()}</div>`;
+  if(extraPage==='account')return `<div class="stack">${back}${accountPage()}</div>`;
   if(extraPage==='players')return viewPlayersPage();
   if(extraPage==='pays')return `<div class="stack"><div class="toprow">${back.replace('class="sesback"','class="sesback" style="flex:1"')}<button type="button" class="btn primary" data-act="newfrompay">+ New game</button></div>${paysPage()}</div>`;
   return viewMonth();
@@ -807,6 +1061,7 @@ let scDraft={k:-1,a:'',b:''};
 const scVal=(side,g)=>scDraft.k===S.cur?scDraft[side]:(g['s'+side]!=null?g['s'+side]:'');
 document.addEventListener('input',e=>{
   const id=e.target&&e.target.id;
+  if(viewing)return;
   if(id==='payGuestFee'){S.guestFee=e.target.value;refreshPay(true);return;}
   if(id==='payCourt'||id==='payHours'||id==='payShuttle'){S.pay[{payCourt:'court',payHours:'hours',payShuttle:'shuttle'}[id]]=e.target.value;refreshPay();return;}
   if(id==='scA'||id==='scB'){if(scDraft.k!==S.cur)scDraft={k:S.cur,a:'',b:''};scDraft[id==='scA'?'a':'b']=e.target.value;}
@@ -847,6 +1102,7 @@ function renderMenu(){
     <button type="button" data-act="menuplayers">Players</button>
     <button type="button" data-act="paysopen">Payments</button>
     <button type="button" data-act="monthopen">Points table</button>
+    <button type="button" data-act="accountopen">Account</button>
     <button type="button" data-act="backupopen">Backup</button>
     <button type="button" data-act="settingsopen">Settings</button>
     <hr>
@@ -880,12 +1136,14 @@ function viewHelp(){
     <p>On the Pay tab enter the court cost, hours and shuttle cost. Check the amounts, then confirm. After that, tap the Paid / Not paid button next to each name when they pay. The menu Payments page shows who still has to pay across all games. Filter by status, person, month or dates. You can also tap Paid / Not paid there, or Mark all paid for one person, and share the list as an image.</p>
     <h3>Sharing</h3>
     <p>Game logs, final payments, pending payments and tournament results can be shared as an image, for example on WhatsApp.</p>
+    <h3>Account</h3>
+    <p>Menu, Account: create an account with your name, email and a password, then sign in on any phone to get your games there. Your games, players and payments are saved online under your account. To let someone else look at your games, add their email under Share with others. They sign in with that email (and verify it) and open your games from Shared with me. They can look but not change anything. Without an account the app works as before, only on this phone.</p>
     <h3>Backup</h3>
     <p>Menu, Backup: save a backup file now and then. To restore, pick that file. Restoring adds to what you have and never removes anything.</p>
     <h3>Settings</h3>
     <p>Menu, Settings: light or dark theme, larger text, and keep the screen on.</p>
     <h3>Your data</h3>
-    <p>Names and games stay on this phone. Nothing is uploaded unless you send a request from Contact admin.</p>
+    <p>Names and games stay on this phone. Nothing is uploaded unless you sign in to an account, or send a request from Contact admin.</p>
   </section>
   <button class="linkbtn" type="button" data-act="helpclose">Back to the app</button></div>`;
 }
@@ -1670,6 +1928,7 @@ function dialogHtml(){
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${esc(q?q.name:'This player')} leaves the game?</h3><p>${onC?'They are on court now, so a resting player will take their place straight away. ':''}They will be listed under Game left. You can bring them back with Back.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmleave">Yes, leave</button></div></div></div>`;}
   if(dialog==='prename')return `<div class="scrim"><form id="prenameForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename player</h3><input id="prenameIn" class="field" type="text" maxlength="24" value="${esc(prTarget)}" aria-label="Name"><p class="msg" id="prenameMsg" role="status"></p><p class="hint" style="margin:0">The name changes in all games.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
   if(dialog==='markall'){const v=payView();const e=v.list.find(q=>nkey(q.name)===nkey(pdTarget||''));const its=e?e.items.filter(i=>!i.paid):[];return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Mark all paid?</h3><p>${esc(pdTarget||'')}: ${its.length} ${its.length===1?'game':'games'}, ${fmtM(its.reduce((q,i)=>q+i.amt,0))} will be marked as paid.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No</button><button class="btn primary" type="button" data-act="confirmmarkall">Yes, mark paid</button></div></div></div>`;}
+  if(dialog==='otheracct')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Games from another account</h3><p>This phone has games from a different account. Do you want to add them to this account, or start fresh on this phone?</p><div class="dbtns" style="flex-direction:column"><button class="btn primary" type="button" data-act="ackeep">Add them to this account</button><button class="btn" type="button" data-act="acfresh">Start fresh on this phone</button><button class="btn" type="button" data-act="accancel">Cancel and sign out</button></div></div></div>`;
   if(dialog==='pdel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove ${esc(prTarget)}?</h3><p>${esc(prTarget)} will not be offered when you start a new game, and is taken out of games that have not started yet. Games already started keep the name and the results.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep</button><button class="btn primary" type="button" data-act="confirmpdel">Yes, remove</button></div></div></div>`;
   if(dialog==='sesren'){const x=store.sessions.find(q=>q.id===sesTarget);
     return `<div class="scrim"><form id="sesRenForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename</h3><input id="sesRenIn" class="field" type="text" maxlength="30" value="${esc(x?x.name:'')}" aria-label="Name"><p class="msg" id="sesRenMsg" role="status"></p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;}
@@ -1692,14 +1951,15 @@ function dialogHtml(){
 }
 function render(){
   const sb=$('#sesbar');const cs=store.sessions.find(x=>x.data===S);
-  if(sb){sb.hidden=home||!cs;sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
-  const nv=document.querySelector('.nav');if(nv)nv.hidden=home&&!helpOpen&&!contactOpen&&!extraPage;
-  $('#view').innerHTML=helpOpen?viewHelp():contactOpen?viewContact():extraPage?viewExtra():home?viewHome():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():S.tab==='pay'?viewPay():viewPlayers();
+  if(sb){sb.hidden=home||!cs||gateOn();sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
+  const nv=document.querySelector('.nav');if(nv)nv.hidden=gateOn()||(home&&!helpOpen&&!contactOpen&&!extraPage);
+  $('#view').innerHTML=gateOn()?`<div class="stack">${accountPage()}</div>`:viewBar()+(helpOpen?viewHelp():contactOpen?viewContact():extraPage?viewExtra():home?viewHome():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():S.tab==='pay'?viewPay():viewPlayers());
   document.querySelectorAll('.tab').forEach(b=>{
     const on=!contactOpen&&!helpOpen&&!extraPage&&b.dataset.tab===S.tab;
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
+  const mb=$('#menuBtn');if(mb)mb.hidden=gateOn();
   $('#modal').innerHTML=dialogHtml();
   if(dialog==='rename'){const ri=$('#renameIn');if(ri){ri.focus();ri.select();}}
   else if(dialog){const cb=document.querySelector('#modal [data-act="cancel"]');if(cb)cb.focus();}
@@ -1872,6 +2132,20 @@ const actions={
     return false;
   },
   settingsopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='settings';},
+  accountopen(){if(viewing)exitShared();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='account';acct.msg='';if(acct.user){syncNow();listShared().then(()=>{if(extraPage==='account'&&!busyNow())render();});}},
+  acmode(){return false;},
+  acreset(){const em=($('#acEmail')||{}).value;acDo(async m=>{const e=String(em||'').trim().toLowerCase();if(!e)throw new Error('Type your email above first.');await authCall('sendOobCode',{requestType:'PASSWORD_RESET',email:e});m('We sent an email to '+e+'. Tap the link in it to set a new password.');});return false;},
+  acverify(){acDo(async m=>{await authCall('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:await idToken()});m('Email sent. Tap the link in it, then tap Check again.');});return false;},
+  accheck(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listShared();m(acct.user.verified?'Verified.':'Not verified yet.');render();});return false;},
+  acrefresh(){listShared().then(()=>{if(extraPage==='account')render();});return false;},
+  syncnow(){syncNow();},
+  memdel(i){store.members=(store.members||[]).filter((_,k)=>k!==i);store.mmod=Date.now();},
+  viewshared(i){openShared(i);return false;},
+  viewexit(){exitShared();return false;},
+  acout(){acOut();},
+  acfresh(){dialog=null;store.sessions=[];store.cur=null;store.del=[];store.roster=[];store.hidden=[];store.members=[];store.mmod=0;store.owner=null;const d=fresh();store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:d});S=d;home=true;acStart();return false;},
+  ackeep(){dialog=null;acStart();return false;},
+  accancel(){dialog=null;acOut();},
   backupopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='backup';},
   savebackup(){closeMenu();saveBackup();return false;},
   pickrestore(){closeMenu();const f=$('#restoreFile');if(f){f.value='';f.click();}return false;},
@@ -1882,7 +2156,7 @@ const actions={
     pendRestore=null;
   },
   sesdel(id){sesTarget=id;dialog='sesdel';},
-  confirmsesdel(){dialog=null;store.sessions=store.sessions.filter(x=>x.id!==sesTarget);if(store.cur===sesTarget){store.cur=null;}if(!store.sessions.length){sesForm=true;}},
+  confirmsesdel(){dialog=null;{const x0=store.sessions.find(x=>x.id===sesTarget);if(x0&&x0.gid)store.del=(store.del||[]).concat([{gid:x0.gid,at:Date.now()}]);}store.sessions=store.sessions.filter(x=>x.id!==sesTarget);if(store.cur===sesTarget){store.cur=null;}if(!store.sessions.length){sesForm=true;}},
   payin(id){if(S.pay.final)return false;S.pay.out[id]=!S.pay.out[id];},
   payhm(id){if(S.pay.final)return false;const H=parseFloat(S.pay.hours);if(!(H>0))return false;S.pay.hrs[id]=Math.max(0,Math.ceil(payH(id,H)-1e-9)-1);},
   payhp(id){if(S.pay.final)return false;const H=parseFloat(S.pay.hours);if(!(H>0))return false;S.pay.hrs[id]=Math.min(H,Math.floor(payH(id,H)+1e-9)+1);},
@@ -1958,6 +2232,8 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#menu,#menuBtn'))closeMenu();
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){hideToast();contactOpen=false;helpOpen=false;extraPage='';S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
+  if(el.dataset.act==='acmode'){acct.mode=el.dataset.k;acct.msg='';render();return;}
+  if(viewing&&el.dataset.act&&!VIEW_OK.has(el.dataset.act)&&el.dataset.act!=='ptperiod'&&el.dataset.act!=='pfstatus'&&!/^theme/.test(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
   if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';render();return;}
   if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;pfKeep.clear();render();return;}
   if(el.dataset.act==='paystat'){const x=store.sessions.find(q=>q.id===+el.dataset.sid);if(x&&x.data.pay){const pid=el.dataset.pid;x.data.pay.paid[pid]=!x.data.pay.paid[pid];pfKeep.add(el.dataset.sid+':'+pid);}render();return;}
@@ -1973,6 +2249,13 @@ document.addEventListener('submit',e=>{
     const P=S.pay;if(!Array.isArray(P.guests))P.guests=[];
     P.gid=(P.gid||0)+1;P.guests.push({id:-P.gid,name});guestAdd=false;render();return;
   }
+  if(viewing&&e.target.id!=='acForm'){e.preventDefault();toast('View only. Only the owner can change this.');return;}
+  if(e.target.id==='acForm'){e.preventDefault();acSubmit();return;}
+  if(e.target.id==='memForm'){e.preventDefault();const v=($('#memEmail').value||'').trim().toLowerCase(),mm=$('#memMsg');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){mm.textContent='This email does not look right.';return;}
+    if(acct.user&&v===acct.user.email){mm.textContent='That is your own email.';return;}
+    if((store.members||[]).includes(v)){mm.textContent='Already added.';return;}
+    store.members=(store.members||[]).concat([v]);store.mmod=Date.now();toast('Added. They can now see your games after they sign in.');render();return;}
   if(e.target.id==='playerForm'){
     e.preventDefault();
     const v=$('#plNew').value.trim();if(!v){$('#plMsg').textContent='Enter a name.';return;}
@@ -2049,6 +2332,7 @@ document.addEventListener('submit',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(viewing&&!['monSel','payMon','payFrom','payTo','payPer'].includes(t&&t.id)){render();return;}
   if(t&&t.id==='monSel'){monSel=t.value;render();return;}
   if(t&&t.id==='payMon'){pfMonth=t.value;pfKeep.clear();if(pfMonth){pfFrom='';pfTo='';}render();return;}
   if(t&&t.id==='payFrom'){pfFrom=t.value;pfKeep.clear();if(pfFrom)pfMonth='';render();return;}
@@ -2068,5 +2352,6 @@ setInterval(()=>{
 },20000);
 applyPrefs();
 render();
+if(acct.user){gsyncLater(800);listShared();}
 </script>
 </body></html>
