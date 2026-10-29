@@ -28,6 +28,17 @@ jobs:
           find android/app/src/main/res -name 'splash.png' -delete
       - name: Copy the app into it
         run: npx cap sync android
+      - name: Use the fixed signing key
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            mkdir -p ~/.android
+            echo "$KS" | base64 -d > ~/.android/debug.keystore
+            echo "Using the fixed signing key"
+          else
+            echo "No signing key secret found, so this build uses a random key"
+          fi
       - name: Build the APK
         working-directory: android
         run: ./gradlew assembleDebug
