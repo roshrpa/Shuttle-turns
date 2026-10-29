@@ -113,6 +113,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab .ph,.ptab .pr{display:grid;grid-template-columns:18px minmax(96px,1fr) 22px 22px 22px 36px 40px;gap:4px;align-items:center;padding:8px 0;text-align:center}
 .ptab .ph{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
 .ptab .pr{border-bottom:1px solid var(--line)}
+.ptab.nopts .ph,.ptab.nopts .pr{grid-template-columns:18px minmax(96px,1fr) 30px 30px 30px}
 .ptab .n{text-align:left;font-weight:600;min-width:0;overflow-wrap:break-word;word-break:normal}
 .big .ptab{font-size:13px}
 .ptab .n small{display:block;font-weight:400;color:var(--muted);font-size:12px}
@@ -302,7 +303,7 @@ function normalize(d){
     if(!d.nextId) d.nextId=d.players.reduce((m,p)=>Math.max(m,p.id),0)+1;
     if(!['players','play','history','pay'].includes(d.tab)) d.tab='players';
     if(typeof d.guestFee!=='string')d.guestFee='2';
-    if(typeof d.shuffle!=='boolean')d.shuffle=true;
+    d.shuffle=true;
     if(typeof d.seed!=='number')d.seed=Math.floor(Math.random()*2147483647);
     if(!d.pay||typeof d.pay!=='object')d.pay=payDefault();else d.pay={...payDefault(),...d.pay};
     return d;
@@ -446,7 +447,7 @@ function newSessionData(src){
   if(!src){d.players=[];d.nextId=1;return d;}
   const m={};d.players=src.players.map((q,i)=>{m[q.id]=i+1;return {id:i+1,name:q.name,active:true,base:0};});d.nextId=d.players.length+1;
   d.teams=src.teams.map(t=>({...t,members:t.members.map(id=>m[id]).filter(Boolean),base:0})).filter(t=>t.members.length===2);d.nextTid=src.nextTid||1;
-  d.mode=src.mode;d.pts=!!src.pts;d.shuffle=src.shuffle!==false;d.guestFee=src.guestFee||'2';
+  d.mode=src.mode;d.pts=!!src.pts;d.shuffle=true;d.guestFee=src.guestFee||'2';
   return d;
 }
 function sesInfo(x){
@@ -459,6 +460,94 @@ function pendingPay(x){
   const d=x.data;if(!d.pay||!d.pay.final)return 0;
   const o=S;S=d;try{const c=payCalc();return c.rows?c.rows.filter(r=>!d.pay.paid[r.id]).length:0;}catch(e){return 0;}finally{S=o;}
 }
+let monSel='',backupMsg='',pendRestore=null;
+const monKey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+const monLabel=k=>new Date(+k.slice(0,4),+k.slice(5)-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+function monthKeys(){const m=new Set();store.sessions.forEach(x=>{if(x.data.mode!=='tour'&&x.data.games.some(g=>gameWinOf(g)!=null))m.add(monKey(x.created));});return [...m].sort().reverse();}
+const gameWinOf=g=>(g.sa!=null&&g.sb!=null&&g.sa!==g.sb)?(g.sa>g.sb?0:1):(g.win===0||g.win===1?g.win:null);
+function monthRows(key){
+  const m=new Map();let days=0,games=0;
+  store.sessions.forEach(x=>{
+    const d=x.data;if(d.mode==='tour'||monKey(x.created)!==key)return;
+    let any=false;
+    d.games.forEach(g=>{
+      const w=gameWinOf(g);if(w==null||!g.teams)return;any=true;games++;
+      [0,1].forEach(k=>g.teams[k].forEach(id=>{
+        const q=d.players.find(z=>z.id===id);if(!q)return;
+        const nk=q.name.trim().toLowerCase();
+        if(!m.has(nk))m.set(nk,{name:q.name.trim(),p:0,w:0,l:0});
+        const r=m.get(nk);r.p++;if(w===k)r.w++;else r.l++;
+      }));
+    });
+    if(any)days++;
+  });
+  const rows=[...m.values()].sort((a,b)=>b.w-a.w||(b.w/b.p)-(a.w/a.p)||b.p-a.p||a.name.localeCompare(b.name));
+  return {rows,days,games};
+}
+function monText(key,r){
+  return `\u{1F3F8} Badminton, ${monLabel(key)}\nGames: ${r.games} in ${r.days} ${r.days===1?'day':'days'}\n\nWin / loss table\n`+r.rows.map((x,i)=>`${i+1}. ${x.name}: played ${x.p}, won ${x.w}, lost ${x.l}`).join('\n');
+}
+function monthCard(){
+  const keys=monthKeys();
+  if(!keys.length)return `<section class="card"><h2>Monthly table</h2><p class="hint" style="margin:0">After you mark who won in some games, a win / loss table for the whole month appears here.</p></section>`;
+  const key=keys.includes(monSel)?monSel:keys[0];
+  const r=monthRows(key);const text=monText(key,r);
+  return `<section class="card"><h2>Monthly table</h2>
+    <label class="lbl">Month<select id="monSel" class="field">${keys.map(k=>`<option value="${k}" ${k===key?'selected':''}>${esc(monLabel(k))}</option>`).join('')}</select></label>
+    <div class="sumhead"><strong>${r.games} ${r.games===1?'game':'games'}</strong><span class="muted">${r.days} ${r.days===1?'day':'days'}</span></div>
+    <div class="ptab nopts"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span></div>
+    ${r.rows.map((x,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(x.name)}</span><span>${x.p}</span><span>${x.w}</span><span>${x.l}</span></div>`).join('')}</div>
+    <p class="hint">Players are matched by name across the month. Only games with a winner marked are counted.</p>
+    <pre class="share" id="monText" hidden>${esc(text)}</pre>
+    <div class="btns"><button class="btn block" type="button" data-act="copymon">Copy text</button>
+    <a class="btn block" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share text on WhatsApp</a>
+    <p class="hint" id="monMsg" role="status" style="margin:0;text-align:center"></p></div></section>`;
+}
+function backupCard(){
+  return `<section class="card"><h2>Backup</h2>
+    <p class="hint" style="margin:0 0 8px">Your games are saved only on this phone. Save a backup file now and then, for example to Google Drive or WhatsApp. If you change phones or reinstall the app, restore it here.</p>
+    <div class="btns"><button class="btn block" type="button" data-act="savebackup">Save backup</button>
+    <button class="btn block" type="button" data-act="pickrestore">Restore from backup</button>
+    <input id="restoreFile" type="file" accept=".json,application/json,text/plain" hidden>
+    <p class="hint" id="bkMsg" role="status" style="margin:0;text-align:center">${esc(backupMsg)}</p></div></section>`;
+}
+function backupData(){return JSON.stringify({app:'shuttle-turns',v:1,at:Date.now(),sessions:store.sessions,nextSid:store.nextSid});}
+async function saveBackup(){
+  const say=m=>{backupMsg=m;const el=$('#bkMsg');if(el)el.textContent=m;};
+  if(!store.sessions.length){say('Nothing to back up yet.');return;}
+  const txt=backupData();const name='shuttle-turns-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  const cap=window.Capacitor;
+  try{
+    const pl=cap&&cap.Plugins;
+    if(pl&&pl.Filesystem&&pl.Share&&(!cap.isNativePlatform||cap.isNativePlatform())){
+      const w=await pl.Filesystem.writeFile({path:name,data:txt,directory:'CACHE',encoding:'utf8'});
+      await pl.Share.share({title:'Shuttle Turns backup',files:[w.uri]});
+      say('Backup ready. Save it somewhere safe.');return;
+    }
+  }catch(e){if(/cancel/i.test(String((e&&e.message)||e))){say('');return;}}
+  try{
+    const file=new File([txt],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Shuttle Turns backup'});say('Backup ready. Save it somewhere safe.');return;}
+  }catch(e){if(e&&e.name==='AbortError'){say('');return;}}
+  try{
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);say('Backup file downloaded.');
+  }catch(e){say('Could not save the backup on this phone.');}
+}
+function readRestore(text){
+  let j;try{j=JSON.parse(text);}catch(e){return {err:'This is not a Shuttle Turns backup file.'};}
+  if(!j||j.app!=='shuttle-turns'||!Array.isArray(j.sessions))return {err:'This is not a Shuttle Turns backup file.'};
+  const add=[];let dup=0;
+  j.sessions.forEach(x=>{
+    if(!x||typeof x.name!=='string'||!x.data)return;
+    let d;try{d=normalize(x.data);}catch(e){d=null;}
+    if(!d)return;
+    if(store.sessions.some(q=>q.created===x.created&&q.name===x.name)){dup++;return;}
+    add.push({name:x.name,created:+x.created||Date.now(),data:d});
+  });
+  if(!add.length&&!dup)return {err:'No games found in this file.'};
+  return {add,dup};
+}
 function viewHome(){
   const list=store.sessions.slice().sort((a,b)=>b.created-a.created);
   const form=sesForm?`<form id="sesForm" class="card stack" autocomplete="off" style="gap:12px"><h2 style="margin:0">New badminton game</h2>
@@ -467,7 +556,8 @@ function viewHome(){
     <div class="dbtns"><button class="btn" type="button" data-act="sescancel">Cancel</button><button class="btn primary" type="submit">Create</button></div></form>`:`<button class="btn primary block" type="button" data-act="newsession">+ New badminton game</button>`;
   return `<div class="stack">${form}
     <section><h2>Your badminton games</h2>${list.length?list.map(x=>{const pn=pendingPay(x);return `<div class="sesitem"><div class="sescard"><button type="button" class="sesmain" data-act="opensession" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(sesInfo(x))}</small></button>${pn?`<button type="button" class="pendbtn" data-act="openpay" data-id="${x.id}" aria-label="Payments pending: ${pn} not paid. Open Pay">\u26A0<b>${pn}</b><small>unpaid</small></button>`:''}<button type="button" class="btn small icon" data-act="sesren" data-id="${x.id}" aria-label="Rename ${esc(x.name)}">\u270E</button><button type="button" class="btn small icon" data-act="sesdel" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">\u00D7</button></div></div>`;}).join(''):'<p class="muted">Nothing here yet.</p>'}</section>
-    <p class="hint">Each badminton game keeps its own players, games, points and payments on this phone. Tap one to open or edit it.</p></div>`;
+    <p class="hint">Each badminton game keeps its own players, games, points and payments on this phone. Tap one to open or edit it.</p>
+    ${monthCard()}${backupCard()}</div>`;
 }
 let dialog=null;
 let copyMsg='';
@@ -678,7 +768,7 @@ function pickNext(){
   const act=S.players.filter(p=>p.active);
   if(act.length<4) return null;
   const order=new Map(S.players.map((p,i)=>[p.id,i]));
-  const shuf=S.shuffle!==false;
+  const shuf=true;
   const rnd=rngFor(S.games.length);
   const lastGame=S.games.length-1;
   const counts=act.map(p=>t.c[p.id]).sort((x,y)=>x-y);
@@ -688,6 +778,7 @@ function pickNext(){
   let pool=act.filter(p=>t.c[p.id]===lim);
   const k=4-forced.length;
   if(pool.length>14){pool=[...pool].sort((x,y)=>t.last[x.id]-t.last[y.id]||order.get(x.id)-order.get(y.id)).slice(0,14);}
+  const run={};act.forEach(q=>{let r=0;for(let i=lastGame;i>=0&&S.games[i].teams.flat().includes(q.id);i--)r++;run[q.id]=r;});
   let bestSet=null,bestCost=Infinity;
   if(!S.games.length)bestSet=act.slice(0,4);else
   combos(pool,k).forEach(ch=>{
@@ -697,6 +788,7 @@ function pickNext(){
     act.forEach(q=>{if(!inSet.has(q.id)&&lastGame>=0&&t.last[q.id]!==lastGame&&(t.c[q.id]-(q.base||0))>0)cost+=restW;});
     for(let x=0;x<4;x++){
       if(t.last[set[x].id]===lastGame)cost+=4;
+      if(run[set[x].id]>=2)cost+=7*(run[set[x].id]-1);
       for(let y=x+1;y<4;y++)cost+=(t.co[key(set[x].id,set[y].id)]||0)*10;
     }
     cost+=shuf?rnd()*0.9:set.reduce((q,p)=>q+t.last[p.id],0)*0.01+set.reduce((q,p)=>q+order.get(p.id),0)*0.0001;
@@ -804,7 +896,7 @@ function ptsCard(){
   return `<section class="card">
     <h2>${S.pts?'Points table':'Win / loss table'}${S.ended?'':' so far'}</h2>
     <div class="sumhead"><strong>${n} ${n===1?'game':'games'}</strong><span class="muted">${date}</span></div>
-    <div class="ptab"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span>${S.pts?'<span>Pts</span><span>+/-</span>':''}</div>
+    <div class="ptab${S.pts?'':' nopts'}"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span>${S.pts?'<span>Pts</span><span>+/-</span>':''}</div>
     ${rows.map((r,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(r.name)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</span><span>${r.p}</span><span>${r.w}</span><span>${r.l}</span>${S.pts?`<span><b>${r.pf}</b></span><span>${r.d>0?'+':''}${r.d}</span>`:''}</div>`).join('')}</div>
     <p class="hint">P = games played, W = won, L = lost${S.pts?', Pts = points scored, +/- = points scored minus points conceded':''}. ${S.pts?'':'Only games where a winner was marked are counted.'}</p>
     <pre class="share" id="sumText">${esc(text)}</pre>
@@ -1182,7 +1274,6 @@ function viewPlayers(){
       </div>
       <p class="hint">${S.mode==='tour'?'Teams of two play each other once. The best teams go to semi-finals and a final, and you get a champion.':isT?'Two players stay together as a team. Teams rotate so every team gets equal turns.':'Everyone rotates on their own. You choose partners on court.'}${started?' ':''}</p>
       <button class="ptsrow" type="button" data-act="togglepts" role="switch" aria-checked="${S.pts}" ${started?'aria-disabled="true"':''}><span><b>Points table</b><small>Enter the score after every game and get a points table at the end. If off, you can still tap who won each game.</small></span><span class="pill${S.pts?' on':''}">${S.pts?'On':'Off'}</span></button>
-      ${S.mode==='solo'?`<button class="ptsrow" type="button" data-act="toggleshuffle" role="switch" aria-checked="${S.shuffle!==false}"><span><b>Shuffle</b><small>Mix players randomly so the same four are not always together. Everyone still gets equal turns.</small></span><span class="pill${S.shuffle!==false?' on':''}">${S.shuffle!==false?'On':'Off'}</span></button>`:''}
     </section>`;
 
   return `<div class="stack">
@@ -1358,6 +1449,9 @@ function dialogHtml(){
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${esc(q?q.name:'This player')} leaves the game?</h3><p>${onC?'They are on court now, so a resting player will take their place straight away. ':''}They will be listed under Game left. You can bring them back with Back.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmleave">Yes, leave</button></div></div></div>`;}
   if(dialog==='sesren'){const x=store.sessions.find(q=>q.id===sesTarget);
     return `<div class="scrim"><form id="sesRenForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename</h3><input id="sesRenIn" class="field" type="text" maxlength="30" value="${esc(x?x.name:'')}" aria-label="Name"><p class="msg" id="sesRenMsg" role="status"></p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;}
+  if(dialog==='restore'&&pendRestore){
+    const n=pendRestore.add.length,du=pendRestore.dup;
+    return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Restore from backup?</h3><p>${n?`${n} ${n===1?'game':'games'} will be added to this phone.`:'Nothing new to add.'}${du?` ${du} already on this phone ${du===1?'is':'are'} skipped.`:''} Your current games are not changed or removed.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button>${n?'<button class="btn primary" type="button" data-act="confirmrestore">Yes, add</button>':''}</div></div></div>`;}
   if(dialog==='sesdel'){const x=store.sessions.find(q=>q.id===sesTarget);
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete this badminton game?</h3><p>${esc(x?x.name:'')} and all its games, points and payments will be removed from this phone. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmsesdel">Yes, delete</button></div></div></div>`;}
   if(dialog==='payfinal'||dialog==='payedit'){
@@ -1454,7 +1548,6 @@ const actions={
   shareimg(){shareImage();},
   shareptsimg(){shareImage('pts');},
   suggest(){S.teamMode=!S.teamMode;},
-  toggleshuffle(){S.shuffle=!(S.shuffle!==false);dropPlanned();},
   setwin(k){const g=S.games[S.cur];if(!g||S.ended||S.pts)return false;g.win=(g.win===k)?null:k;},
   togglepts(){if(!S.games.length&&!S.tour)S.pts=!S.pts;else lockToast('Game in play. The Points table setting can\'t be changed now. Clear all games first.');},
   modeSolo(){if(!S.games.length&&!S.tour)S.mode='solo';else lockToast();},
@@ -1519,6 +1612,19 @@ const actions={
   newsession(){sesForm=true;},
   sescancel(){sesForm=false;},
   sesren(id){sesTarget=id;dialog='sesren';},
+  copymon(){
+    const pre=$('#monText'),say=m=>{const el=$('#monMsg');if(el)el.textContent=m;};
+    if(!pre)return false;
+    try{navigator.clipboard.writeText(pre.textContent).then(()=>say('Copied. Paste it in the group.'),()=>say('Copy was blocked. Use WhatsApp share instead.'));}catch(e){say('Copy was blocked. Use WhatsApp share instead.');}
+    return false;
+  },
+  savebackup(){saveBackup();return false;},
+  pickrestore(){const f=$('#restoreFile');if(f){f.value='';f.click();}return false;},
+  confirmrestore(){
+    dialog=null;
+    if(pendRestore){pendRestore.add.forEach(x=>{store.sessions.push({id:store.nextSid++,name:uniqueName(x.name),created:x.created,data:x.data});});backupMsg=pendRestore.add.length+' '+(pendRestore.add.length===1?'game':'games')+' restored.';}
+    pendRestore=null;
+  },
   sesdel(id){sesTarget=id;dialog='sesdel';},
   confirmsesdel(){dialog=null;store.sessions=store.sessions.filter(x=>x.id!==sesTarget);if(store.cur===sesTarget){store.cur=null;}if(!store.sessions.length){sesForm=true;}},
   payin(id){if(S.pay.final)return false;S.pay.out[id]=!S.pay.out[id];},
@@ -1583,7 +1689,7 @@ const actions={
   contactnew(){cst={s:'idle',m:''};},
   gotoreset(){hideToast();window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});return false;},
   confirmreset(){dialog=null;guestAdd=false;S.pay=payDefault();hideToast();scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};S.tour=null;S.games=[];S.cur=0;S.ended=false;S.endedAt=null;copyMsg='';S.players.forEach(p=>{p.base=0;p.active=true;});S.teams.forEach(x=>{x.base=0;});S.tab='players';},
-  cancel(){dialog=null;dropNote=false;pendSwap=null;if(pendScore){pendScore=null;scDraft={k:-1,a:'',b:''};}},
+  cancel(){dialog=null;pendRestore=null;dropNote=false;pendSwap=null;if(pendScore){pendScore=null;scDraft={k:-1,a:'',b:''};}},
   rename(id){renameId=id;dialog='rename';}
 };
 document.addEventListener('click',e=>{
@@ -1647,6 +1753,16 @@ document.addEventListener('submit',e=>{
     const a=+$('#tp1').value,b=+$('#tp2').value;
     if(!a||!b||a===b){$('#teamMsg').textContent='Pick two different players.';return;}
     addTeam(a,b);render();
+  }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t&&t.id==='monSel'){monSel=t.value;render();return;}
+  if(t&&t.id==='restoreFile'&&t.files&&t.files[0]){
+    const fr=new FileReader();
+    fr.onload=()=>{const r=readRestore(String(fr.result||''));if(r.err){backupMsg=r.err;render();return;}pendRestore=r;dialog='restore';render();};
+    fr.onerror=()=>{backupMsg='Could not read the file.';render();};
+    fr.readAsText(t.files[0]);
   }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dialog){dialog=null;render();}});
