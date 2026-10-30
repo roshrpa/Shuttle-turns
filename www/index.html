@@ -303,8 +303,8 @@ const key=(a,b)=>a<b?a+'-'+b:b+'-'+a;
 const inc=(m,k)=>{m[k]=(m[k]||0)+1;};
 
 function fresh(){
-  return {players:SAMPLE.map((n,i)=>({id:i+1,name:n,active:true,base:0})),nextId:SAMPLE.length+1,
-    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,pts:false,teamMode:false,ended:false,tab:'players',sample:true,pay:payDefault(),guestFee:'2',shuffle:true,seed:Math.floor(Math.random()*2147483647)};
+  return {players:[],nextId:1,
+    mode:'solo',teams:[],nextTid:1,games:[],cur:0,tour:null,pts:false,teamMode:false,ended:false,tab:'players',sample:false,pay:payDefault(),guestFee:'2',shuffle:true,seed:Math.floor(Math.random()*2147483647)};
 }
 function load(){try{const raw=localStorage.getItem(KEY);return raw?normalize(JSON.parse(raw)):null;}catch(e){return null;}}
 function normalize(d){
