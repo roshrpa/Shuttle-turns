@@ -729,7 +729,7 @@ function accountPage(){
   const mem=(store.members||[]);
   return `<section class="card"><h2>Account</h2>
     <p style="margin:0;font-weight:700">${esc(u.name||'No name')}</p><p class="muted" style="margin:2px 0 8px">${esc(u.email)}</p>
-    ${u.verified?'<p class="hint" style="margin:0 0 6px"><span class="pk ok">✓</span> Email verified</p>':'<p class="hint" style="margin:0 0 6px">Your email is not verified yet. Open the email we sent, tap the link, then tap Check again.</p><div class="btns"><button class="btn block" type="button" data-act="acverify">Send the email again</button><button class="btn block" type="button" data-act="accheck">Check again</button></div>'}
+    ${u.verified?'<p class="hint" style="margin:0 0 6px"><span class="pk ok">✓</span> Email verified</p>':'<p class="hint" style="margin:0 0 6px">'+(acct.vsent?'<b>✉ Verification email sent to '+esc(u.email)+'.</b> Please open it (check Spam too), tap the link, then tap Check again.':'Your email is not verified yet. Open the email we sent, tap the link, then tap Check again.')+'</p><div class="btns"><button class="btn block" type="button" data-act="acverify">Send the email again</button><button class="btn block" type="button" data-act="accheck">Check again</button></div>'}
     <p class="hint" id="syncMsg" role="status" style="margin:10px 0 0">${esc(st)}</p>
     <div class="btns"><button class="btn primary block" type="button" data-act="syncnow" ${gsync.state==='sync'?'disabled':''}>Sync now</button></div>
     <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p></section>
@@ -758,14 +758,16 @@ function acSubmit(){
   const email=$('#acEmail').value.trim().toLowerCase(),pass=$('#acPass').value;
   if(!email||!pass){acDo(async m=>{throw new Error(!email?'Enter your email.':'Enter a password.');});return;}
   acDo(async m=>{
-    if(acct.mode==='up'){const nm=($('#acName').value||'').trim().slice(0,40);if(!nm)throw new Error('Enter your name.');await acSignUp(nm,email,pass);toast('Account created. Check your email and tap the link to verify it.');}
-    else await acSignIn(email,pass);
-    m('');acAfterSignIn();
+    let note='';const vmsg='Verification email sent to '+email+'. Please open it, tap the link, then tap Check again.';
+    if(acct.mode==='up'){const nm=($('#acName').value||'').trim().slice(0,40);if(!nm)throw new Error('Enter your name.');await acSignUp(nm,email,pass);note=vmsg;acct.vsent=true;}
+    else{await acSignIn(email,pass);
+      if(!acct.user.verified){try{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});note=vmsg;acct.vsent=true;}catch(e){note='Your email is not verified yet. Tap "Send the email again" on the Account page.';}}}
+    m('');acAfterSignIn();if(note){acct.msg=note;toast(note);}
   });
 }
 function acOut(){
   if(viewing)exitShared();
-  acct.user=null;acct.shared=[];acct.msg='';saveAuth();clearTimeout(gsync.tm);gsync.state='off';
+  acct.user=null;acct.vsent=false;acct.shared=[];acct.msg='';saveAuth();clearTimeout(gsync.tm);gsync.state='off';
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshShared();}});
 window.addEventListener('online',()=>{syncNow();refreshShared();});
@@ -2165,7 +2167,7 @@ const actions={
   accountopen(){if(viewing)exitShared();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='account';acct.msg='';if(acct.user){syncNow();listShared().then(()=>{if(extraPage==='account'&&!busyNow())render();});}},
   acmode(){return false;},
   acreset(){const em=($('#acEmail')||{}).value;acDo(async m=>{const e=String(em||'').trim().toLowerCase();if(!e)throw new Error('Type your email above first.');await authCall('sendOobCode',{requestType:'PASSWORD_RESET',email:e});m('We sent an email to '+e+'. Tap the link in it to set a new password.');});return false;},
-  acverify(){acDo(async m=>{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});m('Email sent. Tap the link in it, then tap Check again.');});return false;},
+  acverify(){acDo(async m=>{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});acct.vsent=true;m('Email sent. Tap the link in it, then tap Check again.');});return false;},
   accheck(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listShared();m(acct.user.verified?'Verified.':'Not verified yet.');render();});return false;},
   acrefresh(){listShared().then(()=>{if(extraPage==='account')render();});return false;},
   syncnow(){syncNow();},
