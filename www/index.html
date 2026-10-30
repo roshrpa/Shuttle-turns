@@ -592,8 +592,11 @@ async function fbPut(obj,ut){
 async function listShared(){
   const u=acct.user;if(!u)return;
   try{
-    const r=await fbFetch(`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents:runQuery?key=${FB.k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'workspaces'}],where:{fieldFilter:{field:{fieldPath:'members'},op:'ARRAY_CONTAINS',value:{stringValue:u.email}}}}})});
-    if(!r.ok){acct.sharedMsg=r.status===403||r.status===401?'Verify your email to see games shared with you.':'Could not load shared games.';return;}
+    const qurl=`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents:runQuery?key=${FB.k}`;
+    const qopt=()=>({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'workspaces'}],where:{fieldFilter:{field:{fieldPath:'members'},op:'ARRAY_CONTAINS',value:{stringValue:u.email}}}}})});
+    let r=await fbFetch(qurl,qopt());
+    if(r.status===403){try{await lookupUser();}catch(e){}acct.user.exp=0;r=await fbFetch(qurl,qopt());}
+    if(!r.ok){let d='';try{const e=await deniedErr(r);d=e.message.slice(7);}catch(e){}acct.sharedMsg=(r.status===403||r.status===401?'Could not load shared games. Make sure your email is verified, then tap Check again.':'Could not load shared games.')+(d?' ('+d+')':'');return;}
     const j=await r.json();acct.sharedMsg='';
     acct.shared=(j||[]).filter(x=>x.document).map(x=>{const f=x.document.fields||{};const uid=x.document.name.split('/').pop();return {uid,name:(f.ownerName&&f.ownerName.stringValue)||'',email:(f.ownerEmail&&f.ownerEmail.stringValue)||''};}).filter(x=>x.uid!==u.uid);
   }catch(e){acct.sharedMsg='Could not load shared games.';}
