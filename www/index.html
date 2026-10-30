@@ -108,7 +108,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab.lk .payh,.ptab.lk .payr{grid-template-columns:minmax(60px,1fr) 40px 78px 92px}.ptab.lk .pst{min-height:36px;min-width:0;width:100%;padding:0 6px;font-size:13px}.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
 .payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
 .payh span:not(.n),.payr span:not(.n){text-align:right}
-#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
+#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
 .okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
 .btn.small{min-height:40px;padding:0 12px;font-size:14px}
 .btn.icon{min-width:40px;padding:0}
@@ -501,7 +501,7 @@ const KEY3='shuttle-turns-v3',GKEY='shuttle-turns-groups',GPFX='shuttle-turns-g-
 let G={uid:'',list:[],cur:'',reqs:[]};try{const g=JSON.parse(localStorage.getItem(GKEY)||'null');if(g&&Array.isArray(g.list))G=Object.assign(G,g);}catch(e){}
 function saveG(){try{localStorage.setItem(GKEY,JSON.stringify(G));}catch(e){}}
 let DEMO=false;try{DEMO=sessionStorage.getItem('st-demo')==='1';}catch(e){}
-let storeKey=DEMO?'shuttle-turns-demo':KEY3;if(!DEMO){let bu='';try{bu=(JSON.parse(localStorage.getItem('shuttle-turns-auth')||'null')||{}).uid||'';}catch(e){}if(bu&&G.uid===bu&&G.cur&&G.list.some(x=>x.gid===G.cur))storeKey=GPFX+G.cur;}
+let storeKey=DEMO?'shuttle-turns-demo':KEY3;if(!DEMO){let bu='';try{bu=(JSON.parse(localStorage.getItem('shuttle-turns-auth')||'null')||{}).uid||'';}catch(e){}if(bu&&G.uid===bu){G.cur='';storeKey='shuttle-turns-none';}}
 const sesName=ts=>new Date(ts).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 function setOpen(v){try{v?sessionStorage.setItem('st-open','1'):sessionStorage.removeItem('st-open');}catch(e){}}
 function loadStore(){
@@ -515,7 +515,7 @@ let home=false;
 try{home=store.sessions.length>0&&!sessionStorage.getItem('st-open');}catch(e){home=store.sessions.length>0;}
 if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:Object.assign(fresh(),{auto:true})});store.cur=1;store.nextSid=2;home=false;setOpen(true);}
 let S=(store.sessions.find(x=>x.id===store.cur)||store.sessions[store.sessions.length-1]).data;
-function save(){if(viewing)return;try{stamp();localStorage.setItem(storeKey,JSON.stringify(store));}catch(e){}gsyncLater(2500);}
+function save(){if(viewing||(acct.user&&!DEMO&&!G.cur))return;try{stamp();localStorage.setItem(storeKey,JSON.stringify(store));}catch(e){}gsyncLater(2500);}
 /* ---- Account and sync (Firebase REST) ---- */
 const FB={p:'shuttle-turns',k:'AIzaSyD1qN7agPFRhQs-K_KMUOcmvsIqLEFUuR8'};
 const AKEY='shuttle-turns-auth';
@@ -685,6 +685,11 @@ async function renameGroup(g,name){
   g.name=nm;saveG();
 }
 async function deleteGroup(g){await fbDel(dirUrl(g.name));await fbDel(gUrl(g.gid));dropGroup(g.gid);}
+function leaveGroup(){
+  if(!viewing){try{stamp();localStorage.setItem(storeKey,JSON.stringify(store));}catch(e){}}
+  clearTimeout(gsync.tm);G.cur='';saveG();storeKey='shuttle-turns-none';viewing=null;gperm={e:1,d:1,p:1,own:1};
+  store={sessions:[],cur:null,nextSid:1,roster:[],hidden:[]};initStore();
+}
 function dropGroup(gid){
   G.list=G.list.filter(g=>g.gid!==gid);try{localStorage.removeItem(GPFX+gid);}catch(e){}
   const was=G.cur===gid;if(was)G.cur='';saveG();
@@ -850,7 +855,7 @@ async function refreshRO(first){
 }
 const DEL_ACTS=new Set(['sesdel','confirmsesdel','pdel','confirmpdel','removeteam','remove']);
 const PAY_ACTS=new Set(['payin','payhm','payhp','payguest','payround','paytick','payfinal','payconfirm','payedit','payunlock','paystat','markall','confirmmarkall','payclear']);
-const VIEW_OK=new Set(['groupsopen','demoexit','demoopen','gohome','opensession','openpay','shareimg','sharelineup','sharepaysum','paymon','shareptsimg','sharependimg','sharepayimg','paycopy','copy','copymon','monthopen','monthclose','pfstatus','payclear','paysopen','helpopen','helpclose','contactopen','contactclose','contactnew','settingsopen','menutoggle','bigtext','awake','cancel','accountopen','menugames','viewexit','menuplayers','playersback']);
+const VIEW_OK=new Set(['groupsopen','demoexit','appexit','demoopen','gohome','opensession','openpay','shareimg','sharelineup','sharepaysum','paymon','shareptsimg','sharependimg','sharepayimg','paycopy','copy','copymon','monthopen','monthclose','pfstatus','payclear','paysopen','helpopen','helpclose','contactopen','contactclose','contactnew','settingsopen','menutoggle','bigtext','awake','cancel','accountopen','menugames','viewexit','menuplayers','playersback']);
 /* --- pages --- */
 function accountPage(){
   const u=acct.user;
@@ -892,7 +897,7 @@ const isGP=()=>['groups','gmanage','gcreate','gjoin'].includes(extraPage);
 let demoGone=false,pendMem=-1;
 function groupsPage(){
   const demo=DEMO&&!acct.user;const u=acct.user||{};
-  const rows=demo?(demoGone?'':`<div class="rrow"><span class="n">Sample group<small style="display:block;font-weight:500;color:var(--muted)">Owner · sample mode</small></span><button class="btn small primary" type="button" data-act="demoopen">Open</button><button type="button" class="btn small icon" data-act="demodel" aria-label="Delete Sample group">×</button></div>`):G.list.map((g,i)=>`<div class="rrow"><span class="n">${esc(g.name)}<small style="display:block;font-weight:500;color:var(--muted)">${roleOf(g)}${g.ownerUid!==u.uid?' · owner '+esc(g.ownerName||g.ownerEmail):''}</small></span>${g.gid===G.cur?'<span class="pk ok">✓ Open</span>':`<button class="btn small primary" type="button" data-act="grpswitch" data-id="${i}">Open</button>`}${g.ownerUid===u.uid?`<button class="btn small" type="button" data-act="grpmanage" data-id="${i}">Manage${(g.reqs||[]).length?' ('+g.reqs.length+')':''}</button><button type="button" class="btn small icon" data-act="grpdelrow" data-id="${i}" aria-label="Delete ${esc(g.name)}" title="Delete group">×</button>`:''}</div>`).join('');
+  const rows=demo?(demoGone?'':`<div class="rrow"><button type="button" class="rowopen" data-act="demoopen"><span class="n">Sample group<small style="display:block;font-weight:500;color:var(--muted)">Owner · sample mode</small></span><span class="chev" aria-hidden="true">›</span></button><button type="button" class="btn small icon" data-act="demodel" aria-label="Delete Sample group">×</button></div>`):G.list.map((g,i)=>`<div class="rrow"><button type="button" class="rowopen" data-act="grpswitch" data-id="${i}"><span class="n">${esc(g.name)}<small style="display:block;font-weight:500;color:var(--muted)">${roleOf(g)}${g.ownerUid!==u.uid?' · owner '+esc(g.ownerName||g.ownerEmail):''}</small></span><span class="chev" aria-hidden="true">›</span></button>${g.ownerUid===u.uid?`<button class="btn small" type="button" data-act="grpmanage" data-id="${i}">Manage${(g.reqs||[]).length?' ('+g.reqs.length+')':''}</button><button type="button" class="btn small icon" data-act="grpdelrow" data-id="${i}" aria-label="Delete ${esc(g.name)}" title="Delete group">×</button>`:''}</div>`).join('');
   const reqs=(G.reqs||[]).map((q,i)=>`<div class="rrow"><span class="n">${esc(q.name)}<small style="display:block;font-weight:500;color:var(--muted)">Waiting for the owner to approve</small></span><button type="button" class="btn small" data-act="grpcancel" data-id="${i}">Cancel</button></div>`).join('');
   return `<section class="card"><div class="achead"><h2>My groups</h2>${demo?'':'<button type="button" class="btn small icon refbtn" data-act="grpreload" aria-label="Refresh" title="Refresh groups">↻</button>'}</div>
     ${rows||'<p class="muted" style="margin:0">No groups yet. Create a group, or search for one to join.</p>'}${gMsg&&!demo?'<p class="hint" style="margin:8px 0 0">'+esc(gMsg)+'</p>':''}${demo?'<p class="hint" style="margin:8px 0 0">Sample mode: creating and joining need a sign in.</p>':''}</section>
@@ -929,7 +934,7 @@ async function acDo(fn){
   try{msg('Please wait…');await fn(msg);}catch(e){msg(String((e&&e.message)||e));}
 }
 function acAfterSignIn(){if(DEMO){DEMO=false;try{sessionStorage.removeItem('st-demo');}catch(e){}}acStart();}
-async function acStart(){acct.msg='';gsync.state='idle';render();await ensureGroups();if(dialog==='otheracct')return;if(store.sessions.every(isPlaceholder)){home=true;extraPage='';}if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();if(!DEMO&&acct.user){extraPage='groups';gFound=null;await loadAllReqs();}render();}
+async function acStart(){acct.msg='';gsync.state='idle';render();await ensureGroups();if(dialog==='otheracct')return;if(store.sessions.every(isPlaceholder)){home=true;extraPage='';}if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();if(!DEMO&&acct.user){if(G.cur)leaveGroup();extraPage='groups';gFound=null;await loadAllReqs();}render();}
 function acSubmit(){
   const email=$('#acEmail').value.trim().toLowerCase(),pass=$('#acPass').value;
   if(!email||!pass){acDo(async m=>{throw new Error(!email?'Enter your email.':'Enter a password.');});return;}
@@ -944,6 +949,35 @@ function acOut(){
   viewing=null;
   acct.user=null;acct.vsent=false;acct.shared=[];acct.msg='';saveAuth();clearTimeout(gsync.tm);gsync.state='off';
 }
+/* --- Back button: one step up each time; the last step asks before closing --- */
+function appBack(){
+  if(dialog){dialog=null;if(typeof actions.cancel==='function'){try{actions.cancel();}catch(e){}}dialog=null;render();return true;}
+  if(tour.on){tourEnd();render();return true;}
+  const mn=$('#menu');if(mn&&!mn.hidden){closeMenu();return true;}
+  if(helpOpen){helpOpen=false;render();return true;}
+  if(contactOpen){contactOpen=false;render();return true;}
+  if(gateOn())return false;
+  if(sesForm){sesForm=false;render();return true;}
+  if(extraPage){
+    if(['gmanage','gcreate','gjoin'].includes(extraPage)){extraPage='groups';gmId='';gFound=null;gJoinMsg='';}
+    else if(extraPage==='groups')return false;
+    else extraPage='';
+    window.scrollTo(0,0);render();return true;
+  }
+  if(playersOpen){playersOpen=false;render();return true;}
+  if(!home){home=true;window.scrollTo(0,0);render();return true;}
+  if(acct.user&&!DEMO&&G.cur){actions.groupsopen();render();return true;}
+  if(DEMO&&!acct.user){extraPage='groups';render();return true;}
+  return false;
+}
+let webExit=false;
+function appExit(){try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.exitApp){A.exitApp();return;}}catch(e){}webExit=true;try{history.go(-2);}catch(e){}try{window.close();}catch(e){}}
+/* in a browser (web app / artifact) the back button is caught through the history */
+try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(!(A&&A.addListener)){
+  history.pushState({st:1},'');
+  window.addEventListener('popstate',()=>{if(webExit)return;try{history.pushState({st:1},'');}catch(e){}if(!appBack()){dialog='exitapp';render();}});
+}}catch(e){}
+try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('backButton',()=>{if(!appBack()){dialog='exitapp';render();}});}catch(e){}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshRO();}});
 window.addEventListener('online',()=>{syncNow();refreshRO();});
 let pollN=0;
@@ -1054,7 +1088,7 @@ function viewExtra(){
   if(extraPage==='settings')return `<div class="stack">${back}${settingsPage()}</div>`;
   if(extraPage==='backup')return `<div class="stack">${back}${backupPage()}</div>`;
   if(extraPage==='account')return `<div class="stack">${back}${accountPage()}</div>`;
-  if(extraPage==='groups')return `<div class="stack">${back}${groupsPage()}</div>`;
+  if(extraPage==='groups')return `<div class="stack">${groupsPage()}</div>`;
   if(extraPage==='gcreate')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gcreatePage()}</div>`;
   if(extraPage==='gjoin')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gjoinPage()}</div>`;
   if(extraPage==='gmanage')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gmanagePage()}</div>`;
@@ -2285,6 +2319,7 @@ function dialogHtml(){
   if(dialog==='markall'){const v=payView();const e=v.list.find(q=>nkey(q.name)===nkey(pdTarget||''));const its=e?e.items.filter(i=>!i.paid):[];return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Mark all paid?</h3><p>${esc(pdTarget||'')}: ${its.length} ${its.length===1?'game':'games'}, ${fmtM(its.reduce((q,i)=>q+i.amt,0))} will be marked as paid.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No</button><button class="btn primary" type="button" data-act="confirmmarkall">Yes, mark paid</button></div></div></div>`;}
   if(dialog==='demodel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete group?</h3><p>This deletes <b>Sample group</b>. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="demodelyes">Delete</button></div></div></div>`;
   if(dialog==='grpmem'){const g=G.list.find(x=>x.gid===gmId);const e=g?Object.keys(g.perms||{}).sort()[pendMem]:'';return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove member?</h3><p><b>${esc(e||'')}</b> will no longer see this group.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="grpmemdel" data-id="${pendMem}">Remove</button></div></div></div>`;}
+  if(dialog==='exitapp')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Close the app?</h3><p>Tap Close to leave Shuttle Turns, or Stay to keep using it.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Stay</button><button class="btn primary" type="button" data-act="appexit">Close</button></div></div></div>`;
   if(dialog==='grpdel'){const g=G.list.find(x=>x.gid===gmId);return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete group?</h3><p>This deletes <b>${esc(g?g.name:'')}</b> and all its games for everyone in it. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="grpdelyes">Delete</button></div></div></div>`;}
   if(dialog==='otheracct')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Games from another account</h3><p>This phone has games from a different account. Do you want to add them to this account, or start fresh on this phone?</p><div class="dbtns" style="flex-direction:column"><button class="btn primary" type="button" data-act="ackeep">Add them to this account</button><button class="btn" type="button" data-act="acfresh">Start fresh on this phone</button><button class="btn" type="button" data-act="accancel">Cancel and sign out</button></div></div></div>`;
   if(dialog==='pdel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove ${esc(prTarget)}?</h3><p>${esc(prTarget)} will not be offered when you start a new game, and is taken out of games that have not started yet. Games already started keep the name and the results.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep</button><button class="btn primary" type="button" data-act="confirmpdel">Yes, remove</button></div></div></div>`;
@@ -2311,7 +2346,7 @@ function render(){
   if(acct.user&&!DEMO&&!G.cur&&!['groups','gmanage','gcreate','gjoin','account','settings'].includes(extraPage)&&!helpOpen&&!contactOpen)extraPage='groups';
   const sb=$('#sesbar');const cs=store.sessions.find(x=>x.data===S);
   if(sb){sb.hidden=home||!cs||gateOn();sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
-  const nv=document.querySelector('.nav');if(nv)nv.hidden=gateOn()||(home&&!helpOpen&&!contactOpen&&!extraPage);
+  const nv=document.querySelector('.nav');if(nv)nv.hidden=gateOn()||isGP()||(home&&!helpOpen&&!contactOpen&&!extraPage);
   $('#view').innerHTML=gateOn()?`<div class="stack">${accountPage()}</div>`:viewBar()+(helpOpen?viewHelp():contactOpen?viewContact():extraPage?viewExtra():home?viewHome():S.tab==='play'?viewPlay():S.tab==='history'?viewHistory():S.tab==='pay'?viewPay():viewPlayers());
   document.querySelectorAll('.tab').forEach(b=>{
     const on=!contactOpen&&!helpOpen&&!extraPage&&b.dataset.tab===S.tab;
@@ -2518,13 +2553,14 @@ const actions={
   demoopen(){extraPage='';home=true;},
   acfresh(){dialog=null;legAns='skip';acStart();return false;},
   ackeep(){dialog=null;legAns='keep';acStart();return false;},
-  groupsopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
+  groupsopen(){if(acct.user&&!DEMO&&G.cur)leaveGroup();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
   grpreload(){listGroups().then(()=>loadAllReqs()).then(()=>render());return false;},
   grpswitch(i){const g=G.list[i];if(!g)return false;if(g.gid===G.cur){extraPage='';home=true;return;}switchGroup(g.gid);home=true;render();return false;},
   grpmanage(i){const g=G.list[i];if(!g)return false;gmId=g.gid;extraPage='gmanage';window.scrollTo(0,0);loadReqs(g).then(()=>{if(extraPage==='gmanage')render();});},
   grpback(){extraPage='groups';gmId='';gFound=null;gJoinMsg='';},
   grpnew(){if(DEMO&&!acct.user){toast('Sign in first to create or join groups.');return false;}extraPage='gcreate';window.scrollTo(0,0);},
   grpsearch(){if(DEMO&&!acct.user){toast('Sign in first to create or join groups.');return false;}extraPage='gjoin';gFound=null;gJoinMsg='';window.scrollTo(0,0);},
+  appexit(){dialog=null;appExit();return false;},
   demodel(){dialog='demodel';},
   demodelyes(){dialog=null;demoGone=true;},
   grpmemask(i){pendMem=i;dialog='grpmem';},
