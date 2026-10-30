@@ -1154,6 +1154,7 @@ function viewContact(){
   const kinds=['Bug','Change request','Other'];
   const busy=cst.s==='sending';
   const done=cst.s==='sent';
+  if(!cd.contact&&acct&&acct.user&&acct.user.email)cd.contact=acct.user.email;
   return `<div class="stack">
     <section class="card">
       <h2>Contact admin</h2>
@@ -1180,16 +1181,18 @@ function viewContact(){
   </div>`;
 }
 async function sendContact(){
-  const body={_subject:'Shuttle Turns: '+cd.kind,_captcha:'false',_template:'table',Type:cd.kind,Contact:cd.contact,Request:cd.msg,_honey:''};
+  const isMail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cd.contact);
+  const body={access_key:'d29120a9-1bea-4883-adc9-afe9b46c0584',subject:'Shuttle Turns: '+cd.kind,from_name:'Shuttle Turns app',Type:cd.kind,Contact:cd.contact,message:cd.msg,botcheck:''};
+  if(isMail)body.email=cd.contact;
   cst={s:'sending',m:''};render();
   try{
     const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),20000);
-    const r=await fetch('https://formsubmit.co/ajax/'+ADMIN,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body),signal:ctl.signal});
+    const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body),signal:ctl.signal});
     clearTimeout(to);
     const j=await r.json().catch(()=>({}));
-    if(r.ok&&String(j.success)!=='false'){cst={s:'sent',m:''};cd={kind:'Bug',contact:cd.contact,msg:''};}
-    else cst={s:'error',m:'Could not send ('+(j.message||('error '+r.status))+'). Please try again, or use the email button below.'};
-  }catch(e){cst={s:'error',m:'Could not send ('+(e&&e.name||'network')+'). Check your internet and try again, or use the email button below.'};}
+    if(r.ok&&j.success===true){cst={s:'sent',m:''};cd={kind:'Bug',contact:cd.contact,msg:''};}
+    else cst={s:'error',m:'Could not send ('+(j.message||('error '+r.status))+'). Please use the email button below.'};
+  }catch(e){cst={s:'error',m:(e&&e.name==='AbortError'?'It took too long to send.':'Could not reach the server.')+' Check your internet and try again, or use the email button below.'};}
   render();
 }
 let shareMsg='';
