@@ -1203,7 +1203,7 @@ function settingsPage(){
     <div class="stack" style="gap:10px">${tog('bigtext','Larger text','Makes all text bigger.',P.big)}
     ${canWake()?tog('awake','Keep screen on','Stops the screen from turning off while the app is open.',P.awake):''}
      ${tog('swapask','Ask reason when swapping a player','When you put a resting player in, ask why. The reason shows in the game log.',P.swapAsk)}
-     ${tog('showtime','Show playing time','Records the time from the first game starting until you end the session, and shows the total hours played in the summary.',P.showTime)}</div></section>`;
+     ${tog('showtime','Show playing time','Records how long each game lasts, from its start until the next game starts. Shown under each game in the game list and the game log.',P.showTime)}</div></section>`;
 }
 function backupPage(){
   return `<section class="card"><h2>Backup</h2>
@@ -1730,10 +1730,11 @@ function ptsRows(){
 const gameWin=g=>(g.sa!=null&&g.sb!=null&&g.sa!==g.sb)?(g.sa>g.sb?0:1):(g.win===0||g.win===1?g.win:null);
 const scoredGames=()=>S.games.filter(g=>gameWin(g)!=null).length;
 const hasRes=()=>S.mode!=='tour'&&scoredGames()>0;
+function fmtMin(m){const h=Math.floor(m/60),r=m%60;return h?`${h} h${r?' '+r+' min':''}`:`${r} min`;}
+function gameDur(g){return (P.showTime&&g&&g.dur!=null)?fmtMin(Math.max(1,Math.round(g.dur/60000))):'';}
+function stopClock(g){if(g&&g.at&&g.dur==null)g.dur=Date.now()-g.at;}
 function playedStr(){
-  if(!P.showTime||!S.ended||!S.endedAt)return '';const t0=S.t0||(S.games[0]&&S.games[0].at);if(!t0)return '';
-  const m=Math.max(1,Math.round((S.endedAt-t0)/60000));const h=Math.floor(m/60),r=m%60;
-  return h?`${h} h${r?' '+r+' min':''}`:`${r} min`;
+  return '';
 }
 function pointsSpec(){
   const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -1804,7 +1805,7 @@ function summaryCard(){
 /* ---- game log as an image ---- */
 function gameLogSpec(){
   const games=S.games.slice(0,S.cur+1);
-  return {title:'GAME LOG',sub:`${fullDate()} \u00B7 ${games.length} ${games.length===1?'game':'games'}`,blocks:games.map((g,i)=>({n:'GAME '+(i+1)+(g.sa!=null?'  \u00B7  SCORE '+g.sa+' - '+g.sb:''),who:gameWho(g),rest:[gameRest(g)].concat(swapNote(g)?['Swap: '+swapNote(g)]:[])}))};
+  return {title:'GAME LOG',sub:`${fullDate()} \u00B7 ${games.length} ${games.length===1?'game':'games'}`,blocks:games.map((g,i)=>({n:'GAME '+(i+1)+(g.sa!=null?'  \u00B7  SCORE '+g.sa+' - '+g.sb:''),who:gameWho(g),rest:[gameRest(g)].concat(swapNote(g)?['Swap: '+swapNote(g)]:[]).concat(gameDur(g)?['Played: '+gameDur(g)]:[])}))};
 }
 function lineupSpec(){
   fixCurrent();
@@ -2316,7 +2317,7 @@ function viewHistory(){
   const summary=spread<=1
     ?`<span class="pill">Even</span><span class="muted">Every ${unit} is within 1 turn of each other.</span>`
     :`<span class="pill rest-pill">Gap of ${spread}</span><span class="muted">Whoever rested will play next.</span>`;
-  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${g.sa!=null?` <b>${g.sa}-${g.sb}</b>`:''}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small>${swapNote(g)?`<small>${esc(swapNote(g))}</small>`:''}</li>`).join('');
+  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${g.sa!=null?` <b>${g.sa}-${g.sb}</b>`:''}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small>${swapNote(g)?`<small>${esc(swapNote(g))}</small>`:''}${gameDur(g)?`<small>Played ${gameDur(g)}</small>`:''}</li>`).join('');
   return `<div class="stack">
     ${S.ended?summaryCard():(hasRes()?ptsCard():'')}
     <section class="card">
@@ -2425,15 +2426,15 @@ const actions={
       const g0=S.games[S.cur];
       if(S.cur+1<S.games.length&&g0.sa!=null&&(g0.sa!==r.a||g0.sb!==r.b)){pendScore={i:S.cur,a:r.a,b:r.b};dialog='scoreedit';return;}
       g0.sa=r.a;g0.sb=r.b;scDraft={k:-1,a:'',b:''};}
-    if(S.cur+1<S.games.length){S.cur++;}
-    else{const g=pickGame();if(!g)return;S.games.push({...g,at:Date.now()});S.cur=S.games.length-1;}
+    if(S.cur+1<S.games.length){stopClock(S.games[S.cur]);S.cur++;}
+    else{const g=pickGame();if(!g)return;stopClock(S.games[S.cur]);S.games.push({...g,at:Date.now()});S.cur=S.games.length-1;}
     S.games[S.cur].at=Date.now();
   },
   confirmscoreedit(){
     dialog=null;const g=pendScore&&S.games[pendScore.i];
     if(g){g.sa=pendScore.a;g.sb=pendScore.b;}
     pendScore=null;scDraft={k:-1,a:'',b:''};
-    if(S.cur+1<S.games.length)S.cur++;S.games[S.cur].at=Date.now();
+    if(S.cur+1<S.games.length){stopClock(S.games[S.cur]);S.cur++;}S.games[S.cur].at=Date.now();
   },
   prev(){if(S.cur>0)S.cur--;},
   pickp(id){
@@ -2539,7 +2540,7 @@ const actions={
     }
     dialog='end';
   },
-  confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else dropPlanned();dropNote=false;S.ended=true;S.endedAt=Date.now();S.tab='history';},
+  confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else dropPlanned();dropNote=false;S.ended=true;S.endedAt=Date.now();stopClock(S.games[S.cur]);S.tab='history';},
   reopen(){S.ended=false;S.endedAt=null;copyMsg='';S.tab='play';},
   gohome(){hideToast();playersOpen=false;home=true;setOpen(false);contactOpen=false;helpOpen=false;extraPage='';window.scrollTo(0,0);},
   opensession(id){const x=store.sessions.find(q=>q.id===id);if(!x)return false;extraPage='';S=x.data;store.cur=id;home=false;setOpen(true);scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};copyMsg='';shareMsg='';window.scrollTo(0,0);},
