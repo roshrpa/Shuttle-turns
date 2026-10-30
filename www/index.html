@@ -520,12 +520,12 @@ function stamp(){
   const rh=hsh(JSON.stringify(store.hidden||[]));if(store.rh!==rh){store.rh=rh;store.rmod=Date.now();}
 }
 /* --- sign in --- */
-const AUTH_ERR={EMAIL_EXISTS:'This email already has an account. Sign in instead.',INVALID_LOGIN_CREDENTIALS:'Wrong email or password.',INVALID_PASSWORD:'Wrong email or password.',EMAIL_NOT_FOUND:'Wrong email or password.',WEAK_PASSWORD:'Use at least 6 characters for the password.',INVALID_EMAIL:'This email does not look right.',MISSING_PASSWORD:'Enter a password.',MISSING_EMAIL:'Enter your email.',TOO_MANY_ATTEMPTS_TRY_LATER:'Too many tries. Wait a little and try again.',OPERATION_NOT_ALLOWED:'Email sign-in is not turned on in Firebase yet.',USER_DISABLED:'This account is turned off.'};
+const AUTH_ERR={EMAIL_EXISTS:'This email already has an account. Sign in instead.',INVALID_LOGIN_CREDENTIALS:'Wrong email or password.',INVALID_PASSWORD:'Wrong email or password.',EMAIL_NOT_FOUND:'Wrong email or password.',WEAK_PASSWORD:'Use at least 6 characters for the password.',INVALID_EMAIL:'This email does not look right.',MISSING_PASSWORD:'Enter a password.',MISSING_EMAIL:'Enter your email.',TOO_MANY_ATTEMPTS_TRY_LATER:'Too many tries. Wait a little and try again.',OPERATION_NOT_ALLOWED:'Email sign-in is not turned on in Firebase yet.',USER_DISABLED:'This account is turned off.',INVALID_ID_TOKEN:'Your sign-in expired. Please sign out and sign in again.'};
 async function authCall(path,body){
   let r;try{r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+path+'?key='+FB.k,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
   catch(e){throw new Error('Could not reach the server. Check the internet and try again.');}
   let j={};try{j=await r.json();}catch(e){}
-  if(!r.ok){const c=String((j.error&&j.error.message)||'').split(' ')[0];throw new Error(AUTH_ERR[c]||'Something went wrong ('+(c||r.status)+').');}
+  if(!r.ok){const c=String((j.error&&j.error.message)||'').split(' ')[0];const er=new Error(AUTH_ERR[c]||'Something went wrong ('+(c||r.status)+').');er.code=c;throw er;}
   return j;
 }
 function setSession(j,keepName){
@@ -533,31 +533,41 @@ function setSession(j,keepName){
   acct.user={uid:j.localId,email:String(j.email||u.email||'').toLowerCase(),name:j.displayName!=null?j.displayName:(u.name||''),refresh:j.refreshToken||u.refresh,id:j.idToken,exp:Date.now()+(Math.max(60,+j.expiresIn||3600)-60)*1000,verified:!!u.verified};
   saveAuth();
 }
-async function idToken(){
+async function idToken(force){
   const u=acct.user;if(!u)throw new Error('denied');
-  if(u.exp>Date.now()+5000)return u.id;
+  if(!force&&u.exp>Date.now()+5000)return u.id;
   let r;try{r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FB.k,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(u.refresh)});}catch(e){throw new Error('offline');}
   if(r.status===400||r.status===401){acct.user=null;saveAuth();throw new Error('signedout');}
   if(!r.ok)throw new Error('offline');
   const j=await r.json();u.id=j.id_token;u.refresh=j.refresh_token||u.refresh;u.exp=Date.now()+(Math.max(60,+j.expires_in||3600)-60)*1000;saveAuth();return u.id;
 }
+async function authTok(path,body){
+  try{return await authCall(path,Object.assign({idToken:await idToken()},body));}
+  catch(e){
+    if(!/INVALID_ID_TOKEN|CREDENTIAL_TOO_OLD|TOKEN_EXPIRED/.test(e.code||''))throw e;
+    return await authCall(path,Object.assign({idToken:await idToken(true)},body));
+  }
+}
 async function lookupUser(){
-  const j=await authCall('lookup',{idToken:acct.user.id});const x=(j.users||[])[0];
+  const j=await authTok('lookup',{});const x=(j.users||[])[0];
   if(x){acct.user.verified=!!x.emailVerified;if(x.displayName!=null)acct.user.name=x.displayName;acct.user.email=String(x.email||acct.user.email).toLowerCase();saveAuth();}
 }
 async function acSignIn(email,pass){const j=await authCall('signInWithPassword',{email,password:pass,returnSecureToken:true});setSession(j);try{await lookupUser();}catch(e){}}
 async function acSignUp(name,email,pass){
   const j=await authCall('signUp',{email,password:pass,returnSecureToken:true});setSession(j);
-  try{const k=await authCall('update',{idToken:acct.user.id,displayName:name,returnSecureToken:true});setSession(k);}catch(e){}
+  try{const k=await authTok('update',{displayName:name,returnSecureToken:true});setSession(k);}catch(e){}
   acct.user.name=name;saveAuth();
-  try{await authCall('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:acct.user.id});}catch(e){}
+  try{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});}catch(e){}
 }
 /* --- Firestore --- */
 const docUrl=uid=>`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents/workspaces/${encodeURIComponent(uid)}`;
 async function deniedErr(r){let d='';try{const j=await r.json();const e=j.error||(Array.isArray(j)&&j[0]&&j[0].error)||{};d=r.status+' '+(e.status||'')+(e.message?' - '+String(e.message).slice(0,160):'');}catch(e){d=String(r.status);}return new Error('denied:'+d);}
 async function fbFetch(url,opt){
-  const t=await idToken();opt=opt||{};opt.headers=Object.assign({'Authorization':'Bearer '+t},opt.headers||{});
-  try{return await fetch(url,opt);}catch(e){throw new Error('offline');}
+  opt=opt||{};
+  const go=async force=>{const t=await idToken(force);opt.headers=Object.assign({},opt.headers||{},{'Authorization':'Bearer '+t});try{return await fetch(url,opt);}catch(e){throw new Error('offline');}};
+  let r=await go(false);
+  if(r.status===401)r=await go(true);
+  return r;
 }
 async function fbGet(uid){
   const r=await fbFetch(docUrl(uid)+'?key='+FB.k);
@@ -2152,7 +2162,7 @@ const actions={
   accountopen(){if(viewing)exitShared();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='account';acct.msg='';if(acct.user){syncNow();listShared().then(()=>{if(extraPage==='account'&&!busyNow())render();});}},
   acmode(){return false;},
   acreset(){const em=($('#acEmail')||{}).value;acDo(async m=>{const e=String(em||'').trim().toLowerCase();if(!e)throw new Error('Type your email above first.');await authCall('sendOobCode',{requestType:'PASSWORD_RESET',email:e});m('We sent an email to '+e+'. Tap the link in it to set a new password.');});return false;},
-  acverify(){acDo(async m=>{await authCall('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:await idToken()});m('Email sent. Tap the link in it, then tap Check again.');});return false;},
+  acverify(){acDo(async m=>{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});m('Email sent. Tap the link in it, then tap Check again.');});return false;},
   accheck(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listShared();m(acct.user.verified?'Verified.':'Not verified yet.');render();});return false;},
   acrefresh(){listShared().then(()=>{if(extraPage==='account')render();});return false;},
   syncnow(){syncNow();},
