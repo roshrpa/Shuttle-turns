@@ -108,7 +108,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab.lk .payh,.ptab.lk .payr{grid-template-columns:minmax(60px,1fr) 40px 78px 92px}.ptab.lk .pst{min-height:36px;min-width:0;width:100%;padding:0 6px;font-size:13px}.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
 .payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
 .payh span:not(.n),.payr span:not(.n){text-align:right}
-#menuBtn[hidden]{display:none!important}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
+#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
 .okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
 .btn.small{min-height:40px;padding:0 12px;font-size:14px}
 .btn.icon{min-width:40px;padding:0}
@@ -157,8 +157,10 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .menu .pill.on{background:var(--accent);color:var(--on-accent)}
 .help h3{font:600 16px var(--font-display);letter-spacing:.08em;text-transform:uppercase;margin:14px 0 4px}
 .help p{margin:0 0 6px;color:var(--ink)}
-.top h1{padding-right:54px;font-size:32px;white-space:nowrap}
-.big .top h1{font-size:27px}
+.top h1{padding-right:106px;font-size:28px;white-space:nowrap}
+.big .top h1{font-size:24px}
+.achead{display:flex;justify-content:space-between;align-items:center;gap:10px}.refbtn{font-size:20px;min-width:44px;min-height:44px}
+.menubtn.guidebtn{right:52px;font:700 22px var(--font-display);color:var(--accent)}#guideBtn[hidden]{display:none!important}
 .menubtn{position:absolute;right:0;top:0;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .menu{position:absolute;right:0;top:50px;z-index:20;min-width:250px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px}
 .menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:12px;font:600 15px var(--font-body);color:var(--ink);cursor:pointer}
@@ -282,6 +284,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     <button id="menuBtn" class="menubtn" type="button" data-act="menutoggle" aria-label="Menu" aria-expanded="false" aria-controls="menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
+    <button id="guideBtn" class="menubtn guidebtn" type="button" data-act="tourshow" aria-label="Show the guide" title="Show the guide"><span aria-hidden="true">?</span></button>
     <div id="menu" class="menu" hidden></div>
   </header>
   <div id="sesbar" class="sesbar" hidden></div>
@@ -494,29 +497,33 @@ function pendText(v){
   const mk=it=>mark?(it.paid?'\u2705 ':'\u274C '):'';
   return `\u{1F3F8} ${ttl}\n`+list.map(e=>`${e.name}: ${fmtM(e.sum)}`+(e.items.length>1||mark?' ('+e.items.map(it=>mk(it)+it.game+' '+fmtM(it.amt)).join(', ')+')':' ('+e.items[0].game+')')).join('\n')+`\n\n${mark?'Total':'Total not paid'}: ${fmtM(tot)}`;
 }
-const KEY3='shuttle-turns-v3';
+const KEY3='shuttle-turns-v3',GKEY='shuttle-turns-groups',GPFX='shuttle-turns-g-';
+let G={uid:'',list:[],cur:'',reqs:[]};try{const g=JSON.parse(localStorage.getItem(GKEY)||'null');if(g&&Array.isArray(g.list))G=Object.assign(G,g);}catch(e){}
+function saveG(){try{localStorage.setItem(GKEY,JSON.stringify(G));}catch(e){}}
+let DEMO=false;try{DEMO=sessionStorage.getItem('st-demo')==='1';}catch(e){}
+let storeKey=DEMO?'shuttle-turns-demo':KEY3;if(!DEMO){let bu='';try{bu=(JSON.parse(localStorage.getItem('shuttle-turns-auth')||'null')||{}).uid||'';}catch(e){}if(bu&&G.uid===bu&&G.cur&&G.list.some(x=>x.gid===G.cur))storeKey=GPFX+G.cur;}
 const sesName=ts=>new Date(ts).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 function setOpen(v){try{v?sessionStorage.setItem('st-open','1'):sessionStorage.removeItem('st-open');}catch(e){}}
 function loadStore(){
-  try{const raw=localStorage.getItem(KEY3);if(raw){const st=JSON.parse(raw);if(st&&Array.isArray(st.sessions)){st.sessions=st.sessions.map(x=>({...x,data:normalize(x.data)})).filter(x=>x.data);if(!st.nextSid)st.nextSid=st.sessions.reduce((m,x)=>Math.max(m,x.id),0)+1;if(!st.sessions.some(x=>x.id===st.cur))st.cur=null;return st;}}}catch(e){}
-  const st={sessions:[],cur:null,nextSid:1};const old=load();
+  try{const raw=localStorage.getItem(storeKey);if(raw){const st=JSON.parse(raw);if(st&&Array.isArray(st.sessions)){st.sessions=st.sessions.map(x=>({...x,data:normalize(x.data)})).filter(x=>x.data);if(!st.nextSid)st.nextSid=st.sessions.reduce((m,x)=>Math.max(m,x.id),0)+1;if(!st.sessions.some(x=>x.id===st.cur))st.cur=null;return st;}}}catch(e){}
+  const st={sessions:[],cur:null,nextSid:1};const old=storeKey===KEY3?load():null;
   if(old&&(old.games.length||old.tour||!old.sample)){const ts=old.endedAt||Date.now();st.sessions.push({id:1,name:sesName(ts),created:ts,data:old});st.nextSid=2;}
   return st;
 }
 let store=loadStore();
 let home=false;
 try{home=store.sessions.length>0&&!sessionStorage.getItem('st-open');}catch(e){home=store.sessions.length>0;}
-if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:fresh()});store.cur=1;store.nextSid=2;home=false;setOpen(true);}
+if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:Object.assign(fresh(),{auto:true})});store.cur=1;store.nextSid=2;home=false;setOpen(true);}
 let S=(store.sessions.find(x=>x.id===store.cur)||store.sessions[store.sessions.length-1]).data;
-function save(){if(viewing)return;try{stamp();localStorage.setItem(KEY3,JSON.stringify(store));}catch(e){}gsyncLater(2500);}
+function save(){if(viewing)return;try{stamp();localStorage.setItem(storeKey,JSON.stringify(store));}catch(e){}gsyncLater(2500);}
 /* ---- Account and sync (Firebase REST) ---- */
 const FB={p:'shuttle-turns',k:'AIzaSyD1qN7agPFRhQs-K_KMUOcmvsIqLEFUuR8'};
 const AKEY='shuttle-turns-auth';
 const acct={user:null,mode:'in',msg:'',shared:[],sharedMsg:''};
 const gsync={state:'off',msg:'',at:0,busy:false,tm:0,again:false,defer:false};
 const NOGATE=/[?&]nogate\b/.test(location.search);
-const gateOn=()=>!NOGATE&&!acct.user;
-let viewing=null,myStore=null,myS=null,viewSig='',pendAcct=null;
+const gateOn=()=>!NOGATE&&!DEMO&&!acct.user;
+let viewing=null,viewSig='',pendAcct=null,gperm={e:1,d:1,p:1,own:1},legAns='',ensuring=false,gmId='',gMsg='',gFound=null,gJoinMsg='';
 try{const j=JSON.parse(localStorage.getItem(AKEY)||'null');if(j&&j.uid&&j.refresh){acct.user=j;gsync.state='idle';}}catch(e){}
 function saveAuth(){try{if(acct.user)localStorage.setItem(AKEY,JSON.stringify(acct.user));else localStorage.removeItem(AKEY);}catch(e){}}
 function hsh(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h;}
@@ -566,7 +573,14 @@ async function acSignUp(name,email,pass){
   try{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});}catch(e){}
 }
 /* --- Firestore --- */
-const docUrl=uid=>`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents/workspaces/${encodeURIComponent(uid)}`;
+const DOCS=`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents`;
+const wsUrl=uid=>DOCS+'/workspaces/'+encodeURIComponent(uid);
+const gUrl=gid=>DOCS+'/groups/'+encodeURIComponent(gid);
+const normName=n=>String(n||'').trim().replace(/\s+/g,' ').toLowerCase();
+const dirUrl=n=>DOCS+'/groupDir/'+Array.from(new TextEncoder().encode(normName(n)),b=>b.toString(16).padStart(2,'0')).join('');
+const sv=x=>({stringValue:String(x)});
+const strs=a=>({arrayValue:{values:a.map(sv)}});
+const JH={'Content-Type':'application/json'};
 async function deniedErr(r){let d='';try{const j=await r.json();const e=j.error||(Array.isArray(j)&&j[0]&&j[0].error)||{};d=r.status+' '+(e.status||'')+(e.message?' - '+String(e.message).slice(0,160):'');}catch(e){d=String(r.status);}return new Error('denied:'+d);}
 async function fbFetch(url,opt){
   opt=opt||{};
@@ -575,41 +589,168 @@ async function fbFetch(url,opt){
   if(r.status===401)r=await go(true);
   return r;
 }
-async function fbGet(uid){
-  const r=await fbFetch(docUrl(uid)+'?key='+FB.k);
-  if(r.status===404)return {rem:null,ut:null};
+const fk=()=>'key='+FB.k;
+function readGroup(doc){
+  const f=doc.fields||{};const st=k=>(f[k]&&f[k].stringValue)||'';
+  let perms={};try{perms=JSON.parse(st('perms')||'{}')||{};}catch(e){}
+  return {gid:doc.name.split('/').pop(),name:st('name'),ownerUid:st('ownerUid'),ownerEmail:st('ownerEmail'),ownerName:st('ownerName'),perms};
+}
+function permFields(perms){const em=Object.keys(perms);return {perms:sv(JSON.stringify(perms)),memberEmails:strs(em),writerEmails:strs(em.filter(e=>perms[e].e))};}
+async function fbGet(gid){
+  const r=await fbFetch(gUrl(gid)+'?'+fk());
+  if(r.status===404)return {gone:true};
   if(r.status===401||r.status===403)throw await deniedErr(r);
   if(!r.ok)throw new Error('http '+r.status);
-  const j=await r.json();const f=j.fields||{};const s=f.data&&f.data.stringValue;
-  let rem=null;try{rem=JSON.parse(s);}catch(e){}
+  const j=await r.json();const f=j.fields||{};let rem=null;try{rem=JSON.parse(f.data&&f.data.stringValue);}catch(e){}
   if(!rem||!Array.isArray(rem.sessions))throw new Error('bad data');
-  return {rem,ut:j.updateTime,ownerName:(f.ownerName&&f.ownerName.stringValue)||'',ownerEmail:(f.ownerEmail&&f.ownerEmail.stringValue)||''};
+  return {rem,ut:j.updateTime,meta:readGroup(j)};
 }
-async function fbPut(obj,ut){
-  const u=acct.user;
-  const q=ut?'currentDocument.updateTime='+encodeURIComponent(ut):'currentDocument.exists=false';
-  const body={fields:{data:{stringValue:JSON.stringify(obj)},updated:{integerValue:String(Date.now())},ownerEmail:{stringValue:u.email},ownerName:{stringValue:u.name||''},members:{arrayValue:{values:(obj.members||[]).map(m=>({stringValue:m}))}}}};
-  const r=await fbFetch(docUrl(u.uid)+'?key='+FB.k+'&'+q,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+async function fbPut(gid,obj,ut){
+  const q='updateMask.fieldPaths=data&updateMask.fieldPaths=updated&'+(ut?'currentDocument.updateTime='+encodeURIComponent(ut):'currentDocument.exists=true');
+  const r=await fbFetch(gUrl(gid)+'?'+fk()+'&'+q,{method:'PATCH',headers:JH,body:JSON.stringify({fields:{data:sv(JSON.stringify(obj)),updated:{integerValue:String(Date.now())}}})});
   if(r.ok)return 'ok';
   if(r.status===401||r.status===403)throw await deniedErr(r);
   if(r.status===400||r.status===409)return 'conflict';
   throw new Error('http '+r.status);
 }
-async function listShared(){
-  const u=acct.user;if(!u)return;
+async function putMeta(gid,fields){
+  const q=Object.keys(fields).map(k=>'updateMask.fieldPaths='+k).join('&');
+  const r=await fbFetch(gUrl(gid)+'?'+fk()+'&'+q+'&currentDocument.exists=true',{method:'PATCH',headers:JH,body:JSON.stringify({fields})});
+  if(!r.ok){if(r.status===401||r.status===403)throw await deniedErr(r);throw new Error('http '+r.status);}
+}
+async function fbDel(url){const r=await fbFetch(url+'?'+fk(),{method:'DELETE'});if(!r.ok&&r.status!==404&&r.status!==403)throw new Error('http '+r.status);return r.ok;}
+/* --- groups --- */
+const gcur=()=>G.list.find(g=>g.gid===G.cur)||null;
+function myPerm(g){
+  const u=acct.user;if(!g||!u)return {e:1,d:1,p:1,own:0};
+  if(g.ownerUid===u.uid)return {e:1,d:1,p:1,own:1};
+  const p=(g.perms||{})[u.email]||{};return {e:!!p.e,d:!!p.e&&!!p.d,p:!!p.e&&!!p.p,own:0};
+}
+function applyRole(){const g=gcur();gperm=g&&acct.user?myPerm(g):{e:1,d:1,p:1,own:1};viewing=(g&&acct.user&&!gperm.e)?{name:g.name}:null;}
+function roleOf(g){const p=myPerm(g);return p.own?'Owner':p.e?'Can edit':'View only';}
+async function listGroups(){
+  const u=acct.user;if(!u)return false;
+  const run=async where=>{
+    const r=await fbFetch(DOCS+':runQuery?'+fk(),{method:'POST',headers:JH,body:JSON.stringify({structuredQuery:{from:[{collectionId:'groups'}],where}})});
+    if(!r.ok)throw await deniedErr(r);const j=await r.json();return (j||[]).filter(x=>x.document).map(x=>readGroup(x.document));};
   try{
-    const qurl=`https://firestore.googleapis.com/v1/projects/${FB.p}/databases/(default)/documents:runQuery?key=${FB.k}`;
-    const qopt=()=>({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'workspaces'}],where:{fieldFilter:{field:{fieldPath:'members'},op:'ARRAY_CONTAINS',value:{stringValue:u.email}}}}})});
-    let r=await fbFetch(qurl,qopt());
-    if(r.status===403){try{await lookupUser();}catch(e){}acct.user.exp=0;r=await fbFetch(qurl,qopt());}
-    if(!r.ok){let d='';try{const e=await deniedErr(r);d=e.message.slice(7);}catch(e){}acct.sharedMsg=(r.status===403||r.status===401?'Could not load shared games. Make sure your email is verified, then tap Check again.':'Could not load shared games.')+(d?' ('+d+')':'');return;}
-    const j=await r.json();acct.sharedMsg='';
-    acct.shared=(j||[]).filter(x=>x.document).map(x=>{const f=x.document.fields||{};const uid=x.document.name.split('/').pop();return {uid,name:(f.ownerName&&f.ownerName.stringValue)||'',email:(f.ownerEmail&&f.ownerEmail.stringValue)||''};}).filter(x=>x.uid!==u.uid);
-  }catch(e){acct.sharedMsg='Could not load shared games.';}
+    let all=await run({fieldFilter:{field:{fieldPath:'ownerUid'},op:'EQUAL',value:sv(u.uid)}});
+    gMsg='';
+    try{all=all.concat(await run({fieldFilter:{field:{fieldPath:'memberEmails'},op:'ARRAY_CONTAINS',value:sv(u.email)}}));}
+    catch(e){if(u.verified)throw e;gMsg='Verify your email to see groups you were added to.';}
+    const seen=new Set();const old=new Map(G.list.map(g=>[g.gid,g]));
+    G.list=all.filter(g=>!seen.has(g.gid)&&seen.add(g.gid)).map(g=>Object.assign(old.get(g.gid)||{},g));
+    G.list.sort((a,b)=>(b.ownerUid===u.uid)-(a.ownerUid===u.uid)||a.name.localeCompare(b.name));
+    G.uid=u.uid;if(!G.list.some(g=>g.gid===G.cur))G.cur='';
+    const left=[];
+    for(const q of (G.reqs||[])){
+      if(G.list.some(g=>g.gid===q.gid))continue;
+      try{const r=await fbFetch(gUrl(q.gid)+'/requests/'+encodeURIComponent(u.uid)+'?'+fk());if(r.status===404){toast('Your request to join '+q.name+' was not approved.');continue;}}catch(e){}
+      left.push(q);
+    }
+    G.reqs=left;saveG();
+    const g=gcur();if(g){const was=viewing;applyRole();if(!!was!==!!viewing)gRefreshMode();}
+    return true;
+  }catch(e){gMsg='Could not load groups. '+gsErr(e);return false;}
+}
+function gRefreshMode(){if(viewing){store={sessions:[],cur:null,nextSid:1,roster:[],hidden:[]};S=fresh();home=true;viewSig='';render();refreshRO(true);}else{switchGroup(G.cur);}}
+async function loadReqs(g){
+  try{
+    const r=await fbFetch(gUrl(g.gid)+':runQuery?'+fk(),{method:'POST',headers:JH,body:JSON.stringify({structuredQuery:{from:[{collectionId:'requests'}]}})});
+    if(!r.ok)return;const j=await r.json();
+    g.reqs=(j||[]).filter(x=>x.document).map(x=>{const f=x.document.fields||{};const st=k=>(f[k]&&f[k].stringValue)||'';return {uid:x.document.name.split('/').pop(),email:st('email'),name:st('name'),status:st('status')};}).filter(x=>x.status==='pending');
+  }catch(e){}
+}
+async function loadAllReqs(){for(const g of G.list.filter(x=>x.ownerUid===(acct.user||{}).uid))await loadReqs(g);}
+async function dirPut(gid,nm,u){const r=await fbFetch(dirUrl(nm)+'?'+fk()+'&currentDocument.exists=false',{method:'PATCH',headers:JH,body:JSON.stringify({fields:{gid:sv(gid),name:sv(nm),ownerUid:sv(u.uid),ownerName:sv(u.name||'')}})});return r.ok;}
+const cleanName=n=>String(n||'').trim().replace(/\s+/g,' ').slice(0,30);
+async function nameFree(nm){const r=await fbFetch(dirUrl(nm)+'?'+fk());if(r.status===404)return true;if(r.status===200)return false;throw await deniedErr(r);}
+async function createGroup(name,quiet){
+  const u=acct.user,nm=cleanName(name);if(!nm)throw new Error('Type a group name.');
+  if(!quiet&&!(await nameFree(nm)))throw new Error('This name is already used. Try another name.');
+  const gid=newGid(),empty={v:1,sessions:[],roster:[],hidden:[],rmod:0,del:[]};
+  const r=await fbFetch(gUrl(gid)+'?'+fk()+'&currentDocument.exists=false',{method:'PATCH',headers:JH,body:JSON.stringify({fields:Object.assign({data:sv(JSON.stringify(empty)),updated:{integerValue:String(Date.now())},name:sv(nm),ownerUid:sv(u.uid),ownerEmail:sv(u.email),ownerName:sv(u.name||''),created:{integerValue:String(Date.now())}},permFields({}))})});
+  if(!r.ok)throw await deniedErr(r);
+  const ok=await dirPut(gid,nm,u);
+  if(!ok&&!quiet){await fbDel(gUrl(gid));throw new Error('This name is already used. Try another name.');}
+  const g={gid,name:nm,ownerUid:u.uid,ownerEmail:u.email,ownerName:u.name||'',perms:{}};
+  G.list.push(g);saveG();return g;
+}
+async function renameGroup(g,name){
+  const nm=cleanName(name);if(!nm)throw new Error('Type a group name.');
+  const chg=normName(nm)!==normName(g.name);
+  if(chg&&!(await nameFree(nm)))throw new Error('This name is already used. Try another name.');
+  await putMeta(g.gid,{name:sv(nm)});
+  if(chg){await fbDel(dirUrl(g.name));await dirPut(g.gid,nm,acct.user);}
+  g.name=nm;saveG();
+}
+async function deleteGroup(g){await fbDel(dirUrl(g.name));await fbDel(gUrl(g.gid));dropGroup(g.gid);}
+function dropGroup(gid){
+  G.list=G.list.filter(g=>g.gid!==gid);try{localStorage.removeItem(GPFX+gid);}catch(e){}
+  const was=G.cur===gid;if(was)G.cur='';saveG();
+  if(was){if(G.list.length)switchGroup(G.list[0].gid,true);else{viewing=null;gmId='';extraPage='groups';render();}}
+}
+async function setPerm(g,perms){await putMeta(g.gid,permFields(perms));g.perms=perms;saveG();}
+async function findGroup(nm){
+  const r=await fbFetch(dirUrl(nm)+'?'+fk());if(r.status===404)return null;if(!r.ok)throw await deniedErr(r);
+  const f=(await r.json()).fields||{};const st=k=>(f[k]&&f[k].stringValue)||'';return {gid:st('gid'),name:st('name'),ownerName:st('ownerName')};
+}
+async function requestJoin(x){
+  const u=acct.user;if(G.list.some(g=>g.gid===x.gid))throw new Error('You are already in this group.');
+  if(!u.verified)throw new Error('Verify your email first (Account page), then try again.');
+  const url=gUrl(x.gid)+'/requests/'+encodeURIComponent(u.uid);
+  await fbDel(url);
+  const r=await fbFetch(url+'?'+fk()+'&currentDocument.exists=false',{method:'PATCH',headers:JH,body:JSON.stringify({fields:{email:sv(u.email),name:sv(u.name||''),at:{integerValue:String(Date.now())},status:sv('pending')}})});
+  if(!r.ok)throw await deniedErr(r);
+  G.reqs=(G.reqs||[]).filter(q=>q.gid!==x.gid).concat([{gid:x.gid,name:x.name,at:Date.now()}]);saveG();
+}
+async function cancelReq(gid){await fbDel(gUrl(gid)+'/requests/'+encodeURIComponent(acct.user.uid));G.reqs=(G.reqs||[]).filter(q=>q.gid!==gid);saveG();}
+function initStore(){
+  store=loadStore();
+  if(!store.sessions.length){store.sessions.push({id:1,name:sesName(Date.now()),created:Date.now(),data:Object.assign(fresh(),{auto:true})});store.cur=1;store.nextSid=2;}
+  S=(store.sessions.find(x=>x.id===store.cur)||store.sessions[store.sessions.length-1]).data;
+  home=!store.sessions.every(isPlaceholder);
+}
+function switchGroup(gid,nosync){
+  if(!viewing){try{stamp();localStorage.setItem(storeKey,JSON.stringify(store));}catch(e){}}
+  clearTimeout(gsync.tm);
+  G.cur=gid;saveG();storeKey=GPFX+gid;extraPage='';helpOpen=false;contactOpen=false;gmId='';window.scrollTo(0,0);
+  applyRole();
+  if(viewing){gRefreshMode();return;}
+  initStore();render();if(!nosync)syncNow();
+}
+async function fetchWorkspace(uid){
+  try{const r=await fbFetch(wsUrl(uid)+'?'+fk());if(!r.ok)return null;const j=await r.json();const f=j.fields||{};const rem=JSON.parse(f.data&&f.data.stringValue);return rem&&Array.isArray(rem.sessions)&&rem.sessions.length?rem:null;}catch(e){return null;}
+}
+async function ensureGroups(){
+  if(ensuring||!acct.user)return;ensuring=true;
+  try{
+    const u=acct.user;
+    if(G.uid!==u.uid){G={uid:u.uid,list:[],cur:'',reqs:[]};saveG();}
+    if(!(await listGroups()))return;
+    let raw=null,leg=null;try{raw=localStorage.getItem(KEY3);leg=JSON.parse(raw||'null');}catch(e){}
+    let legHas=!!(leg&&Array.isArray(leg.sessions)&&leg.sessions.some(x=>x.data&&!isPlaceholder(x)));
+    if(legHas&&leg.owner&&leg.owner!==u.uid&&!legAns){dialog='otheracct';render();return;}
+    if(legAns==='skip')legHas=false;
+    const fresh0=!G.list.length;
+    const wsRem=fresh0?await fetchWorkspace(u.uid):null;
+    if(legHas||wsRem){
+      const g=await createGroup((u.name||u.email.split('@')[0])+"\u2019s games",true);
+      if(legHas){const st=JSON.parse(raw);delete st.owner;localStorage.setItem(GPFX+g.gid,JSON.stringify(st));}
+      if(raw){try{localStorage.setItem(KEY3+'-old',raw);localStorage.removeItem(KEY3);}catch(e){}}
+      G.cur=g.gid;saveG();storeKey=GPFX+g.gid;applyRole();initStore();
+      if(wsRem){mergeRemote(wsRem);save();}
+      legAns='';
+    }else if(raw){try{localStorage.setItem(KEY3+'-old',raw);localStorage.removeItem(KEY3);}catch(e){}}
+    if(G.cur&&storeKey!==GPFX+G.cur)switchGroup(G.cur,true);
+    else if(G.cur){applyRole();if(viewing)gRefreshMode();}
+    saveG();
+  }catch(e){gMsg=gsErr(e);}
+  finally{ensuring=false;}
 }
 function buildRemote(){
   return {v:1,sessions:store.sessions.slice().sort((a,b)=>a.gid<b.gid?-1:1).map(x=>({gid:x.gid,name:x.name,created:x.created,mod:x.mod||0,data:x.data})),
-    roster:store.roster||[],hidden:store.hidden||[],rmod:store.rmod||0,del:store.del||[],members:store.members||[],mmod:store.mmod||0};
+    roster:store.roster||[],hidden:store.hidden||[],rmod:store.rmod||0,del:store.del||[]};
 }
 function needPush(rem){
   const rs=new Map((rem.sessions||[]).map(x=>[x.gid,x]));
@@ -619,7 +760,6 @@ function needPush(rem){
   const rr=new Set((rem.roster||[]).map(nkey));
   if((store.roster||[]).some(n=>!rr.has(nkey(n))))return true;
   if((store.rmod||0)>(rem.rmod||0))return true;
-  if((store.mmod||0)>(rem.mmod||0))return true;
   return false;
 }
 function mergeRemote(rem){
@@ -631,7 +771,7 @@ function mergeRemote(rem){
   if(store.sessions.length!==n0){ch=true;
     if(!store.sessions.some(x=>x.data===S)){
       home=true;extraPage=extraPage==='account'?'account':'';
-      if(!store.sessions.length)store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:fresh()});
+      if(!store.sessions.length)store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:Object.assign(fresh(),{auto:true})});
       const f=store.sessions[store.sessions.length-1];S=f.data;store.cur=f.id;
     }
   }
@@ -648,7 +788,6 @@ function mergeRemote(rem){
   const have=new Set((store.roster||[]).map(nkey));
   (rem.roster||[]).forEach(n=>{if(typeof n==='string'&&!have.has(nkey(n))){store.roster=(store.roster||[]).concat([n]);have.add(nkey(n));ch=true;}});
   if((rem.rmod||0)>(store.rmod||0)&&Array.isArray(rem.hidden)){store.hidden=rem.hidden.filter(n=>typeof n==='string');store.rmod=rem.rmod;store.rh=hsh(JSON.stringify(store.hidden));ch=true;}
-  if((rem.mmod||0)>(store.mmod||0)&&Array.isArray(rem.members)){store.members=rem.members.filter(n=>typeof n==='string');store.mmod=rem.mmod;ch=true;}
   return ch;
 }
 function gsErr(e){
@@ -660,65 +799,63 @@ function gsErr(e){
 }
 function busyNow(){const a=document.activeElement;return !!dialog||!!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));}
 async function syncNow(){
-  if(!acct.user||viewing)return;
+  const g=gcur();
+  if(!acct.user||viewing||!g)return;
   if(gsync.busy){gsync.again=true;return;}
-  gsync.busy=true;gsync.state='sync';let rerender=false;
+  gsync.busy=true;gsync.state='sync';let rerender=false;const gid=g.gid;
   try{
     for(let t=0;t<4;t++){
       stamp();
-      const g=await fbGet(acct.user.uid);
-      if(g.rem&&mergeRemote(g.rem)){rerender=true;save();}
+      const r0=await fbGet(gid);
+      if(G.cur!==gid)throw new Error('switched');
+      if(r0.gone){gsync.busy=false;dropGroup(gid);toast('This group is no longer available.');return;}
+      if(JSON.stringify(r0.meta.perms)!==JSON.stringify(g.perms||{})||r0.meta.name!==g.name){Object.assign(g,r0.meta);saveG();const was=viewing;applyRole();if(!!was!==!!viewing){gsync.busy=false;gRefreshMode();return;}rerender=true;}
+      if(mergeRemote(r0.rem)){rerender=true;save();}
       stamp();
-      if(!g.rem||needPush(g.rem)){
-        const res=await fbPut(buildRemote(),g.ut);
+      if(needPush(r0.rem)){
+        const res=await fbPut(gid,buildRemote(),r0.ut);
         if(res==='conflict'){if(t===3)throw new Error('busy');continue;}
         save();
       }
       break;
     }
-    store.owner=acct.user.uid;gsync.state='ok';gsync.at=Date.now();gsync.msg='';
-  }catch(e){gsync.state=(e&&/^(denied|signedout)/.test(String(e.message)))?'err':'offline';gsync.msg=gsErr(e);}
+    gsync.state='ok';gsync.at=Date.now();gsync.msg='';
+  }catch(e){if(String(e&&e.message)==='switched'){gsync.busy=false;return;}gsync.state=(e&&/^(denied|signedout)/.test(String(e.message)))?'err':'offline';gsync.msg=gsErr(e);}
   gsync.busy=false;
   if(rerender){if(busyNow())gsync.defer=true;else render();}
-  else if(extraPage==='account'&&!busyNow())render();
+  else if((extraPage==='account'||extraPage==='groups'||extraPage==='gmanage')&&!busyNow())render();
   if(gsync.again){gsync.again=false;gsyncLater(1500);}
 }
 function gsyncLater(ms){if(!acct.user||viewing)return;clearTimeout(gsync.tm);gsync.tm=setTimeout(syncNow,ms||2000);}
 function gsyncTime(){return new Date(gsync.at).toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true});}
-/* --- viewing someone else's games (view only) --- */
+/* --- read-only groups --- */
 function buildViewStore(rem){
   const ss=[];(rem.sessions||[]).forEach((r,i)=>{let d=null;try{d=normalize(r.data);}catch(e){}if(d&&typeof r.name==='string')ss.push({id:ss.length+1,gid:r.gid,name:r.name,created:+r.created||0,data:d,mod:r.mod||0});});
   return {sessions:ss,cur:null,nextSid:ss.length+1,roster:Array.isArray(rem.roster)?rem.roster:[],hidden:Array.isArray(rem.hidden)?rem.hidden:[]};
 }
-async function openShared(i){
-  const o=acct.shared[i];if(!o)return;
+async function refreshRO(first){
+  const g=gcur();if(!g||!viewing||(!first&&busyNow()))return;
   try{
-    const g=await fbGet(o.uid);if(!g.rem){toast('Nothing to show yet.');return;}
-    const cs=store.sessions.find(x=>x.data===S);
-    myStore=store;myS=S;store=buildViewStore(g.rem);viewing={uid:o.uid,name:o.name||o.email,email:o.email};viewSig=hsh(JSON.stringify(g.rem))+'';
-    S=(store.sessions[store.sessions.length-1]||{data:fresh()}).data;home=true;extraPage='';helpOpen=false;contactOpen=false;window.scrollTo(0,0);render();
-  }catch(e){toast(gsErr(e));}
-}
-function exitShared(){
-  if(!viewing)return;store=myStore;S=myS;myStore=null;myS=null;viewing=null;home=true;extraPage='';window.scrollTo(0,0);render();gsyncLater(500);
-}
-async function refreshShared(){
-  if(!viewing||busyNow())return;
-  try{
-    const g=await fbGet(viewing.uid);if(!g.rem||!viewing)return;
-    const sig=hsh(JSON.stringify(g.rem))+'';if(sig===viewSig)return;viewSig=sig;
-    const cur=store.sessions.find(x=>x.data===S),gid=cur&&cur.gid,tab=S.tab;
-    store=buildViewStore(g.rem);const k=gid&&store.sessions.find(x=>x.gid===gid);
+    const r=await fbGet(g.gid);if(G.cur!==g.gid||!viewing)return;
+    if(r.gone){dropGroup(g.gid);toast('This group is no longer available.');return;}
+    Object.assign(g,r.meta);saveG();applyRole();
+    if(!viewing){switchGroup(g.gid);return;}
+    const sig=hsh(JSON.stringify(r.rem))+'';if(sig===viewSig&&!first)return;viewSig=sig;
+    const cur=store.sessions.find(x=>x.data===S),cg=cur&&cur.gid,tab=S.tab;
+    store=buildViewStore(r.rem);const k=cg&&store.sessions.find(x=>x.gid===cg);
     if(k){S=k.data;S.tab=tab;}else{S=(store.sessions[store.sessions.length-1]||{data:fresh()}).data;home=true;}
-    if(!busyNow())render();
-  }catch(e){}
+    gsync.state='ok';gsync.at=Date.now();gsync.msg='';
+    if(first||!busyNow())render();
+  }catch(e){if(first){gsync.state='offline';gsync.msg=gsErr(e);render();}}
 }
-const VIEW_OK=new Set(['gohome','opensession','openpay','shareimg','sharelineup','sharepaysum','paymon','shareptsimg','sharependimg','sharepayimg','paycopy','copy','copymon','monthopen','monthclose','pfstatus','payclear','paysopen','helpopen','helpclose','contactopen','contactclose','contactnew','settingsopen','menutoggle','bigtext','awake','cancel','accountopen','menugames','viewexit','menuplayers','playersback']);
+const DEL_ACTS=new Set(['sesdel','confirmsesdel','pdel','confirmpdel','removeteam','remove']);
+const PAY_ACTS=new Set(['payin','payhm','payhp','payguest','payround','paytick','payfinal','payconfirm','payedit','payunlock','paystat','markall','confirmmarkall','payclear']);
+const VIEW_OK=new Set(['groupsopen','demoexit','demoopen','gohome','opensession','openpay','shareimg','sharelineup','sharepaysum','paymon','shareptsimg','sharependimg','sharepayimg','paycopy','copy','copymon','monthopen','monthclose','pfstatus','payclear','paysopen','helpopen','helpclose','contactopen','contactclose','contactnew','settingsopen','menutoggle','bigtext','awake','cancel','accountopen','menugames','viewexit','menuplayers','playersback']);
 /* --- pages --- */
 function accountPage(){
   const u=acct.user;
   const gate=gateOn();
-  const info=gate?'<p class="hint">Sign in, or create an account, to use Shuttle Turns. Your games are saved under your account, so you can open them on any phone.</p>':'<p class="hint">An account keeps your games on every phone you sign in on, and lets you share them with others.</p>';
+  const info=gate?'<p class="hint">Sign in, or create an account, to use Shuttle Turns. Your games are saved under your account, so you can open them on any phone.</p>':'<p class="hint">An account keeps your games on every phone you sign in on, and lets you share them in groups.</p>';
   if(!u){
     const up=acct.mode==='up';
     return `<section class="card"><h2>${gate?(up?'Create account':'Sign in'):'Account'}</h2>${info}
@@ -729,37 +866,70 @@ function accountPage(){
         <label class="lbl">Password<input id="acPass" class="field" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
         <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p>
         <button class="btn primary block" type="submit">${up?'Create account':'Sign in'}</button></form>
+      ${gate?'':''}
       ${up?'':'<button class="linkbtn" type="button" data-act="acreset" style="align-self:flex-start;margin-top:8px">Forgot password?</button>'}</section>`;
   }
   const st=gsync.state==='sync'?'Syncing…':gsync.state==='ok'?'Synced at '+gsyncTime():(gsync.state==='offline'||gsync.state==='err')?gsync.msg:'Not synced yet';
   const mem=(store.members||[]);
-  return `<section class="card"><h2>Account</h2>
+  return `<section class="card"><div class="achead"><h2>Account</h2><button type="button" class="btn small icon refbtn" data-act="acreload" aria-label="Refresh" title="Refresh: check email verification, groups and sync">\u21BB</button></div>
     <p style="margin:0;font-weight:700">${esc(u.name||'No name')}</p><p class="muted" style="margin:2px 0 8px">${esc(u.email)}</p>
     ${u.verified?'<p class="hint" style="margin:0 0 6px"><span class="pk ok">✓</span> Email verified</p>':'<p class="hint" style="margin:0 0 6px">'+(acct.vsent?'<b>✉ Verification email sent to '+esc(u.email)+'.</b> Please open it (check Spam too), tap the link, then tap Check again.':'Your email is not verified yet. Open the email we sent, tap the link, then tap Check again.')+'</p><div class="btns"><button class="btn block" type="button" data-act="acverify">Send the email again</button><button class="btn block" type="button" data-act="accheck">Check again</button></div>'}
     <p class="hint" id="syncMsg" role="status" style="margin:10px 0 0">${esc(st)}</p>
     <div class="btns"><button class="btn primary block" type="button" data-act="syncnow" ${gsync.state==='sync'?'disabled':''}>Sync now</button></div>
     <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p></section>
-  <section class="card"><h2>Share with others</h2>
-    <p class="hint" style="margin:0 0 8px">People you add here can see your games, players and payments, but cannot change them. They need an account with the same email, and must verify it.</p>
-    ${mem.length?mem.map((m,i)=>`<div class="rrow"><span class="n">${esc(m)}</span><button type="button" class="btn small icon" data-act="memdel" data-id="${i}" aria-label="Remove ${esc(m)}">×</button></div>`).join(''):'<p class="muted" style="margin:0 0 8px">Nobody yet.</p>'}
-    <form id="memForm" novalidate autocomplete="off" class="stack" style="gap:8px;margin-top:8px"><label class="lbl">Add by email<input id="memEmail" class="field" type="email" inputmode="email" autocapitalize="none" placeholder="name@example.com"></label>
-    <p class="msg" id="memMsg" role="status"></p><button class="btn block" type="submit">Add</button></form></section>
-  <section class="card"><h2>Shared with me</h2>
-    ${acct.shared.length?acct.shared.map((o,i)=>`<div class="rrow"><span class="n">${esc(o.name||o.email)}<small style="display:block;font-weight:500;color:var(--muted)">${esc(o.email)}</small></span><button type="button" class="btn small" data-act="viewshared" data-id="${i}">View</button></div>`).join(''):`<p class="muted" style="margin:0">${esc(acct.sharedMsg||'Nothing shared with you yet.')}</p>`}
-    <div class="btns"><button class="btn block" type="button" data-act="acrefresh">Check for shared games</button></div></section>
+  <section class="card"><h2>Groups</h2><p class="hint" style="margin:0 0 8px">${gcur()?'Current group: <b>'+esc(gcur().name)+'</b>. ':''}Your games live in groups. You can have several groups and share each one with other people.</p><div class="btns"><button class="btn block" type="button" data-act="groupsopen">Open Groups</button></div></section>
   <section class="card"><button class="btn block" type="button" data-act="acout">Sign out</button><p class="hint" style="margin:8px 0 0">Signing out keeps the games on this phone.</p></section>`;
 }
-function viewBar(){return viewing?`<div class="viewbar"><span>Viewing <b>${esc(viewing.name)}</b>’s games. View only.</span><button type="button" class="btn small" data-act="viewexit">Back to my games</button></div>`:'';}
+function viewBar(){
+  const g=gcur();
+  if(viewing)return `<div class="viewbar"><span>You can only view <b>${esc(viewing.name)}</b>. The owner can give you edit rights.</span><button type="button" class="btn small" data-act="groupsopen">Groups</button></div>`;
+  if(acct.user&&g&&home&&!extraPage&&!helpOpen&&!contactOpen){const n=G.list.reduce((a,x)=>a+((x.reqs||[]).length),0);return `<div class="gpill"><button type="button" class="sesback" data-act="groupsopen" style="flex:1;margin:0">\u2039 Groups \u00B7 ${esc(g.name)}</button>${n?'<span class="pk ok">'+n+' request'+(n>1?'s':'')+'</span>':''}</div>`;}
+  if(DEMO&&!acct.user&&home&&!extraPage&&!helpOpen&&!contactOpen)return `<div class="gpill"><button type="button" class="sesback" data-act="groupsopen" style="flex:1;margin:0">\u2039 Groups \u00B7 Sample group</button></div>`;
+  return '';
+}
+const gerr=e=>{const m=String((e&&e.message)||e);return /^(denied|offline|signedout|http|bad data|busy|switched)/.test(m)?gsErr(e):m;};
+const isGP=()=>['groups','gmanage','gcreate','gjoin'].includes(extraPage);
+let demoGone=false,pendMem=-1;
+function groupsPage(){
+  const demo=DEMO&&!acct.user;const u=acct.user||{};
+  const rows=demo?(demoGone?'':`<div class="rrow"><span class="n">Sample group<small style="display:block;font-weight:500;color:var(--muted)">Owner · sample mode</small></span><button class="btn small primary" type="button" data-act="demoopen">Open</button><button type="button" class="btn small icon" data-act="demodel" aria-label="Delete Sample group">×</button></div>`):G.list.map((g,i)=>`<div class="rrow"><span class="n">${esc(g.name)}<small style="display:block;font-weight:500;color:var(--muted)">${roleOf(g)}${g.ownerUid!==u.uid?' · owner '+esc(g.ownerName||g.ownerEmail):''}</small></span>${g.gid===G.cur?'<span class="pk ok">✓ Open</span>':`<button class="btn small primary" type="button" data-act="grpswitch" data-id="${i}">Open</button>`}${g.ownerUid===u.uid?`<button class="btn small" type="button" data-act="grpmanage" data-id="${i}">Manage${(g.reqs||[]).length?' ('+g.reqs.length+')':''}</button><button type="button" class="btn small icon" data-act="grpdelrow" data-id="${i}" aria-label="Delete ${esc(g.name)}" title="Delete group">×</button>`:''}</div>`).join('');
+  const reqs=(G.reqs||[]).map((q,i)=>`<div class="rrow"><span class="n">${esc(q.name)}<small style="display:block;font-weight:500;color:var(--muted)">Waiting for the owner to approve</small></span><button type="button" class="btn small" data-act="grpcancel" data-id="${i}">Cancel</button></div>`).join('');
+  return `<section class="card"><div class="achead"><h2>My groups</h2>${demo?'':'<button type="button" class="btn small icon refbtn" data-act="grpreload" aria-label="Refresh" title="Refresh groups">↻</button>'}</div>
+    ${rows||'<p class="muted" style="margin:0">No groups yet. Create a group, or search for one to join.</p>'}${gMsg&&!demo?'<p class="hint" style="margin:8px 0 0">'+esc(gMsg)+'</p>':''}${demo?'<p class="hint" style="margin:8px 0 0">Sample mode: creating and joining need a sign in.</p>':''}</section>
+  <div class="toprow"><button class="btn primary block" type="button" data-act="grpnew">+ Create group</button><button class="btn block" type="button" data-act="grpsearch">Search group</button></div>
+  ${reqs?`<section class="card"><h2>Waiting for approval</h2>${reqs}</section>`:''}
+  ${demo?'<div class="btns"><button class="btn block" type="button" data-act="demoexit">Back to sign in</button></div>':''}`;
+}
+function gcreatePage(){
+  return `<section class="card"><h2>Create a group</h2><p class="hint" style="margin:0 0 8px">For example the name of your badminton club. You will be the owner and can add people or approve their requests.</p>
+    <form id="grpCreate" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpName" class="field" type="text" maxlength="30" placeholder="Smash"></label><p class="msg" id="grpCMsg" role="status"></p><button class="btn primary block" type="submit">Create group</button></form></section>`;
+}
+function gjoinPage(){
+  const f=gFound;
+  return `<section class="card"><h2>Search group</h2><p class="hint" style="margin:0 0 8px">Type the exact group name. The owner has to approve your request.</p>
+    <form id="grpFind" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpQ" class="field" type="text" maxlength="30"></label><button class="btn block" type="submit">Search</button></form>
+    ${f?(f.none?'<p class="muted" style="margin:8px 0 0">No group with the name “'+esc(f.none)+'”.</p>':`<div class="rrow" style="margin-top:8px"><span class="n">${esc(f.name)}<small style="display:block;font-weight:500;color:var(--muted)">Owner ${esc(f.ownerName||'')}</small></span><button type="button" class="btn small primary" data-act="grpjoin">Ask to join</button></div>`):''}
+    ${gJoinMsg?'<p class="msg" role="status">'+esc(gJoinMsg)+'</p>':''}</section>`;
+}
+function gmanagePage(){
+  const g=G.list.find(x=>x.gid===gmId);if(!g)return '<section class="card"><p class="muted" style="margin:0">Group not found.</p></section>';
+  const em=Object.keys(g.perms||{}).sort();
+  const ck=(i,k,l,on)=>`<label class="pk2"><input type="checkbox" data-pm="${i}" data-k="${k}" ${on?'checked':''}> ${l}</label>`;
+  return `<section class="card"><h2>${esc(g.name)}</h2>
+    <form id="grpRename" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpRn" class="field" type="text" maxlength="30" value="${esc(g.name)}"></label><p class="msg" id="grpRMsg" role="status"></p><button class="btn block" type="submit">Rename</button></form></section>
+  <section class="card"><h2>Join requests</h2>
+    ${(g.reqs||[]).length?g.reqs.map((q,i)=>`<div class="rrow"><span class="n">${esc(q.name||q.email)}<small style="display:block;font-weight:500;color:var(--muted)">${esc(q.email)}</small></span><button type="button" class="btn small primary" data-act="grpapprove" data-id="${i}">Approve</button><button type="button" class="btn small" data-act="grpreject" data-id="${i}">Reject</button></div>`).join(''):'<p class="muted" style="margin:0">No requests.</p>'}</section>
+  <section class="card"><h2>Members</h2><p class="hint" style="margin:0 0 8px">Edit lets a person add and change games and players. Delete and Payments need Edit. Without Edit a member can only view. The server enforces view and edit. Delete and Payments are enforced inside the app.</p>
+    ${em.length?em.map((e,i)=>{const p=g.perms[e]||{};return `<div class="mrow"><span class="n" style="flex:1 1 100%">${esc(e)}</span>${ck(i,'e','Edit',p.e)}${ck(i,'d','Delete',p.e&&p.d)}${ck(i,'p','Payments',p.e&&p.p)}<button type="button" class="btn small icon" data-act="grpmemask" data-id="${i}" aria-label="Remove ${esc(e)}">\u00D7</button></div>`;}).join(''):'<p class="muted" style="margin:0 0 8px">Nobody yet.</p>'}
+    <form id="grpAdd" novalidate autocomplete="off" class="stack" style="gap:8px;margin-top:8px"><label class="lbl">Add by email<input id="grpEm" class="field" type="email" inputmode="email" autocapitalize="none" placeholder="name@example.com"></label><p class="msg" id="grpAMsg" role="status"></p><button class="btn block" type="submit">Add</button></form></section>
+  <section class="card"><button class="btn block" type="button" data-act="grpdelask">Delete this group</button></section>`;
+}
 async function acDo(fn){
   const msg=m=>{acct.msg=m;const e=$('#acMsg');if(e)e.textContent=m;};
   try{msg('Please wait…');await fn(msg);}catch(e){msg(String((e&&e.message)||e));}
 }
-function acAfterSignIn(){
-  const other=store.owner&&store.owner!==acct.user.uid&&store.sessions.some(x=>x.data.games.length||x.data.tour);
-  if(other){dialog='otheracct';render();return;}
-  acStart();
-}
-async function acStart(){acct.msg='';gsync.state='idle';if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();await listShared();render();}
+function acAfterSignIn(){if(DEMO){DEMO=false;try{sessionStorage.removeItem('st-demo');}catch(e){}}acStart();}
+async function acStart(){acct.msg='';gsync.state='idle';render();await ensureGroups();if(dialog==='otheracct')return;if(store.sessions.every(isPlaceholder)){home=true;extraPage='';}if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();if(!DEMO&&acct.user){extraPage='groups';gFound=null;await loadAllReqs();}render();}
 function acSubmit(){
   const email=$('#acEmail').value.trim().toLowerCase(),pass=$('#acPass').value;
   if(!email||!pass){acDo(async m=>{throw new Error(!email?'Enter your email.':'Enter a password.');});return;}
@@ -771,12 +941,13 @@ function acSubmit(){
   });
 }
 function acOut(){
-  if(viewing)exitShared();
+  viewing=null;
   acct.user=null;acct.vsent=false;acct.shared=[];acct.msg='';saveAuth();clearTimeout(gsync.tm);gsync.state='off';
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshShared();}});
-window.addEventListener('online',()=>{syncNow();refreshShared();});
-setInterval(()=>{if(document.visibilityState!=='visible')return;if(viewing){refreshShared();return;}if(acct.user){if(gsync.defer&&!busyNow()){gsync.defer=false;render();}syncNow();}},12000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshRO();}});
+window.addEventListener('online',()=>{syncNow();refreshRO();});
+let pollN=0;
+setInterval(()=>{if(document.visibilityState!=='visible'||!acct.user)return;pollN++;if(!G.cur){if(pollN%4===0)ensureGroups();return;}if(pollN%10===0&&!busyNow())listGroups().then(()=>loadAllReqs()).then(()=>{if(!busyNow())render();});if(viewing){refreshRO();return;}if(gsync.defer&&!busyNow()){gsync.defer=false;render();}syncNow();},8000);
 let sesForm=false,sesTarget=0;
 function uniqueName(base){let n=base,k=2;while(store.sessions.some(x=>x.name===n))n=base+' ('+(k++)+')';return n;}
 function newSessionData(src){
@@ -883,6 +1054,10 @@ function viewExtra(){
   if(extraPage==='settings')return `<div class="stack">${back}${settingsPage()}</div>`;
   if(extraPage==='backup')return `<div class="stack">${back}${backupPage()}</div>`;
   if(extraPage==='account')return `<div class="stack">${back}${accountPage()}</div>`;
+  if(extraPage==='groups')return `<div class="stack">${back}${groupsPage()}</div>`;
+  if(extraPage==='gcreate')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gcreatePage()}</div>`;
+  if(extraPage==='gjoin')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gjoinPage()}</div>`;
+  if(extraPage==='gmanage')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gmanagePage()}</div>`;
   if(extraPage==='players')return viewPlayersPage();
   if(extraPage==='pays')return `<div class="stack"><div class="toprow">${back.replace('class="sesback"','class="sesback" style="flex:1"')}<button type="button" class="btn primary" data-act="newfrompay">+ New game</button></div>${paysPage()}</div>`;
   return viewMonth();
@@ -1057,7 +1232,25 @@ function playerBlock(name){
   if(pe)return name+' has a payment pending ('+fmtM(pe.sum)+'). Remove after it is paid.';
   return '';
 }
+const oth={t:0,busy:false,map:new Map()};
+async function loadOthers(){
+  if(oth.busy||!acct.user||DEMO)return;oth.busy=true;const m=new Map();
+  try{
+    for(const g of G.list){
+      if(g.gid===G.cur)continue;
+      let r;try{r=await fbGet(g.gid);}catch(e){continue;}
+      if(!r||!r.rem)continue;const hid=new Set((r.rem.hidden||[]).map(nkey)),seen=new Set();
+      const add=n=>{const k=nkey(n);if(!k||hid.has(k)||seen.has(k))return;seen.add(k);if(!m.has(k))m.set(k,[]);m.get(k).push(g.name);};
+      (r.rem.roster||[]).forEach(add);(r.rem.sessions||[]).forEach(x=>((x.data&&x.data.players)||[]).forEach(q=>add(q.name)));
+    }
+    oth.map=m;
+  }catch(e){}
+  oth.t=Date.now();oth.busy=false;
+  if(extraPage==='players'||playersOpen)if(!busyNow())render();
+}
+const alsoIn=n=>{const a=oth.map.get(nkey(n));return a&&a.length?`<small style="display:block;font-weight:500;color:var(--muted)">Also in: ${a.map(esc).join(', ')}</small>`:'';};
 function viewPlayersPage(){
+  if(!oth.busy&&Date.now()-oth.t>60000&&G.list.length>1)setTimeout(loadOthers,0);
   const names=rosterNames();
   return `<div class="stack">
     <button type="button" class="sesback" data-act="playersback">\u2039 ${extraPage?'Back':'All games'}</button>
@@ -1065,12 +1258,13 @@ function viewPlayersPage(){
       <form id="playerForm" autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Add players<input id="plNew" class="field" type="text" maxlength="80" placeholder="Name, or several separated by commas"></label>
       <p class="msg" id="plMsg" role="status"></p><button class="btn primary block" type="submit">Add</button></form></section>
     <section class="card"><h2>Everyone</h2>
-      ${names.length?names.map((n,i)=>`<div class="rrow"><span class="n">${esc(n)}</span><button type="button" class="btn small icon" data-act="prename" data-id="${i}" aria-label="Rename ${esc(n)}">\u270E</button><button type="button" class="btn small icon" data-act="pdel" data-id="${i}" aria-label="Remove ${esc(n)}">\u00D7</button></div>`).join(''):'<p class="muted">No players yet. Add the names above, or try some sample names.</p><button class="btn block" type="button" data-act="addsample">Add sample players</button>'}
+      ${names.length?names.map((n,i)=>`<div class="rrow"><span class="n">${esc(n)}${alsoIn(n)}</span><button type="button" class="btn small icon" data-act="prename" data-id="${i}" aria-label="Rename ${esc(n)}">\u270E</button><button type="button" class="btn small icon" data-act="pdel" data-id="${i}" aria-label="Remove ${esc(n)}">\u00D7</button></div>`).join(''):'<p class="muted">No players yet. Add the names above, or try some sample names.</p><button class="btn block" type="button" data-act="addsample">Add sample players</button>'}
       <p class="hint">Renaming changes the name in all games. Removing hides the name from the new game list and from games not started yet. Games already started keep it.</p>
     </section></div>`;
 }
+const isPlaceholder=x=>!!(x.data&&x.data.auto&&!x.data.players.length&&!x.data.games.length&&!x.data.tour);
 function viewHome(){
-  const list=store.sessions.slice().sort((a,b)=>b.created-a.created);
+  const list=store.sessions.filter(x=>!isPlaceholder(x)).sort((a,b)=>b.created-a.created);
   const form=sesForm?`<form id="sesForm" class="card stack" autocomplete="off" style="gap:12px"><h2 style="margin:0">New badminton game</h2>
     <label class="lbl">Name<input id="sesName" class="field" type="text" maxlength="30" value="${esc(uniqueName(sesName(Date.now())))}"></label>
     <div class="lbl">Who is here today? <span class="pickbtns"><button class="linkbtn" type="button" data-act="pickall">Select all</button><button class="linkbtn" type="button" data-act="picknone">None</button></span><div class="pickgrid">${(()=>{const ls=latestSession();const pre=new Set(ls?ls.data.players.filter(p=>p.active).map(p=>nkey(p.name)):[]);const nm=rosterNames();return nm.length?nm.map(n=>`<label class="pk2"><input type="checkbox" name="rp" value="${esc(n)}" ${pre.has(nkey(n))?'checked':''}> ${esc(n)}</label>`).join(''):'<span class="muted">No players yet. Add names below, or </span><button class="linkbtn" type="button" data-act="addsample">add sample players</button>';})()}</div></div>
@@ -1078,7 +1272,7 @@ function viewHome(){
     <div class="dbtns"><button class="btn" type="button" data-act="sescancel">Cancel</button><button class="btn primary" type="submit">Create</button></div></form>`:`<div class="toprow"><button class="btn primary block" type="button" data-act="newsession">+ New badminton game</button><button class="btn iconbig" type="button" data-act="playersopen" aria-label="Players" title="Players"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.2c2.4.3 4 2.3 4 4.8"/></svg></button></div>`;
   if(playersOpen)return viewPlayersPage();
   return `<div class="stack">${form}
-    <section><h2>Your badminton games</h2>${list.length?list.map(x=>{const pn=pendingPay(x);return `<div class="sesitem"><div class="sescard"><button type="button" class="sesmain" data-act="opensession" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(sesInfo(x))}</small></button>${pn?`<button type="button" class="pendbtn" data-act="openpay" data-id="${x.id}" aria-label="Payments pending: ${pn} not paid. Open Pay">\u26A0<b>${pn}</b><small>unpaid</small></button>`:''}<button type="button" class="btn small icon" data-act="sesren" data-id="${x.id}" aria-label="Rename ${esc(x.name)}">\u270E</button><button type="button" class="btn small icon" data-act="sesdel" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">\u00D7</button></div></div>`;}).join(''):'<p class="muted">Nothing here yet.</p>'}</section>
+    <section><h2>Your badminton games</h2>${list.length?list.map(x=>{const pn=pendingPay(x);return `<div class="sesitem"><div class="sescard"><button type="button" class="sesmain" data-act="opensession" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(sesInfo(x))}</small></button>${pn?`<button type="button" class="pendbtn" data-act="openpay" data-id="${x.id}" aria-label="Payments pending: ${pn} not paid. Open Pay">\u26A0<b>${pn}</b><small>unpaid</small></button>`:''}<button type="button" class="btn small icon" data-act="sesren" data-id="${x.id}" aria-label="Rename ${esc(x.name)}">\u270E</button><button type="button" class="btn small icon" data-act="sesdel" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">\u00D7</button></div></div>`;}).join(''):'<p class="muted">No games yet. Tap + New badminton game to start.</p>'}</section>
     <p class="hint">Each badminton game keeps its own players, games, points and payments on this phone. Tap one to open or edit it.</p>
     </div>`;
 }
@@ -1103,7 +1297,7 @@ function doUndo(){
   const curSid=store.cur;
   Object.keys(store).forEach(k=>delete store[k]);Object.assign(store,o);
   const f=store.sessions.find(x=>x.id===curSid)||store.sessions[store.sessions.length-1];
-  if(!f){store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:fresh()});}
+  if(!f){store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:Object.assign(fresh(),{auto:true})});}
   const g=f||store.sessions[store.sessions.length-1];S=g.data;store.cur=g.id;
   swapSel={i:-1,id:0};
 }
@@ -1170,7 +1364,7 @@ function tourSteps(){
   st.push({h:'Welcome to Shuttle Turns',d:'A quick look at how the app works. It takes less than a minute. You can skip it any time.'});
   st.push({sel:'[data-act=newsession]',h:'Start a game',d:'Tap + New badminton game each time you play. Tick who is here today, or add new names.'});
   st.push({sel:'[data-act=playersopen]',h:'Your players',d:'Keep your list of regular players here. Add several names at once, separated by commas.'});
-  st.push({sel:'#menuBtn',h:'Menu',d:'All games, Payments, Points table, Account, Backup and Settings are in this menu. In Account you can share your games with friends by email.'});
+  st.push({sel:'#menuBtn',h:'Menu',d:'Groups, Players, Payments, Points table, Account, Backup and Settings are in this menu.'});
   st.push({h:'During a game',d:'The app picks four players for each game and keeps the turns fair. To change who plays, tap one player, then another. Tap Next game when it is over, and tap who won to build a win / loss table.'});
   st.push({h:'Pay tab',d:'Enter the court fee and the hours, check the amounts and confirm. Then tap Paid next to each name as they pay. Line-ups, game logs and payments can be shared as images on WhatsApp.'});
   st.push({h:'You are ready',d:'Tap + New badminton game to begin. You can open this guide again from the menu (Show the guide). How it works and Contact admin are there too.'});
@@ -1215,12 +1409,13 @@ function applyPrefs(){
 function renderMenu(){
   const seg=(k,label)=>`<button type="button" data-act="theme${k}" aria-pressed="${P.theme===k}">${label}</button>`;
   const tog=(act,label,on)=>`<button type="button" data-act="${act}" role="switch" aria-checked="${on}"><span class="row"><span>${label}</span><span class="pill${on?' on':''}">${on?'On':'Off'}</span></span></button>`;
-  $('#menu').innerHTML=`<button type="button" data-act="menugames">All games</button>
-    <button type="button" data-act="menuplayers">Players</button>
+  const ing=!((acct.user||DEMO)&&isGP());
+  $('#menu').innerHTML=`<button type="button" data-act="groupsopen">Groups</button>
+    ${ing?`<button type="button" data-act="menuplayers">Players</button>
     <button type="button" data-act="paysopen">Payments</button>
     <button type="button" data-act="monthopen">Points table</button>
+    <button type="button" data-act="backupopen">Backup</button>`:''}
     <button type="button" data-act="accountopen">Account</button>
-    <button type="button" data-act="backupopen">Backup</button>
     <button type="button" data-act="settingsopen">Settings</button>
     <hr>
     <button type="button" data-act="tourshow">Show the guide</button>
@@ -1234,8 +1429,9 @@ const ADMIN='roshrpa@gmail.com';
 function viewHelp(){
   return `<div class="stack"><section class="card help">
     <h2>How it works</h2>
+    <button class="btn primary block" type="button" data-act="tourshow" style="margin:4px 0 12px">\u25B6 Show the guide</button>
     <h3>Menu (≡ at the top)</h3>
-    <p>All games, Players, Payments, Points table, Account, Backup, Settings, How it works and Contact admin are all in the menu.</p>
+    <p>Groups, Players, Payments, Points table, Account, Backup, Settings, How it works and Contact admin are all in the menu.</p>
     <h3>Your badminton games</h3>
     <p>Each time you play, tap + New badminton game on the first screen. Tick who is here today, or add new names. Each game keeps its own players, matches, points and payments. Tap an old one to look at it or change it. You can add players while a game is on.</p>
     <h3>Players</h3>
@@ -1257,18 +1453,19 @@ function viewHelp(){
     <h3>Undo</h3>
     <p>After you tap Paid / Not paid, Mark all paid, swap two players or delete a game, an Undo button shows for a few seconds. Tap it to go back.</p>
     <h3>Guide</h3>
-    <p>The first time you sign in, a short guide shows the main buttons. Open it again any time from the menu: Show the guide.</p>
+    <p>The first time you sign in, a short guide shows the main buttons. Open it again any time: tap the ? button at the top, the Show the guide button on this page, or Show the guide in the menu.</p>
     <h3>Account and sign in</h3>
     <p>You sign in with your email and a password when you open the app. The first time, tap Create account and enter your name, email and a password. The app sends a verification email straight away, only this first time: open it (look in Spam too), tap the link, then tap Check again on the Account page. If you need the email again, tap Send the email again on the Account page. The phone remembers you until you tap Sign out. After signing out, someone else can sign in on the same phone.</p>
-    <p>Your games, players and payments are saved online under your account, so signing in on another phone shows the same games. The app syncs by itself; tap Sync now on the Account page if you want to do it right away. If you already had games on a phone before your first sign in, they are added to your account.</p>
-    <h3>Share with others</h3>
-    <p>On the Account page, add a person's email under Share with others. That person creates their own account with the same email and verifies it. Your name then appears under Shared with me on their Account page; they tap View to see your games, players and payments. They can only look, they cannot change anything, and your games are not copied into their own list. Remove their email to stop sharing.</p>
+    <p>Your games, players and payments are saved online under your account, so signing in on another phone shows the same games. The app syncs by itself; tap Sync now on the Account page if you want to do it right away. If you already had games on a phone before your first sign in, they are added to your first group.</p>
+    <h3>Groups</h3>
+    <p>Your games live in a group, for example the name of your club. The first time you sign in, a group with your name is made for you. Menu, Groups lets you create more groups, switch between them, and join other groups. The group name shows at the top of the games list.</p>
+    <p>As the owner, tap Manage next to your group. Add people by their email (they need an account with that email, verified) or approve their join requests. For each person tick what they may do: Edit (add and change games and players), Delete (delete games and players) and Payments (change payment details). A person without Edit can only look. To join a group, type its exact name under Join a group and tap Ask to join. The owner has to approve. The app does not send a notice: the owner sees the request when they open Groups, and you see the group in your list after approval.</p>
     <h3>Backup</h3>
     <p>Menu, Backup: save a backup file now and then. To restore, pick that file. Restoring adds to what you have and never removes anything.</p>
     <h3>Settings</h3>
     <p>Menu, Settings: light or dark theme, larger text, keep the screen on, and Ask reason when swapping a player (off by default).</p>
     <h3>Your data</h3>
-    <p>Your games are saved on this phone and, once you are signed in, online under your account. Only you and the people you add under Share with others can see them. Contact admin sends only the message you write and the phone number or email you give.</p>
+    <p>Your games are saved on this phone and, once you are signed in, online under your account. Only you and the people in your groups can see them. Contact admin sends only the message you write and the phone number or email you give.</p>
   </section>
   <button class="linkbtn" type="button" data-act="helpclose">Back to the app</button></div>`;
 }
@@ -2086,6 +2283,9 @@ function dialogHtml(){
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${esc(q?q.name:'This player')} leaves the game?</h3><p>${onC?'They are on court now, so a resting player will take their place straight away. ':''}They will be listed under Game left. You can bring them back with Back.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="confirmleave">Yes, leave</button></div></div></div>`;}
   if(dialog==='prename')return `<div class="scrim"><form id="prenameForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename player</h3><input id="prenameIn" class="field" type="text" maxlength="24" value="${esc(prTarget)}" aria-label="Name"><p class="msg" id="prenameMsg" role="status"></p><p class="hint" style="margin:0">The name changes in all games.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
   if(dialog==='markall'){const v=payView();const e=v.list.find(q=>nkey(q.name)===nkey(pdTarget||''));const its=e?e.items.filter(i=>!i.paid):[];return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Mark all paid?</h3><p>${esc(pdTarget||'')}: ${its.length} ${its.length===1?'game':'games'}, ${fmtM(its.reduce((q,i)=>q+i.amt,0))} will be marked as paid.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No</button><button class="btn primary" type="button" data-act="confirmmarkall">Yes, mark paid</button></div></div></div>`;}
+  if(dialog==='demodel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete group?</h3><p>This deletes <b>Sample group</b>. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="demodelyes">Delete</button></div></div></div>`;
+  if(dialog==='grpmem'){const g=G.list.find(x=>x.gid===gmId);const e=g?Object.keys(g.perms||{}).sort()[pendMem]:'';return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove member?</h3><p><b>${esc(e||'')}</b> will no longer see this group.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="grpmemdel" data-id="${pendMem}">Remove</button></div></div></div>`;}
+  if(dialog==='grpdel'){const g=G.list.find(x=>x.gid===gmId);return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Delete group?</h3><p>This deletes <b>${esc(g?g.name:'')}</b> and all its games for everyone in it. This cannot be undone.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="grpdelyes">Delete</button></div></div></div>`;}
   if(dialog==='otheracct')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Games from another account</h3><p>This phone has games from a different account. Do you want to add them to this account, or start fresh on this phone?</p><div class="dbtns" style="flex-direction:column"><button class="btn primary" type="button" data-act="ackeep">Add them to this account</button><button class="btn" type="button" data-act="acfresh">Start fresh on this phone</button><button class="btn" type="button" data-act="accancel">Cancel and sign out</button></div></div></div>`;
   if(dialog==='pdel')return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Remove ${esc(prTarget)}?</h3><p>${esc(prTarget)} will not be offered when you start a new game, and is taken out of games that have not started yet. Games already started keep the name and the results.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep</button><button class="btn primary" type="button" data-act="confirmpdel">Yes, remove</button></div></div></div>`;
   if(dialog==='sesren'){const x=store.sessions.find(q=>q.id===sesTarget);
@@ -2108,6 +2308,7 @@ function dialogHtml(){
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
 function render(){
+  if(acct.user&&!DEMO&&!G.cur&&!['groups','gmanage','gcreate','gjoin','account','settings'].includes(extraPage)&&!helpOpen&&!contactOpen)extraPage='groups';
   const sb=$('#sesbar');const cs=store.sessions.find(x=>x.data===S);
   if(sb){sb.hidden=home||!cs||gateOn();sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
   const nv=document.querySelector('.nav');if(nv)nv.hidden=gateOn()||(home&&!helpOpen&&!contactOpen&&!extraPage);
@@ -2117,7 +2318,7 @@ function render(){
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
-  const mb=$('#menuBtn');if(mb)mb.hidden=gateOn();
+  const mb=$('#menuBtn');if(mb)mb.hidden=gateOn();const gb=$('#guideBtn');if(gb)gb.hidden=gateOn()||tour.on;
   $('#modal').innerHTML=dialogHtml();
   tourDraw();
   if(dialog==='rename'){const ri=$('#renameIn');if(ri){ri.focus();ri.select();}}
@@ -2304,19 +2505,37 @@ const actions={
     return false;
   },
   settingsopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='settings';},
-  accountopen(){if(viewing)exitShared();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='account';acct.msg='';if(acct.user){syncNow();listShared().then(()=>{if(extraPage==='account'&&!busyNow())render();});}},
+  accountopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='account';acct.msg='';if(acct.user){syncNow();listGroups().then(()=>{if(extraPage==='account'&&!busyNow())render();});}},
   acmode(){return false;},
   acreset(){const em=($('#acEmail')||{}).value;acDo(async m=>{const e=String(em||'').trim().toLowerCase();if(!e)throw new Error('Type your email above first.');await authCall('sendOobCode',{requestType:'PASSWORD_RESET',email:e});m('We sent an email to '+e+'. Tap the link in it to set a new password.');});return false;},
+  acreload(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listGroups();syncNow();m(acct.user.verified?'Refreshed. Email verified.':'Refreshed. Email not verified yet.');render();});return false;},
   acverify(){acDo(async m=>{await authTok('sendOobCode',{requestType:'VERIFY_EMAIL'});acct.vsent=true;m('Email sent. Tap the link in it, then tap Check again.');});return false;},
-  accheck(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listShared();m(acct.user.verified?'Verified.':'Not verified yet.');render();});return false;},
-  acrefresh(){listShared().then(()=>{if(extraPage==='account')render();});return false;},
+  accheck(){acDo(async m=>{acct.user.exp=0;await idToken();await lookupUser();await listGroups();m(acct.user.verified?'Verified.':'Not verified yet.');render();});return false;},
   syncnow(){syncNow();},
-  memdel(i){store.members=(store.members||[]).filter((_,k)=>k!==i);store.mmod=Date.now();},
-  viewshared(i){openShared(i);return false;},
-  viewexit(){exitShared();return false;},
   acout(){acOut();},
-  acfresh(){dialog=null;store.sessions=[];store.cur=null;store.del=[];store.roster=[];store.hidden=[];store.members=[];store.mmod=0;store.owner=null;const d=fresh();store.sessions.push({id:store.nextSid++,name:sesName(Date.now()),created:Date.now(),data:d});S=d;home=true;acStart();return false;},
-  ackeep(){dialog=null;acStart();return false;},
+  demoexit(){try{sessionStorage.removeItem('st-demo');}catch(e){}location.reload();return false;},
+  demostart(){try{sessionStorage.setItem('st-demo','1');}catch(e){}DEMO=true;storeKey='shuttle-turns-demo';initStore();if(!S.players.length){S.players=['Arun','Basil','Chris','Dev','Eli','Faris','Gokul','Hari'].map((n,i)=>({id:i+1,name:n,active:true,base:0}));S.nextId=9;}home=true;extraPage='groups';render();return false;},
+  demoopen(){extraPage='';home=true;},
+  acfresh(){dialog=null;legAns='skip';acStart();return false;},
+  ackeep(){dialog=null;legAns='keep';acStart();return false;},
+  groupsopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
+  grpreload(){listGroups().then(()=>loadAllReqs()).then(()=>render());return false;},
+  grpswitch(i){const g=G.list[i];if(!g)return false;if(g.gid===G.cur){extraPage='';home=true;return;}switchGroup(g.gid);home=true;render();return false;},
+  grpmanage(i){const g=G.list[i];if(!g)return false;gmId=g.gid;extraPage='gmanage';window.scrollTo(0,0);loadReqs(g).then(()=>{if(extraPage==='gmanage')render();});},
+  grpback(){extraPage='groups';gmId='';gFound=null;gJoinMsg='';},
+  grpnew(){if(DEMO&&!acct.user){toast('Sign in first to create or join groups.');return false;}extraPage='gcreate';window.scrollTo(0,0);},
+  grpsearch(){if(DEMO&&!acct.user){toast('Sign in first to create or join groups.');return false;}extraPage='gjoin';gFound=null;gJoinMsg='';window.scrollTo(0,0);},
+  demodel(){dialog='demodel';},
+  demodelyes(){dialog=null;demoGone=true;},
+  grpmemask(i){pendMem=i;dialog='grpmem';},
+  grpdelrow(i){const g=G.list[i];if(!g)return false;gmId=g.gid;dialog='grpdel';},
+  grpjoin(){const x=gFound;if(!x||x.none)return false;gJoinMsg='Sending\u2026';render();requestJoin(x).then(()=>{gJoinMsg='';gFound=null;extraPage='groups';render();window.scrollTo(0,0);toast('Request sent. The owner has to approve it.');}).catch(e=>{gJoinMsg=gerr(e);render();});return false;},
+  grpcancel(i){const q=(G.reqs||[])[i];if(!q)return false;cancelReq(q.gid).then(()=>render()).catch(e=>toast(gerr(e)));return false;},
+  grpapprove(i){const g=G.list.find(x=>x.gid===gmId),q=g&&(g.reqs||[])[i];if(!q)return false;const pm=Object.assign({},g.perms);pm[q.email]={e:1,d:0,p:0};setPerm(g,pm).then(()=>fbDel(gUrl(g.gid)+'/requests/'+encodeURIComponent(q.uid))).then(()=>{g.reqs=g.reqs.filter(x=>x.uid!==q.uid);toast(q.email+' added with Edit rights.');render();}).catch(e=>toast(gerr(e)));return false;},
+  grpreject(i){const g=G.list.find(x=>x.gid===gmId),q=g&&(g.reqs||[])[i];if(!q)return false;fbDel(gUrl(g.gid)+'/requests/'+encodeURIComponent(q.uid)).then(()=>{g.reqs=g.reqs.filter(x=>x.uid!==q.uid);render();}).catch(e=>toast(gerr(e)));return false;},
+  grpmemdel(i){const g=G.list.find(x=>x.gid===gmId);if(!g)return false;const e=Object.keys(g.perms||{}).sort()[i];if(!e)return false;dialog=null;const pm=Object.assign({},g.perms);delete pm[e];setPerm(g,pm).then(()=>render()).catch(er=>toast(gerr(er)));return false;},
+  grpdelask(){dialog='grpdel';},
+  grpdelyes(){dialog=null;const g=G.list.find(x=>x.gid===gmId);if(!g)return;deleteGroup(g).then(()=>{extraPage='groups';gmId='';toast('Group deleted.');render();}).catch(e=>{toast(gerr(e));render();});return false;},
   accancel(){dialog=null;acOut();},
   backupopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='backup';},
   savebackup(){closeMenu();saveBackup();return false;},
@@ -2406,7 +2625,8 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){hideToast();contactOpen=false;helpOpen=false;extraPage='';S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   if(el.dataset.act==='acmode'){acct.mode=el.dataset.k;acct.msg='';render();return;}
-  if(viewing&&el.dataset.act&&!VIEW_OK.has(el.dataset.act)&&el.dataset.act!=='ptperiod'&&el.dataset.act!=='pfstatus'&&!/^theme/.test(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
+  if(viewing&&el.dataset.act&&!VIEW_OK.has(el.dataset.act)&&!/^grp/.test(el.dataset.act)&&el.dataset.act!=='ptperiod'&&el.dataset.act!=='pfstatus'&&!/^theme/.test(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
+  if(acct.user&&gcur()&&!viewing){const ac=el.dataset.act;if(DEL_ACTS.has(ac)&&!gperm.d){toast('You do not have permission to delete.');return;}if(PAY_ACTS.has(ac)&&!gperm.p){toast('You do not have permission to change payments.');return;}}
   if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';render();return;}
   if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;pfKeep.clear();render();return;}
   if(el.dataset.act==='paymon'){pfMonth=el.dataset.k||'';pfFrom='';pfTo='';pfStatus='all';pfPerson='';pfKeep.clear();render();window.scrollTo(0,0);return;}
@@ -2418,18 +2638,21 @@ document.addEventListener('click',e=>{
 document.addEventListener('submit',e=>{
   if(!e.target)return;
   if(e.target.id==='guestForm'){
-    e.preventDefault();
+    e.preventDefault();if(acct.user&&gcur()&&!gperm.p){toast('You do not have permission to change payments.');return;}
     const name=$('#guestName').value.trim();if(!name)return;
     const P=S.pay;if(!Array.isArray(P.guests))P.guests=[];
     P.gid=(P.gid||0)+1;P.guests.push({id:-P.gid,name});guestAdd=false;render();return;
   }
-  if(viewing&&e.target.id!=='acForm'){e.preventDefault();toast('View only. Only the owner can change this.');return;}
+  if(viewing&&e.target.id!=='acForm'&&!/^grp/.test(e.target.id)){e.preventDefault();toast('View only. Only the owner can change this.');return;}
   if(e.target.id==='acForm'){e.preventDefault();acSubmit();return;}
-  if(e.target.id==='memForm'){e.preventDefault();const v=($('#memEmail').value||'').trim().toLowerCase(),mm=$('#memMsg');
+  if(e.target.id==='grpCreate'){e.preventDefault();const mm=$('#grpCMsg');mm.textContent='Creating\u2026';createGroup($('#grpName').value).then(g=>{extraPage='groups';gmId='';render();window.scrollTo(0,0);toast('Group \u201C'+g.name+'\u201D created.');}).catch(er=>{mm.textContent=gerr(er);});return;}
+  if(e.target.id==='grpFind'){e.preventDefault();const q=cleanName($('#grpQ').value);if(!q)return;gJoinMsg='';findGroup(q).then(x=>{gFound=x||{none:q};render();}).catch(er=>{gJoinMsg=gerr(er);render();});return;}
+  if(e.target.id==='grpRename'){e.preventDefault();const g=G.list.find(x=>x.gid===gmId),mm=$('#grpRMsg');if(!g)return;renameGroup(g,$('#grpRn').value).then(()=>{toast('Renamed.');render();}).catch(er=>{mm.textContent=gerr(er);});return;}
+  if(e.target.id==='grpAdd'){e.preventDefault();const g=G.list.find(x=>x.gid===gmId),mm=$('#grpAMsg'),v=($('#grpEm').value||'').trim().toLowerCase();if(!g)return;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){mm.textContent='This email does not look right.';return;}
-    if(acct.user&&v===acct.user.email){mm.textContent='That is your own email.';return;}
-    if((store.members||[]).includes(v)){mm.textContent='Already added.';return;}
-    store.members=(store.members||[]).concat([v]);store.mmod=Date.now();toast('Added. They can now see your games after they sign in.');render();return;}
+    if(v===acct.user.email){mm.textContent='That is your own email.';return;}
+    if(g.perms[v]){mm.textContent='Already added.';return;}
+    const pm=Object.assign({},g.perms);pm[v]={e:1,d:0,p:0};setPerm(g,pm).then(()=>{toast('Added. They see this group after they sign in with a verified email.');render();}).catch(er=>{mm.textContent=gerr(er);});return;}
   if(e.target.id==='playerForm'){
     e.preventDefault();
     const v=$('#plNew').value.trim();if(!v){$('#plMsg').textContent='Enter a name.';return;}
@@ -2504,8 +2727,19 @@ document.addEventListener('submit',e=>{
     addTeam(a,b);render();
   }
 });
+let nmTm=0,nmSeq=0;
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t||(t.id!=='grpName'&&t.id!=='grpRn'))return;
+  const mm=$(t.id==='grpName'?'#grpCMsg':'#grpRMsg');if(!mm)return;
+  clearTimeout(nmTm);const nm=cleanName(t.value),my=++nmSeq;
+  const g=t.id==='grpRn'?G.list.find(x=>x.gid===gmId):null;
+  if(!nm||(g&&normName(nm)===normName(g.name))){mm.textContent='';mm.className='msg';return;}
+  mm.className='msg';mm.textContent='Checking\u2026';
+  nmTm=setTimeout(()=>{nameFree(nm).then(f=>{if(my!==nmSeq)return;mm.className='msg'+(f?' okmsg':'');mm.textContent=f?'\u2713 Available':'\u2717 Already used. Try another name.';}).catch(()=>{if(my===nmSeq)mm.textContent='';});},400);
+});
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t&&t.dataset&&t.dataset.pm!==undefined){const g=G.list.find(x=>x.gid===gmId);if(!g)return;const em=Object.keys(g.perms||{}).sort()[+t.dataset.pm];if(!em)return;const pm=JSON.parse(JSON.stringify(g.perms)),k=t.dataset.k,o=pm[em]||{e:0,d:0,p:0};o[k]=t.checked?1:0;if(k!=='e'&&t.checked)o.e=1;if(k==='e'&&!t.checked){o.d=0;o.p=0;}pm[em]=o;setPerm(g,pm).then(()=>render()).catch(er=>{toast(gerr(er));render();});return;}
   if(viewing&&!['monSel','payMon','payFrom','payTo','payPer'].includes(t&&t.id)){render();return;}
   if(t&&t.id==='monSel'){monSel=t.value;render();return;}
   if(t&&t.id==='payMon'){pfMonth=t.value;pfKeep.clear();if(pfMonth){pfFrom='';pfTo='';}render();return;}
@@ -2525,8 +2759,10 @@ setInterval(()=>{
   if(el&&S.games.length&&S.games[S.cur])el.textContent=elapsed(S.games[S.cur].at);
 },20000);
 applyPrefs();
+applyRole();
+if(acct.user&&!DEMO&&G.cur)extraPage='groups';
 render();
-if(acct.user){gsyncLater(800);listShared();}
+if(acct.user){if(!G.cur||storeKey!==GPFX+G.cur)ensureGroups();else{if(viewing)refreshRO(true);else gsyncLater(800);listGroups().then(()=>loadAllReqs()).then(()=>render());}}
 </script>
 
 </body></html>
