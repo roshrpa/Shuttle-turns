@@ -284,7 +284,6 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     <button id="menuBtn" class="menubtn" type="button" data-act="menutoggle" aria-label="Menu" aria-expanded="false" aria-controls="menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <button id="guideBtn" class="menubtn guidebtn" type="button" data-act="tourshow" aria-label="Show the guide" title="Show the guide"><span aria-hidden="true">?</span></button>
     <div id="menu" class="menu" hidden></div>
   </header>
   <div id="sesbar" class="sesbar" hidden></div>
@@ -700,6 +699,29 @@ async function findGroup(nm){
   const r=await fbFetch(dirUrl(nm)+'?'+fk());if(r.status===404)return null;if(!r.ok)throw await deniedErr(r);
   const f=(await r.json()).fields||{};const st=k=>(f[k]&&f[k].stringValue)||'';return {gid:st('gid'),name:st('name'),ownerName:st('ownerName')};
 }
+let dirCache={at:0,list:[]};
+async function listDir(){
+  if(Date.now()-dirCache.at<20000)return dirCache.list;
+  const r=await fbFetch(DOCS+'/groupDir?pageSize=300&'+fk());if(!r.ok)throw await deniedErr(r);
+  const j=await r.json();const out=(j.documents||[]).map(d=>{const f=d.fields||{};const st=k=>(f[k]&&f[k].stringValue)||'';return {gid:st('gid'),name:st('name'),ownerName:st('ownerName')};}).filter(x=>x.gid&&x.name);
+  dirCache={at:Date.now(),list:out};return out;
+}
+async function searchGroups(q){const n=q.toLowerCase();return (await listDir()).filter(x=>x.name.toLowerCase().includes(n)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30);}
+function gResHtml(){
+  const f=gFound;if(!f)return '';
+  if(f.short)return '<p class="muted" style="margin:8px 0 0">Type at least 3 letters.</p>';
+  if(f.busy)return '<p class="muted" style="margin:8px 0 0">Searching\u2026</p>';
+  if(!f.list.length)return '<p class="muted" style="margin:8px 0 0">No group found for \u201C'+esc(f.q)+'\u201D.</p>';
+  return f.list.map((x,i)=>{const mine=G.list.some(g=>g.gid===x.gid),pend=(G.reqs||[]).some(g=>g.gid===x.gid);
+    return `<div class="rrow" style="margin-top:8px"><span class="n">${esc(x.name)}<small style="display:block;font-weight:500;color:var(--muted)">Owner ${esc(x.ownerName||'')}</small></span>${mine?'<span class="muted">Member</span>':pend?'<span class="muted">Waiting</span>':`<button type="button" class="btn small primary" data-act="grpjoin" data-id="${i}">Ask to join</button>`}</div>`;}).join('');
+}
+let gqSeq=0;
+function runGSearch(){
+  const el=$('#grpQ');if(!el)return;const q=cleanName(el.value),my=++gqSeq;
+  if(q.length<3){gFound=q?{short:1}:null;const r=$('#grpRes');if(r)r.innerHTML=gResHtml();return;}
+  gFound={busy:1};const r0=$('#grpRes');if(r0)r0.innerHTML=gResHtml();
+  searchGroups(q).then(list=>{if(my!==gqSeq)return;gFound={q,list};gJoinMsg='';const r=$('#grpRes');if(r)r.innerHTML=gResHtml();const m=$('#grpJMsg');if(m)m.textContent='';}).catch(er=>{if(my!==gqSeq)return;gFound=null;const r=$('#grpRes');if(r)r.innerHTML='';const m=$('#grpJMsg');if(m)m.textContent=gerr(er);});
+}
 async function requestJoin(x){
   const u=acct.user;if(G.list.some(g=>g.gid===x.gid))throw new Error('You are already in this group.');
   if(!u.verified)throw new Error('Verify your email first (Account page), then try again.');
@@ -907,14 +929,13 @@ function groupsPage(){
 }
 function gcreatePage(){
   return `<section class="card"><h2>Create a group</h2><p class="hint" style="margin:0 0 8px">For example the name of your badminton club. You will be the owner and can add people or approve their requests.</p>
-    <form id="grpCreate" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpName" class="field" type="text" maxlength="30" placeholder="Smash"></label><p class="msg" id="grpCMsg" role="status"></p><button class="btn primary block" type="submit">Create group</button></form></section>`;
+    <form id="grpCreate" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpName" class="field" type="text" maxlength="30" placeholder="Enter group name"></label><p class="msg" id="grpCMsg" role="status"></p><button class="btn primary block" type="submit">Create group</button></form></section>`;
 }
 function gjoinPage(){
-  const f=gFound;
-  return `<section class="card"><h2>Search group</h2><p class="hint" style="margin:0 0 8px">Type the exact group name. The owner has to approve your request.</p>
-    <form id="grpFind" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpQ" class="field" type="text" maxlength="30"></label><button class="btn block" type="submit">Search</button></form>
-    ${f?(f.none?'<p class="muted" style="margin:8px 0 0">No group with the name “'+esc(f.none)+'”.</p>':`<div class="rrow" style="margin-top:8px"><span class="n">${esc(f.name)}<small style="display:block;font-weight:500;color:var(--muted)">Owner ${esc(f.ownerName||'')}</small></span><button type="button" class="btn small primary" data-act="grpjoin">Ask to join</button></div>`):''}
-    ${gJoinMsg?'<p class="msg" role="status">'+esc(gJoinMsg)+'</p>':''}</section>`;
+  return `<section class="card"><h2>Search group</h2><p class="hint" style="margin:0 0 8px">Type 3 or more letters of the group name. The owner has to approve your request.</p>
+    <form id="grpFind" novalidate autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Group name<input id="grpQ" class="field" type="text" maxlength="30" placeholder="Enter group name"></label><button class="btn block" type="submit">Search</button></form>
+    <div id="grpRes">${gResHtml()}</div>
+    <p class="msg" id="grpJMsg" role="status">${gJoinMsg?esc(gJoinMsg):''}</p></section>`;
 }
 function gmanagePage(){
   const g=G.list.find(x=>x.gid===gmId);if(!g)return '<section class="card"><p class="muted" style="margin:0">Group not found.</p></section>';
@@ -2604,7 +2625,7 @@ const actions={
   demodelyes(){dialog=null;demoGone=true;},
   grpmemask(i){pendMem=i;dialog='grpmem';},
   grpdelrow(i){const g=G.list[i];if(!g)return false;gmId=g.gid;dialog='grpdel';},
-  grpjoin(){const x=gFound;if(!x||x.none)return false;gJoinMsg='Sending\u2026';render();requestJoin(x).then(()=>{gJoinMsg='';gFound=null;extraPage='groups';render();window.scrollTo(0,0);toast('Request sent. The owner has to approve it.');}).catch(e=>{gJoinMsg=gerr(e);render();});return false;},
+  grpjoin(i){const x=gFound&&gFound.list&&gFound.list[i];if(!x)return false;gJoinMsg='Sending\u2026';render();requestJoin(x).then(()=>{gJoinMsg='';gFound=null;extraPage='groups';render();window.scrollTo(0,0);toast('Request sent. The owner has to approve it.');}).catch(e=>{gJoinMsg=gerr(e);render();});return false;},
   grpcancel(i){const q=(G.reqs||[])[i];if(!q)return false;cancelReq(q.gid).then(()=>render()).catch(e=>toast(gerr(e)));return false;},
   grpapprove(i){const g=G.list.find(x=>x.gid===gmId),q=g&&(g.reqs||[])[i];if(!q)return false;const pm=Object.assign({},g.perms);pm[q.email]={e:1,d:0,p:0};setPerm(g,pm).then(()=>fbDel(gUrl(g.gid)+'/requests/'+encodeURIComponent(q.uid))).then(()=>{g.reqs=g.reqs.filter(x=>x.uid!==q.uid);toast(q.email+' added with Edit rights.');render();}).catch(e=>toast(gerr(e)));return false;},
   grpreject(i){const g=G.list.find(x=>x.gid===gmId),q=g&&(g.reqs||[])[i];if(!q)return false;fbDel(gUrl(g.gid)+'/requests/'+encodeURIComponent(q.uid)).then(()=>{g.reqs=g.reqs.filter(x=>x.uid!==q.uid);render();}).catch(e=>toast(gerr(e)));return false;},
@@ -2722,7 +2743,7 @@ document.addEventListener('submit',e=>{
   if(viewing&&e.target.id!=='acForm'&&!/^grp/.test(e.target.id)){e.preventDefault();toast('View only. Only the owner can change this.');return;}
   if(e.target.id==='acForm'){e.preventDefault();acSubmit();return;}
   if(e.target.id==='grpCreate'){e.preventDefault();const mm=$('#grpCMsg');mm.textContent='Creating\u2026';createGroup($('#grpName').value).then(g=>{extraPage='groups';gmId='';render();window.scrollTo(0,0);toast('Group \u201C'+g.name+'\u201D created.');}).catch(er=>{mm.textContent=gerr(er);});return;}
-  if(e.target.id==='grpFind'){e.preventDefault();const q=cleanName($('#grpQ').value);if(!q)return;gJoinMsg='';findGroup(q).then(x=>{gFound=x||{none:q};render();}).catch(er=>{gJoinMsg=gerr(er);render();});return;}
+  if(e.target.id==='grpFind'){e.preventDefault();gJoinMsg='';runGSearch();return;}
   if(e.target.id==='grpRename'){e.preventDefault();const g=G.list.find(x=>x.gid===gmId),mm=$('#grpRMsg');if(!g)return;renameGroup(g,$('#grpRn').value).then(()=>{toast('Renamed.');render();}).catch(er=>{mm.textContent=gerr(er);});return;}
   if(e.target.id==='grpAdd'){e.preventDefault();const g=G.list.find(x=>x.gid===gmId),mm=$('#grpAMsg'),v=($('#grpEm').value||'').trim().toLowerCase();if(!g)return;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){mm.textContent='This email does not look right.';return;}
@@ -2804,6 +2825,8 @@ document.addEventListener('submit',e=>{
   }
 });
 let nmTm=0,nmSeq=0;
+let gqTm=0;
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='grpQ'){clearTimeout(gqTm);gqTm=setTimeout(runGSearch,250);}});
 document.addEventListener('input',e=>{
   const t=e.target;if(!t||(t.id!=='grpName'&&t.id!=='grpRn'))return;
   const mm=$(t.id==='grpName'?'#grpCMsg':'#grpRMsg');if(!mm)return;
