@@ -108,7 +108,12 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab.lk .payh,.ptab.lk .payr{grid-template-columns:minmax(60px,1fr) 40px 78px 92px}.ptab.lk .pst{min-height:36px;min-width:0;width:100%;padding:0 6px;font-size:13px}.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
 .payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
 .payh span:not(.n),.payr span:not(.n){text-align:right}
-#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
+#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.ro-off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
+.viewbar.ro{position:sticky;top:0;z-index:6;border:2px solid var(--danger);background:color-mix(in srgb,var(--danger) 16%,var(--surface));font-weight:600}
+.viewbar.ro b.tag{background:var(--danger);color:#fff;border-radius:8px;padding:2px 8px;margin-right:6px;font-size:13px;letter-spacing:.04em}
+.bellbtn{right:52px}.bellbtn .badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--danger);color:#fff;font:700 12px var(--font-body,sans-serif);display:flex;align-items:center;justify-content:center;padding:0 5px}.bellbtn[hidden]{display:none!important}
+.nrow{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:var(--surface)}.nrow.new{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.nrow small{display:block;color:var(--muted);margin-top:2px}
+.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
 .okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
 .btn.small{min-height:40px;padding:0 12px;font-size:14px}
 .btn.icon{min-width:40px;padding:0}
@@ -284,6 +289,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
     <button id="menuBtn" class="menubtn" type="button" data-act="menutoggle" aria-label="Menu" aria-expanded="false" aria-controls="menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
+    <button id="bellBtn" class="menubtn bellbtn" type="button" data-act="grpnotes" aria-label="Notifications" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg><span class="badge" id="bellN" hidden></span></button>
     <div id="menu" class="menu" hidden></div>
   </header>
   <div id="sesbar" class="sesbar" hidden></div>
@@ -626,6 +632,21 @@ function myPerm(g){
   const p=(g.perms||{})[u.email]||{};return {e:!!p.e,d:!!p.e&&!!p.d,p:!!p.e&&!!p.p,own:0};
 }
 function applyRole(){const g=gcur();gperm=g&&acct.user?myPerm(g):{e:1,d:1,p:1,own:1};viewing=(g&&acct.user&&!gperm.e)?{name:g.name}:null;}
+function notify(msg){G.notes=[{t:msg,at:Date.now(),r:0}].concat(G.notes||[]).slice(0,30);saveG();toast(msg);updateBell();}
+function updateBell(){const b=$('#bellBtn'),n=$('#bellN');if(!b)return;b.hidden=!(acct.user&&!DEMO)||gateOn();const u=(G.notes||[]).filter(x=>!x.r).length;if(n){n.hidden=!u;n.textContent=u>9?'9+':u;}}
+let notesNew=0;
+function notesPage(){
+  const l=G.notes||[];
+  return `<section class="card"><h2>Notifications</h2>${l.length?l.map((x,i)=>`<div class="nrow${i<notesNew?' new':''}">${esc(x.t)}<small>${new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')+'<button class="btn block" type="button" data-act="grpnotesclear" style="margin-top:12px">Clear all</button>':'<p class="muted" style="margin:0">No notifications yet. You will see join requests, approvals and access changes here.</p>'}</section>`;
+}
+function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&act!=='ptperiod'&&act!=='pfstatus'&&!/^theme/.test(act);}
+function applyReadOnlyUI(){
+  if(!viewing)return;const v=$('#view');if(!v)return;
+  v.querySelectorAll('[data-act]').forEach(el=>{if(roBlocked(el.dataset.act)){el.classList.add('ro-off');el.setAttribute('aria-disabled','true');el.tabIndex=-1;}});
+  v.querySelectorAll('input,select,textarea').forEach(el=>{if(!['monSel','payMon','payFrom','payTo','payPer'].includes(el.id)&&!/^grp/.test(el.id)&&el.id!=='acForm'&&!el.closest('#acForm')){el.disabled=true;}});
+  v.querySelectorAll('#addForm,.addrow').forEach(el=>{el.style.display='none';});
+}
+function permText(g){const p=myPerm(g);if(p.own)return 'Owner';if(!p.e)return 'View only';return 'Can edit'+(p.d?', delete':'')+(p.p?', payments':'');}
 function roleOf(g){const p=myPerm(g);return p.own?'Owner':p.e?'Can edit':'View only';}
 async function listGroups(){
   const u=acct.user;if(!u)return false;
@@ -637,21 +658,39 @@ async function listGroups(){
     gMsg='';
     try{all=all.concat(await run({fieldFilter:{field:{fieldPath:'memberEmails'},op:'ARRAY_CONTAINS',value:sv(u.email)}}));}
     catch(e){if(u.verified)throw e;gMsg='Verify your email to see groups you were added to.';}
+    const prev=new Map(G.list.map(g=>[g.gid,{name:g.name,own:g.ownerUid===u.uid,t:permText(g)}]));
     const seen=new Set();const old=new Map(G.list.map(g=>[g.gid,g]));
     G.list=all.filter(g=>!seen.has(g.gid)&&seen.add(g.gid)).map(g=>Object.assign(old.get(g.gid)||{},g));
     G.list.sort((a,b)=>(b.ownerUid===u.uid)-(a.ownerUid===u.uid)||a.name.localeCompare(b.name));
     G.uid=u.uid;if(!G.list.some(g=>g.gid===G.cur))G.cur='';
     const left=[];
     for(const q of (G.reqs||[])){
-      if(G.list.some(g=>g.gid===q.gid))continue;
-      try{const r=await fbFetch(gUrl(q.gid)+'/requests/'+encodeURIComponent(u.uid)+'?'+fk());if(r.status===404){toast('Your request to join '+q.name+' was not approved.');continue;}}catch(e){}
+      if(G.list.some(g=>g.gid===q.gid)){notify('Approved. You joined '+q.name+'.');continue;}
+      try{const r=await fbFetch(gUrl(q.gid)+'/requests/'+encodeURIComponent(u.uid)+'?'+fk());if(r.status===404){notify('Your request to join '+q.name+' was declined.');continue;}}catch(e){}
       left.push(q);
     }
     G.reqs=left;saveG();
+    const notes=[];
+    prev.forEach((o,gid)=>{if(o.own)return;const n=G.list.find(x=>x.gid===gid);if(!n)notes.push('You no longer have access to '+o.name+'.');else{const t=permText(n);if(t!==o.t)notes.push('Your access in '+n.name+' changed: '+t+'.');}});
+    notes.forEach(n=>notify(n));
     const g=gcur();if(g){const was=viewing;applyRole();if(!!was!==!!viewing)gRefreshMode();}
     return true;
   }catch(e){gMsg='Could not load groups. '+gsErr(e);return false;}
 }
+async function refreshVerified(){
+  const u=acct.user;if(!u||u.verified||DEMO)return false;
+  try{await lookupUser();}catch(e){return false;}
+  if(acct.user&&acct.user.verified){toast('Email verified.');ensureGroups();render();return true;}
+  return false;
+}
+function scanNotify(){
+  const u=acct.user;if(!u)return;
+  const seen=new Set(G.seen||[]),cur=new Set(),fresh=[];
+  G.list.filter(g=>g.ownerUid===u.uid).forEach(g=>(g.reqs||[]).forEach(q=>{const k=g.gid+':'+q.uid;cur.add(k);if(!seen.has(k))fresh.push((q.name||q.email)+' asked to join '+g.name);}));
+  G.seen=[...cur];saveG();
+  fresh.forEach(n=>notify(n+'.'));
+}
+async function refreshGroupsN(){if(!(await listGroups()))return;await loadAllReqs();scanNotify();}
 function gRefreshMode(){if(viewing){store={sessions:[],cur:null,nextSid:1,roster:[],hidden:[]};S=fresh();home=true;viewSig='';render();refreshRO(true);}else{switchGroup(G.cur);}}
 async function loadReqs(g){
   try{
@@ -724,7 +763,8 @@ function runGSearch(){
 }
 async function requestJoin(x){
   const u=acct.user;if(G.list.some(g=>g.gid===x.gid))throw new Error('You are already in this group.');
-  if(!u.verified)throw new Error('Verify your email first (Account page), then try again.');
+  if(!u.verified)await refreshVerified();
+  if(!acct.user.verified)throw new Error('Verify your email first (Account page), then try again.');
   const url=gUrl(x.gid)+'/requests/'+encodeURIComponent(u.uid);
   await fbDel(url);
   const r=await fbFetch(url+'?'+fk()+'&currentDocument.exists=false',{method:'PATCH',headers:JH,body:JSON.stringify({fields:{email:sv(u.email),name:sv(u.name||''),at:{integerValue:String(Date.now())},status:sv('pending')}})});
@@ -909,13 +949,13 @@ function accountPage(){
 }
 function viewBar(){
   const g=gcur();
-  if(viewing)return `<div class="viewbar"><span>You can only view <b>${esc(viewing.name)}</b>. The owner can give you edit rights.</span><button type="button" class="btn small" data-act="groupsopen">Groups</button></div>`;
+  if(viewing)return `<div class="viewbar ro"><span><b class="tag">VIEW ONLY</b>You can only look at <b>${esc(viewing.name)}</b>. Buttons that change things are switched off. Ask the owner for edit rights.</span><button type="button" class="btn small" data-act="groupsopen">Groups</button></div>`;
   if(acct.user&&g&&home&&!extraPage&&!helpOpen&&!contactOpen){const n=G.list.reduce((a,x)=>a+((x.reqs||[]).length),0);return `<div class="gpill"><button type="button" class="sesback" data-act="groupsopen" style="flex:1;margin:0">\u2039 Groups \u00B7 ${esc(g.name)}</button>${n?'<span class="pk ok">'+n+' request'+(n>1?'s':'')+'</span>':''}</div>`;}
   if(DEMO&&!acct.user&&home&&!extraPage&&!helpOpen&&!contactOpen)return `<div class="gpill"><button type="button" class="sesback" data-act="groupsopen" style="flex:1;margin:0">\u2039 Groups \u00B7 Sample group</button></div>`;
   return '';
 }
 const gerr=e=>{const m=String((e&&e.message)||e);return /^(denied|offline|signedout|http|bad data|busy|switched)/.test(m)?gsErr(e):m;};
-const isGP=()=>['groups','gmanage','gcreate','gjoin'].includes(extraPage);
+const isGP=()=>['groups','gmanage','gcreate','gjoin','notes'].includes(extraPage);
 let demoGone=false,pendMem=-1;
 function groupsPage(){
   const demo=DEMO&&!acct.user;const u=acct.user||{};
@@ -999,10 +1039,10 @@ try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(!(A&&A
   window.addEventListener('popstate',()=>{if(webExit)return;try{history.pushState({st:1},'');}catch(e){}if(!appBack()){dialog='exitapp';render();}});
 }}catch(e){}
 try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('backButton',()=>{if(!appBack()){dialog='exitapp';render();}});}catch(e){}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshRO();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncNow();refreshRO();if(acct.user&&!DEMO){refreshVerified().then(()=>{if(!busyNow())refreshGroupsN().then(()=>{if(!busyNow())render();});});}}});
 window.addEventListener('online',()=>{syncNow();refreshRO();});
 let pollN=0;
-setInterval(()=>{if(document.visibilityState!=='visible'||!acct.user)return;pollN++;if(!G.cur){if(pollN%4===0)ensureGroups();return;}if(pollN%10===0&&!busyNow())listGroups().then(()=>loadAllReqs()).then(()=>{if(!busyNow())render();});if(viewing){refreshRO();return;}if(gsync.defer&&!busyNow()){gsync.defer=false;render();}syncNow();},8000);
+setInterval(()=>{if(document.visibilityState!=='visible'||!acct.user)return;pollN++;if(!acct.user.verified&&!DEMO&&pollN%2===0)refreshVerified();if(!G.cur){if(pollN%4===0)ensureGroups();else if(pollN%2===0&&!busyNow())refreshGroupsN().then(()=>{if(!busyNow())render();});return;}if(pollN%5===0&&!busyNow())refreshGroupsN().then(()=>{if(!busyNow())render();});if(viewing){refreshRO();return;}if(gsync.defer&&!busyNow()){gsync.defer=false;render();}syncNow();},8000);
 let sesForm=false,sesTarget=0;
 function uniqueName(base){let n=base,k=2;while(store.sessions.some(x=>x.name===n))n=base+' ('+(k++)+')';return n;}
 function newSessionData(src){
@@ -1126,6 +1166,7 @@ function viewExtra(){
   if(extraPage==='backup')return `<div class="stack">${back}${backupPage()}</div>`;
   if(extraPage==='account')return `<div class="stack">${back}${accountPage()}</div>`;
   if(extraPage==='groups')return `<div class="stack">${groupsPage()}</div>`;
+  if(extraPage==='notes')return `<div class="stack"><button type="button" class="sesback" data-act="monthclose">\u2039 Back</button>${notesPage()}</div>`;
   if(extraPage==='gcreate')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gcreatePage()}</div>`;
   if(extraPage==='gjoin')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gjoinPage()}</div>`;
   if(extraPage==='gmanage')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gmanagePage()}</div>`;
@@ -2402,7 +2443,7 @@ function dialogHtml(){
   return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${d.t}</h3><p>${d.b}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="button" data-act="${d.a}">${d.y}</button></div></div></div>`;
 }
 function render(){
-  if(acct.user&&!DEMO&&!G.cur&&!['groups','gmanage','gcreate','gjoin','account','settings'].includes(extraPage)&&!helpOpen&&!contactOpen)extraPage='groups';
+  if(acct.user&&!DEMO&&!G.cur&&!['groups','gmanage','gcreate','gjoin','notes','account','settings'].includes(extraPage)&&!helpOpen&&!contactOpen)extraPage='groups';
   const sb=$('#sesbar');const cs=store.sessions.find(x=>x.data===S);
   if(sb){sb.hidden=home||!cs||gateOn();sb.innerHTML=(home||!cs)?'':`<button type="button" class="sesback" data-act="gohome">\u2039 All games</button><span>${esc(cs.name)}</span>`;}
   const nv=document.querySelector('.nav');if(nv)nv.hidden=gateOn()||isGP()||(home&&!helpOpen&&!contactOpen&&!extraPage);
@@ -2412,6 +2453,7 @@ function render(){
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
+  updateBell();applyReadOnlyUI();
   const mb=$('#menuBtn');if(mb)mb.hidden=gateOn();const gb=$('#guideBtn');if(gb)gb.hidden=gateOn()||tour.on;
   $('#modal').innerHTML=dialogHtml();
   tourDraw();
@@ -2613,6 +2655,8 @@ const actions={
   demoopen(){extraPage='';home=true;},
   acfresh(){dialog=null;legAns='skip';acStart();return false;},
   ackeep(){dialog=null;legAns='keep';acStart();return false;},
+  grpnotes(){notesNew=(G.notes||[]).filter(x=>!x.r).length;(G.notes||[]).forEach(x=>x.r=1);saveG();closeMenu();contactOpen=false;helpOpen=false;extraPage='notes';window.scrollTo(0,0);},
+  grpnotesclear(){G.notes=[];notesNew=0;saveG();},
   groupsopen(){if(acct.user&&!DEMO&&G.cur)leaveGroup();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
   grpreload(){listGroups().then(()=>loadAllReqs()).then(()=>render());return false;},
   grpswitch(i){const g=G.list[i];if(!g)return false;if(g.gid===G.cur){extraPage='';home=true;return;}switchGroup(g.gid);home=true;render();return false;},
@@ -2722,7 +2766,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){hideToast();contactOpen=false;helpOpen=false;extraPage='';S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   if(el.dataset.act==='acmode'){acct.mode=el.dataset.k;acct.msg='';render();return;}
-  if(viewing&&el.dataset.act&&!VIEW_OK.has(el.dataset.act)&&!/^grp/.test(el.dataset.act)&&el.dataset.act!=='ptperiod'&&el.dataset.act!=='pfstatus'&&!/^theme/.test(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
+  if(viewing&&roBlocked(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
   if(acct.user&&gcur()&&!viewing){const ac=el.dataset.act;if(DEL_ACTS.has(ac)&&!gperm.d){toast('You do not have permission to delete.');return;}if(PAY_ACTS.has(ac)&&!gperm.p){toast('You do not have permission to change payments.');return;}}
   if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';render();return;}
   if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;pfKeep.clear();render();return;}
