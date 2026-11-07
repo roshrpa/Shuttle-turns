@@ -639,11 +639,11 @@ function notesPage(){
   const l=G.notes||[];
   return `<section class="card"><h2>Notifications</h2>${l.length?l.map((x,i)=>`<button type="button" class="nrow${i<notesNew?' new':''}" data-act="grpnoteopen" data-id="${i}" style="display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">${esc(x.t)}${x.k?'<span style="float:right;color:var(--accent);font-weight:700">\u203A</span>':''}<small>${new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></button>`).join('')+'<button class="btn block" type="button" data-act="grpnotesclear" style="margin-top:12px">Clear all</button>':'<p class="muted" style="margin:0">No notifications yet. You will see join requests, approvals and access changes here.</p>'}</section>`;
 }
-function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&act!=='ptperiod'&&act!=='pfstatus'&&!/^theme/.test(act);}
+function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&act!=='ptperiod'&&act!=='ptpreset'&&act!=='pfstatus'&&!/^theme/.test(act);}
 function applyReadOnlyUI(){
   if(!viewing)return;const v=$('#view');if(!v)return;
   v.querySelectorAll('[data-act]').forEach(el=>{if(roBlocked(el.dataset.act)){el.classList.add('ro-off');el.setAttribute('aria-disabled','true');el.tabIndex=-1;}});
-  v.querySelectorAll('input,select,textarea').forEach(el=>{if(!['monSel','payMon','payFrom','payTo','payPer'].includes(el.id)&&!/^grp/.test(el.id)&&el.id!=='acForm'&&!el.closest('#acForm')){el.disabled=true;}});
+  v.querySelectorAll('input,select,textarea').forEach(el=>{if(!['monSel','monFrom','monTo','payMon','payFrom','payTo','payPer'].includes(el.id)&&!/^grp/.test(el.id)&&el.id!=='acForm'&&!el.closest('#acForm')){el.disabled=true;}});
   v.querySelectorAll('#addForm,.addrow').forEach(el=>{el.style.display='none';});
 }
 function permText(g){const p=myPerm(g);if(p.own)return 'Owner';if(!p.e)return 'View only';return 'Can edit'+(p.d?', delete':'')+(p.p?', payments':'');}
@@ -1090,13 +1090,15 @@ function pendingPay(x){
   const d=x.data;if(!d.pay||!d.pay.final)return 0;
   const o=S;S=d;try{const c=payCalc();return c.rows?c.rows.filter(r=>!d.pay.paid[r.id]).length:0;}catch(e){return 0;}finally{S=o;}
 }
-let monSel='',backupMsg='',pendRestore=null,ptPeriod='month';
+let monSel='',backupMsg='',pendRestore=null,ptPeriod='month',monFrom='',monTo='';
+const dstr=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function monDefaults(days){const t=new Date();monTo=dstr(t);monFrom=dstr(new Date(t.getFullYear(),t.getMonth(),t.getDate()-(days-1)));}
 const monKey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
 const wkStart=ts=>{const d=new Date(ts);return new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7));};
-const perKey=ts=>{if(ptPeriod==='week'){const w=wkStart(ts);return 'W'+w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');}return monKey(ts);};
-const perLabel=k=>{if(k&&k[0]==='W'){const a=new Date(+k.slice(1,5),+k.slice(6,8)-1,+k.slice(9,11)),b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6);const f=(d,y)=>d.toLocaleDateString('en-GB',y?{day:'numeric',month:'short',year:'numeric'}:{day:'numeric',month:'short'});return f(a,false)+' \u2013 '+f(b,true);}return monLabel(k);};
+const perKey=ts=>{if(ptPeriod==='custom'){const q=dstr(new Date(ts));return((monFrom&&q<monFrom)||(monTo&&q>monTo))?'':'custom';}if(ptPeriod==='week'){const w=wkStart(ts);return 'W'+w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');}return monKey(ts);};
+const perLabel=k=>{if(k==='custom'){const f=q=>q?new Date(+q.slice(0,4),+q.slice(5,7)-1,+q.slice(8,10)).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'\u2026';return f(monFrom)+' \u2013 '+f(monTo);}if(k&&k[0]==='W'){const a=new Date(+k.slice(1,5),+k.slice(6,8)-1,+k.slice(9,11)),b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6);const f=(d,y)=>d.toLocaleDateString('en-GB',y?{day:'numeric',month:'short',year:'numeric'}:{day:'numeric',month:'short'});return f(a,false)+' \u2013 '+f(b,true);}return monLabel(k);};
 const monLabel=k=>new Date(+k.slice(0,4),+k.slice(5)-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-function monthKeys(){const m=new Set();store.sessions.forEach(x=>{if(x.data.mode!=='tour'&&x.data.games.some(g=>gameWinOf(g)!=null))m.add(perKey(x.created));});return [...m].sort().reverse();}
+function monthKeys(){const m=new Set();store.sessions.forEach(x=>{if(x.data.mode!=='tour'&&x.data.games.some(g=>gameWinOf(g)!=null))m.add(perKey(x.created));});m.delete('');return [...m].sort().reverse();}
 const gameWinOf=g=>(g.sa!=null&&g.sb!=null&&g.sa!==g.sb)?(g.sa>g.sb?0:1):(g.win===0||g.win===1?g.win:null);
 function monthRows(key){
   const m=new Map();let days=0,games=0;
@@ -1129,7 +1131,7 @@ function monthPairs(key){
 }
 function highlightsList(r,key){
   if(!r.rows.length)return [];
-  const per=ptPeriod==='week'?'week':'month';
+  const per=ptPeriod==='week'?'week':ptPeriod==='custom'?'period':'month';
   const top=r.rows[0],most=r.rows.slice().sort((a,b)=>b.p-a.p||b.w-a.w)[0];
   const rate=r.rows.filter(x=>x.p>=3).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p)[0],pair=monthPairs(key)[0];
   const o=[['Player of the '+per,top.name+' ('+top.w+' won of '+top.p+')']];
@@ -1141,11 +1143,11 @@ function highlightsList(r,key){
 function monSpec(){
   const keys=monthKeys();if(!keys.length)return null;
   const key=keys.includes(monSel)?monSel:keys[0];const r=monthRows(key);
-  return {table:true,noPts:true,title:ptPeriod==='week'?'WEEKLY TABLE':'MONTHLY TABLE',sub:perLabel(key)+' \u00B7 '+r.games+(r.games===1?' game':' games'),rows:r.rows,hl:highlightsList(r,key)};
+  return {table:true,noPts:true,title:ptPeriod==='week'?'WEEKLY TABLE':ptPeriod==='custom'?'POINTS TABLE':'MONTHLY TABLE',sub:perLabel(key)+' \u00B7 '+r.games+(r.games===1?' game':' games'),rows:r.rows,hl:highlightsList(r,key)};
 }
 function highlightsHtml(r,key){
   if(!r.rows.length)return '';
-  const per=ptPeriod==='week'?'week':'month';
+  const per=ptPeriod==='week'?'week':ptPeriod==='custom'?'period':'month';
   const top=r.rows[0];
   const most=r.rows.slice().sort((a,b)=>b.p-a.p||b.w-a.w)[0];
   const rate=r.rows.filter(x=>x.p>=3).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p)[0];
@@ -1241,13 +1243,15 @@ function viewMonth(){return `<div class="stack"><button type="button" class="ses
 function monthCard(){
   const keys=monthKeys();
   const chip=(k,l)=>`<button type="button" class="chip${ptPeriod===k?' sel':''}" data-act="ptperiod" data-k="${k}" aria-pressed="${ptPeriod===k}">${l}</button>`;
-  const head=`<h2>Points table</h2><div class="chips" style="gap:8px;margin-bottom:10px">${chip('week','Weekly')}${chip('month','Monthly')}</div>`;
-  if(!keys.length)return `<section class="card">${head}<p class="hint" style="margin:0">After you mark who won in some games, the ${ptPeriod==='week'?'weekly':'monthly'} table appears here.</p></section>`;
+  const head=`<h2>Points table</h2><div class="chips" style="gap:8px;margin-bottom:10px">${chip('week','Weekly')}${chip('custom','Custom dates')}${chip('month','Monthly')}</div>`;
+  const cu=ptPeriod==='custom';
+  const dates=cu?`<div class="datepair"><label class="lbl">From<input id="monFrom" class="field" type="date" value="${esc(monFrom)}"></label><label class="lbl">To<input id="monTo" class="field" type="date" value="${esc(monTo)}"></label></div>`:'';
+  if(!keys.length)return `<section class="card">${head}${dates}<p class="hint" style="margin:8px 0 0">${cu?'No games with a winner marked between these dates.':'After you mark who won in some games, the '+(ptPeriod==='week'?'weekly':'monthly')+' table appears here.'}</p></section>`;
   const key=keys.includes(monSel)?monSel:keys[0];
   const r=monthRows(key);const text=monText(key,r);
   return `<section class="card">${head}
-    <label class="lbl">${ptPeriod==='week'?'Week':'Month'}<select id="monSel" class="field">${keys.map(k=>`<option value="${k}" ${k===key?'selected':''}>${esc(perLabel(k))}</option>`).join('')}</select></label>
-    <h3 style="margin:14px 0 0;font-size:18px">${ptPeriod==='week'?'Weekly':'Monthly'} points table</h3><p class="muted" style="margin:2px 0 0">${esc(perLabel(key))}</p>
+    ${cu?dates:`<label class="lbl">${ptPeriod==='week'?'Week':'Month'}<select id="monSel" class="field">${keys.map(k=>`<option value="${k}" ${k===key?'selected':''}>${esc(perLabel(k))}</option>`).join('')}</select></label>`}
+    <h3 style="margin:14px 0 0;font-size:18px">${ptPeriod==='week'?'Weekly':cu?'Custom':'Monthly'} points table</h3><p class="muted" style="margin:2px 0 0">${esc(perLabel(key))}</p>
     <div class="sumhead"><strong>${r.games} ${r.games===1?'game':'games'}</strong><span class="muted">${r.days} ${r.days===1?'day':'days'}</span></div>
     <div class="ptab nopts"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span></div>
     ${r.rows.map((x,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(x.name)}</span><span>${x.p}</span><span>${x.w}</span><span>${x.l}</span></div>`).join('')}</div>
@@ -2756,6 +2760,7 @@ const actions={
   monthopen(){closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='month';},
   monthclose(){extraPage='';window.scrollTo(0,0);},
   pfstatus(){return false;},
+  ptpreset(d){monDefaults(d);},
   payclear(){pfFrom='';pfTo='';},
   newfrompay(){extraPage='';helpOpen=false;contactOpen=false;playersOpen=false;home=true;setOpen(false);sesForm=true;window.scrollTo(0,0);},
   paysopen(){pfKeep.clear();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='pays';},
@@ -2775,7 +2780,7 @@ document.addEventListener('click',e=>{
   if(el.dataset.act==='acmode'){acct.mode=el.dataset.k;acct.msg='';render();return;}
   if(viewing&&roBlocked(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
   if(acct.user&&gcur()&&!viewing){const ac=el.dataset.act;if(DEL_ACTS.has(ac)&&!gperm.d){toast('You do not have permission to delete.');return;}if(PAY_ACTS.has(ac)&&!gperm.p){toast('You do not have permission to change payments.');return;}}
-  if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';render();return;}
+  if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';if(ptPeriod==='custom'&&!monFrom)monDefaults(7);render();return;}
   if(el.dataset.act==='pfstatus'){pfStatus=el.dataset.k;pfKeep.clear();render();return;}
   if(el.dataset.act==='paymon'){pfMonth=el.dataset.k||'';pfFrom='';pfTo='';pfStatus='all';pfPerson='';pfKeep.clear();render();window.scrollTo(0,0);return;}
   if(el.dataset.act==='paystat'){const x=store.sessions.find(q=>q.id===+el.dataset.sid);if(x&&x.data.pay){const pid=el.dataset.pid;undoPoint();x.data.pay.paid[pid]=!x.data.pay.paid[pid];pfKeep.add(el.dataset.sid+':'+pid);undoToast(x.data.pay.paid[pid]?'Marked paid.':'Marked not paid.');}render();return;}
@@ -2890,8 +2895,9 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t&&t.dataset&&t.dataset.pm!==undefined){const g=G.list.find(x=>x.gid===gmId);if(!g)return;const em=Object.keys(g.perms||{}).sort()[+t.dataset.pm];if(!em)return;const pm=JSON.parse(JSON.stringify(g.perms)),k=t.dataset.k,o=pm[em]||{e:0,d:0,p:0};o[k]=t.checked?1:0;if(k!=='e'&&t.checked)o.e=1;if(k==='e'&&!t.checked){o.d=0;o.p=0;}pm[em]=o;setPerm(g,pm).then(()=>render()).catch(er=>{toast(gerr(er));render();});return;}
-  if(viewing&&!['monSel','payMon','payFrom','payTo','payPer'].includes(t&&t.id)){render();return;}
+  if(viewing&&!['monSel','monFrom','monTo','payMon','payFrom','payTo','payPer'].includes(t&&t.id)){render();return;}
   if(t&&t.id==='monSel'){monSel=t.value;render();return;}
+  if(t&&(t.id==='monFrom'||t.id==='monTo')){if(t.id==='monFrom')monFrom=t.value;else monTo=t.value;if(monFrom&&monTo&&monFrom>monTo){const x=monFrom;monFrom=monTo;monTo=x;}render();return;}
   if(t&&t.id==='payMon'){pfMonth=t.value;pfKeep.clear();if(pfMonth){pfFrom='';pfTo='';}render();return;}
   if(t&&t.id==='payFrom'){pfFrom=t.value;pfKeep.clear();if(pfFrom)pfMonth='';render();return;}
   if(t&&t.id==='payTo'){pfTo=t.value;pfKeep.clear();if(pfTo)pfMonth='';render();return;}
