@@ -111,7 +111,7 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 #menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.ro-off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
 .viewbar.ro{position:sticky;top:0;z-index:6;border:2px solid var(--danger);background:color-mix(in srgb,var(--danger) 16%,var(--surface));font-weight:600}
 .viewbar.ro b.tag{background:var(--danger);color:#fff;border-radius:8px;padding:2px 8px;margin-right:6px;font-size:13px;letter-spacing:.04em}
-.bellbtn{right:52px}.bellbtn .badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--danger);color:#fff;font:700 12px var(--font-body,sans-serif);display:flex;align-items:center;justify-content:center;padding:0 5px}.bellbtn[hidden]{display:none!important}
+.menubtn.bellbtn{right:52px}.bellbtn .badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--danger);color:#fff;font:700 12px var(--font-body,sans-serif);display:flex;align-items:center;justify-content:center;padding:0 5px}.bellbtn[hidden]{display:none!important}
 .nrow{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:var(--surface)}.nrow.new{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.nrow small{display:block;color:var(--muted);margin-top:2px}
 .viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:14px}.gcode{font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;padding:12px;border:1px dashed var(--line);border-radius:12px;margin:6px 0 10px;text-align:center;user-select:all;overflow-wrap:anywhere}.paidlist{margin-top:12px}.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.pn{font-weight:700}.pn small{display:block;font-weight:500;color:var(--muted);font-size:13px}.pst{min-height:44px;min-width:128px;padding:0 14px;border-radius:12px;font:700 14px var(--font-body);cursor:pointer}.pst.no{border:1px solid var(--danger);background:var(--surface);color:var(--danger)}.pst.yes{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}.paidlist .chip{margin:4px 6px 0 0;cursor:pointer}
 .okbox{padding:10px 12px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
@@ -632,12 +632,12 @@ function myPerm(g){
   const p=(g.perms||{})[u.email]||{};return {e:!!p.e,d:!!p.e&&!!p.d,p:!!p.e&&!!p.p,own:0};
 }
 function applyRole(){const g=gcur();gperm=g&&acct.user?myPerm(g):{e:1,d:1,p:1,own:1};viewing=(g&&acct.user&&!gperm.e)?{name:g.name}:null;}
-function notify(msg){G.notes=[{t:msg,at:Date.now(),r:0}].concat(G.notes||[]).slice(0,30);saveG();toast(msg);updateBell();}
+function notify(msg,k,gid){G.notes=[{t:msg,at:Date.now(),r:0,k:k||'',g:gid||''}].concat(G.notes||[]).slice(0,30);saveG();toast(msg);updateBell();}
 function updateBell(){const b=$('#bellBtn'),n=$('#bellN');if(!b)return;b.hidden=!(acct.user&&!DEMO)||gateOn();const u=(G.notes||[]).filter(x=>!x.r).length;if(n){n.hidden=!u;n.textContent=u>9?'9+':u;}}
 let notesNew=0;
 function notesPage(){
   const l=G.notes||[];
-  return `<section class="card"><h2>Notifications</h2>${l.length?l.map((x,i)=>`<div class="nrow${i<notesNew?' new':''}">${esc(x.t)}<small>${new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')+'<button class="btn block" type="button" data-act="grpnotesclear" style="margin-top:12px">Clear all</button>':'<p class="muted" style="margin:0">No notifications yet. You will see join requests, approvals and access changes here.</p>'}</section>`;
+  return `<section class="card"><h2>Notifications</h2>${l.length?l.map((x,i)=>`<button type="button" class="nrow${i<notesNew?' new':''}" data-act="grpnoteopen" data-id="${i}" style="display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">${esc(x.t)}${x.k?'<span style="float:right;color:var(--accent);font-weight:700">\u203A</span>':''}<small>${new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></button>`).join('')+'<button class="btn block" type="button" data-act="grpnotesclear" style="margin-top:12px">Clear all</button>':'<p class="muted" style="margin:0">No notifications yet. You will see join requests, approvals and access changes here.</p>'}</section>`;
 }
 function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&act!=='ptperiod'&&act!=='pfstatus'&&!/^theme/.test(act);}
 function applyReadOnlyUI(){
@@ -665,14 +665,14 @@ async function listGroups(){
     G.uid=u.uid;if(!G.list.some(g=>g.gid===G.cur))G.cur='';
     const left=[];
     for(const q of (G.reqs||[])){
-      if(G.list.some(g=>g.gid===q.gid)){notify('Approved. You joined '+q.name+'.');continue;}
-      try{const r=await fbFetch(gUrl(q.gid)+'/requests/'+encodeURIComponent(u.uid)+'?'+fk());if(r.status===404){notify('Your request to join '+q.name+' was declined.');continue;}}catch(e){}
+      if(G.list.some(g=>g.gid===q.gid)){notify('Approved. You joined '+q.name+'.','group',q.gid);continue;}
+      try{const r=await fbFetch(gUrl(q.gid)+'/requests/'+encodeURIComponent(u.uid)+'?'+fk());if(r.status===404){notify('Your request to join '+q.name+' was declined.','groups');continue;}}catch(e){}
       left.push(q);
     }
     G.reqs=left;saveG();
     const notes=[];
-    prev.forEach((o,gid)=>{if(o.own)return;const n=G.list.find(x=>x.gid===gid);if(!n)notes.push('You no longer have access to '+o.name+'.');else{const t=permText(n);if(t!==o.t)notes.push('Your access in '+n.name+' changed: '+t+'.');}});
-    notes.forEach(n=>notify(n));
+    prev.forEach((o,gid)=>{if(o.own)return;const n=G.list.find(x=>x.gid===gid);if(!n)notes.push(['You no longer have access to '+o.name+'.','groups','']);else{const t=permText(n);if(t!==o.t)notes.push(['Your access in '+n.name+' changed: '+t+'.','group',gid]);}});
+    notes.forEach(n=>notify(n[0],n[1],n[2]));
     const g=gcur();if(g){const was=viewing;applyRole();if(!!was!==!!viewing)gRefreshMode();}
     return true;
   }catch(e){gMsg='Could not load groups. '+gsErr(e);return false;}
@@ -686,9 +686,9 @@ async function refreshVerified(){
 function scanNotify(){
   const u=acct.user;if(!u)return;
   const seen=new Set(G.seen||[]),cur=new Set(),fresh=[];
-  G.list.filter(g=>g.ownerUid===u.uid).forEach(g=>(g.reqs||[]).forEach(q=>{const k=g.gid+':'+q.uid;cur.add(k);if(!seen.has(k))fresh.push((q.name||q.email)+' asked to join '+g.name);}));
+  G.list.filter(g=>g.ownerUid===u.uid).forEach(g=>(g.reqs||[]).forEach(q=>{const k=g.gid+':'+q.uid;cur.add(k);if(!seen.has(k))fresh.push([(q.name||q.email)+' asked to join '+g.name,g.gid]);}));
   G.seen=[...cur];saveG();
-  fresh.forEach(n=>notify(n+'.'));
+  fresh.forEach(n=>notify(n[0]+'.','req',n[1]));
 }
 async function refreshGroupsN(){if(!(await listGroups()))return;await loadAllReqs();scanNotify();}
 function gRefreshMode(){if(viewing){store={sessions:[],cur:null,nextSid:1,roster:[],hidden:[]};S=fresh();home=true;viewSig='';render();refreshRO(true);}else{switchGroup(G.cur);}}
@@ -955,7 +955,7 @@ function viewBar(){
   return '';
 }
 const gerr=e=>{const m=String((e&&e.message)||e);return /^(denied|offline|signedout|http|bad data|busy|switched)/.test(m)?gsErr(e):m;};
-const isGP=()=>['groups','gmanage','gcreate','gjoin','notes'].includes(extraPage);
+const isGP=()=>['groups','gmanage','gcreate','gjoin'].includes(extraPage)||(extraPage==='notes'&&!G.cur);
 let demoGone=false,pendMem=-1;
 function groupsPage(){
   const demo=DEMO&&!acct.user;const u=acct.user||{};
@@ -2656,6 +2656,13 @@ const actions={
   acfresh(){dialog=null;legAns='skip';acStart();return false;},
   ackeep(){dialog=null;legAns='keep';acStart();return false;},
   grpnotes(){notesNew=(G.notes||[]).filter(x=>!x.r).length;(G.notes||[]).forEach(x=>x.r=1);saveG();closeMenu();contactOpen=false;helpOpen=false;extraPage='notes';window.scrollTo(0,0);},
+  grpnoteopen(i){
+    const x=(G.notes||[])[i];if(!x||!x.k)return false;
+    const gi=G.list.findIndex(g=>g.gid===x.g);
+    if(x.k==='req'&&gi>=0){const me=G.list[gi];if(me.ownerUid===(acct.user||{}).uid){if(G.cur)leaveGroup();return actions.grpmanage(gi);}}
+    if((x.k==='group'||x.k==='req')&&gi>=0)return actions.grpswitch(gi);
+    return actions.groupsopen();
+  },
   grpnotesclear(){G.notes=[];notesNew=0;saveG();},
   groupsopen(){if(acct.user&&!DEMO&&G.cur)leaveGroup();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
   grpreload(){listGroups().then(()=>loadAllReqs()).then(()=>render());return false;},
