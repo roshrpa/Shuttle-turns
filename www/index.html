@@ -108,7 +108,10 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 .ptab.lk .payh,.ptab.lk .payr{grid-template-columns:minmax(60px,1fr) 40px 78px 92px}.ptab.lk .pst{min-height:36px;min-width:0;width:100%;padding:0 6px;font-size:13px}.payh{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--line)}
 .payr{border-bottom:1px solid var(--line)}.payr .n small{display:block;color:var(--muted);font-size:12px}
 .payh span:not(.n),.payr span:not(.n){text-align:right}
-#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.ro-off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
+#menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.namebtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px}
+.stiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.stiles div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center}.stiles b{display:block;font-size:22px}.stiles small{color:var(--muted);font-size:12px}
+.form5 i{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:13px;color:#fff;margin-right:4px;background:var(--danger)}.form5 i.w{background:var(--accent)}
+.ro-off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
 .viewbar.ro{position:sticky;top:0;z-index:6;border:2px solid var(--danger);background:color-mix(in srgb,var(--danger) 16%,var(--surface));font-weight:600}
 .viewbar.ro b.tag{background:var(--danger);color:#fff;border-radius:8px;padding:2px 8px;margin-right:6px;font-size:13px;letter-spacing:.04em}
 .menubtn.bellbtn{right:52px}.bellbtn .badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--danger);color:#fff;font:700 12px var(--font-body,sans-serif);display:flex;align-items:center;justify-content:center;padding:0 5px}.bellbtn[hidden]{display:none!important}
@@ -639,7 +642,7 @@ function notesPage(){
   const l=G.notes||[];
   return `<section class="card"><h2>Notifications</h2>${l.length?l.map((x,i)=>`<button type="button" class="nrow${i<notesNew?' new':''}" data-act="grpnoteopen" data-id="${i}" style="display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">${esc(x.t)}${x.k?'<span style="float:right;color:var(--accent);font-weight:700">\u203A</span>':''}<small>${new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></button>`).join('')+'<button class="btn block" type="button" data-act="grpnotesclear" style="margin-top:12px">Clear all</button>':'<p class="muted" style="margin:0">No notifications yet. You will see join requests, approvals and access changes here.</p>'}</section>`;
 }
-function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&act!=='ptperiod'&&act!=='ptpreset'&&act!=='pfstatus'&&!/^theme/.test(act);}
+function roBlocked(act){return !!act&&!VIEW_OK.has(act)&&!/^grp/.test(act)&&!/^pstat/.test(act)&&act!=='ptperiod'&&act!=='ptpreset'&&act!=='pfstatus'&&!/^theme/.test(act);}
 function applyReadOnlyUI(){
   if(!viewing)return;const v=$('#view');if(!v)return;
   v.querySelectorAll('[data-act]').forEach(el=>{if(roBlocked(el.dataset.act)){el.classList.add('ro-off');el.setAttribute('aria-disabled','true');el.tabIndex=-1;}});
@@ -865,6 +868,19 @@ function gsErr(e){
   return 'Could not reach the server. It will try again.';
 }
 function busyNow(){const a=document.activeElement;return !!dialog||!!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));}
+const peekSeen={};
+function liveNow(){return store.sessions.some(x=>!x.data.ended&&x.data.games&&x.data.games.length&&Date.now()-x.created<18*3600000);}
+async function peekGroup(){
+  const g=gcur();if(!g||!acct.user||DEMO||document.visibilityState!=='visible'||gsync.busy||busyNow()||!liveNow())return;
+  const gid=g.gid;let ut='';
+  try{const r=await fbFetch(gUrl(gid)+'?mask.fieldPaths=updated&'+fk());if(!r.ok)return;const j=await r.json();ut=j.updateTime||'';}catch(e){return;}
+  if(G.cur!==gid||!ut)return;
+  if(peekSeen[gid]===undefined){peekSeen[gid]=ut;return;}
+  if(peekSeen[gid]===ut)return;
+  peekSeen[gid]=ut;
+  if(viewing)refreshRO();else syncNow();
+}
+setInterval(peekGroup,3000);
 async function syncNow(){
   const g=gcur();
   if(!acct.user||viewing||!g)return;
@@ -1022,6 +1038,7 @@ function appBack(){
   if(extraPage){
     if(['gmanage','gcreate','gjoin'].includes(extraPage)){extraPage='groups';gmId='';gFound=null;gJoinMsg='';}
     else if(extraPage==='groups')return false;
+    else if(extraPage==='pstat')extraPage=pstatBack||'';
     else extraPage='';
     window.scrollTo(0,0);render();return true;
   }
@@ -1100,6 +1117,55 @@ const perLabel=k=>{if(k==='custom'){const f=q=>q?new Date(+q.slice(0,4),+q.slice
 const monLabel=k=>new Date(+k.slice(0,4),+k.slice(5)-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function monthKeys(){const m=new Set();store.sessions.forEach(x=>{if(x.data.mode!=='tour'&&x.data.games.some(g=>gameWinOf(g)!=null))m.add(perKey(x.created));});m.delete('');return [...m].sort().reverse();}
 const gameWinOf=g=>(g.sa!=null&&g.sb!=null&&g.sa!==g.sb)?(g.sa>g.sb?0:1):(g.win===0||g.win===1?g.win:null);
+let pstatName='',pstatBack='';
+const nameBtn=n=>`<button type="button" class="namebtn" data-act="pstat" data-k="${esc(n)}">${esc(n)}</button>`;
+function playerStats(name){
+  const nk=normName(name);const r={name,p:0,w:0,l:0,pf:0,pa:0,sc:0,days:0,seq:[],best:0,cur:0,big:null,part:new Map(),opp:new Map()};
+  const add=(m,n,won)=>{const k=normName(n);if(!m.has(k))m.set(k,{name:n.trim(),p:0,w:0});const e=m.get(k);e.p++;if(won)e.w++;};
+  store.sessions.slice().sort((a,b)=>a.created-b.created).forEach(x=>{
+    const d=x.data;if(d.mode==='tour')return;let any=false;
+    const nmOf=id=>{const q=d.players.find(z=>z.id===id);return q?q.name:'';};
+    d.games.forEach(g=>{
+      const w=gameWinOf(g);if(w==null||!g.teams)return;
+      const k=[0,1].find(i=>g.teams[i].some(id=>normName(nmOf(id))===nk));if(k==null)return;
+      any=true;const won=w===k;r.p++;if(won){r.w++;r.cur++;r.best=Math.max(r.best,r.cur);}else{r.l++;r.cur=0;}
+      r.seq.push(won?'W':'L');
+      if(g.sa!=null&&g.sb!=null){const f=k===0?g.sa:g.sb,a=k===0?g.sb:g.sa;r.pf+=f;r.pa+=a;r.sc++;if(won&&(!r.big||f-a>r.big.m))r.big={m:f-a,t:f+'\u2013'+a};}
+      g.teams[k].forEach(id=>{const n=nmOf(id);if(n&&normName(n)!==nk)add(r.part,n,won);});
+      g.teams[1-k].forEach(id=>{const n=nmOf(id);if(n)add(r.opp,n,won);});
+    });
+    if(any)r.days++;
+  });
+  return r;
+}
+function pstatPage(){
+  const r=playerStats(pstatName);
+  if(!r.p)return `<section class="card"><h2>${esc(r.name)}</h2><p class="hint" style="margin:0">No finished games with a winner yet.</p></section>`;
+  const pct=Math.round(r.w*100/r.p);
+  const parts=[...r.part.values()].sort((a,b)=>b.p-a.p||b.w-a.w||a.name.localeCompare(b.name));
+  const opps=[...r.opp.values()];
+  const bestP=parts.filter(e=>e.p>=2).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p)[0];
+  const beat=opps.filter(e=>e.p>=2).sort((a,b)=>b.w-a.w||b.w/b.p-a.w/a.p)[0];
+  const tough=opps.filter(e=>e.p>=2).sort((a,b)=>(b.p-b.w)-(a.p-a.w)||(a.w/a.p)-(b.w/b.p))[0];
+  const li=(t,v)=>`<li><span>${t}</span><b>${v}</b></li>`;
+  const d=r.pf-r.pa;
+  return `<section class="card"><h2>Player stats</h2>
+    <h3 style="margin:0;font-size:24px">${esc(r.name)}</h3>
+    <p class="muted" style="margin:2px 0 0">${r.days} ${r.days===1?'day':'days'} played</p>
+    <div class="stiles"><div><b>${r.p}</b><small>Played</small></div><div><b>${r.w}</b><small>Won</small></div><div><b>${r.l}</b><small>Lost</small></div><div><b>${pct}%</b><small>Win rate</small></div></div>
+    <p class="hint form5" style="margin:0 0 6px">Last ${Math.min(5,r.seq.length)}: ${r.seq.slice(-5).map(x=>`<i class="${x==='W'?'w':''}">${x}</i>`).join('')}</p>
+    <ul class="log hl">
+      ${li('\u{1F525} Best winning streak',r.best+' in a row')}
+      ${r.sc?li('\u{1F3AF} Points scored / conceded',r.pf+' / '+r.pa+' ('+(d>0?'+':'')+d+')'):''}
+      ${r.big?li('\u{1F4AA} Biggest win',r.big.t):''}
+      ${bestP?li('\u{1F91D} Best partner (2+ games)',esc(bestP.name)+' ('+bestP.w+' won of '+bestP.p+')'):''}
+      ${beat&&beat.w?li('\u2705 Beats most often',esc(beat.name)+' ('+beat.w+' of '+beat.p+')'):''}
+      ${tough&&tough.p-tough.w?li('\u26A0\uFE0F Toughest opponent',esc(tough.name)+' (lost '+(tough.p-tough.w)+' of '+tough.p+')'):''}
+    </ul>
+    ${parts.length?`<h3 style="margin:16px 0 6px;font-size:18px">With each partner</h3><div class="ptab nopts"><div class="ph"><span></span><span class="n">Partner</span><span>P</span><span>W</span><span>L</span></div>${parts.map((e,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${nameBtn(e.name)}</span><span>${e.p}</span><span>${e.w}</span><span>${e.p-e.w}</span></div>`).join('')}</div>`:''}
+    <p class="hint">Counts all games in this group where a winner was marked. Tournament games are not included.</p>
+  </section>`;
+}
 function monthRows(key){
   const m=new Map();let days=0,games=0;
   store.sessions.forEach(x=>{
@@ -1129,6 +1195,25 @@ function monthPairs(key){
         const e=pr.get(kk);e.p++;if(w===k)e.w++;});});});
   return [...pr.values()].filter(e=>e.p>=2).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p||b.w-a.w);
 }
+function monthExtras(key){
+  const o=[];const seq=new Map();let big=null;
+  store.sessions.slice().sort((a,b)=>a.created-b.created).forEach(x=>{const d=x.data;if(d.mode==='tour'||(key&&perKey(x.created)!==key))return;
+    const nmOf=id=>{const q=d.players.find(z=>z.id===id);return q?q.name.trim():'';};
+    d.games.forEach(g=>{const w=gameWinOf(g);if(w==null||!g.teams)return;
+      [0,1].forEach(k=>g.teams[k].forEach(id=>{const n=nmOf(id);if(!n)return;const nk=n.toLowerCase();if(!seq.has(nk))seq.set(nk,{name:n,cur:0,best:0});const e=seq.get(nk);if(w===k){e.cur++;e.best=Math.max(e.best,e.cur);}else e.cur=0;}));
+      if(g.sa!=null&&g.sb!=null){const m=Math.abs(g.sa-g.sb);if(!big||m>big.m)big={m,t:g.teams[w].map(nmOf).join(' & ')+' beat '+g.teams[1-w].map(nmOf).join(' & ')+' '+Math.max(g.sa,g.sb)+'\u2013'+Math.min(g.sa,g.sb)};}
+    });});
+  const st=[...seq.values()].sort((a,b)=>b.best-a.best||a.name.localeCompare(b.name))[0];
+  if(st&&st.best>=2)o.push(['\u{1F525}','Longest winning streak',st.name+' ('+st.best+' in a row)']);
+  if(big)o.push(['\u{1F4AA}','Biggest win',big.t]);
+  if(ptPeriod!=='custom'&&key){
+    const keys=monthKeys(),pk=keys[keys.indexOf(key)+1];
+    if(pk){const cur=monthRows(key).rows,prev=new Map(monthRows(pk).rows.map(x=>[x.name.toLowerCase(),x]));
+      const im=cur.map(x=>{const q=prev.get(x.name.toLowerCase());if(!q||x.p<3||q.p<3)return null;const a=Math.round(q.w*100/q.p),b=Math.round(x.w*100/x.p);return {name:x.name,a,b,d:b-a};}).filter(v=>v&&v.d>0).sort((u,v)=>v.d-u.d)[0];
+      if(im)o.push(['\u{1F680}','Most improved',im.name+' ('+im.a+'% \u2192 '+im.b+'%)']);}
+  }
+  return o;
+}
 function highlightsList(r,key){
   if(!r.rows.length)return [];
   const per=ptPeriod==='week'?'week':ptPeriod==='custom'?'period':'month';
@@ -1138,6 +1223,7 @@ function highlightsList(r,key){
   if(most)o.push(['Most games played',most.name+' ('+most.p+')']);
   if(rate)o.push(['Best win rate (3+ games)',rate.name+' ('+Math.round(rate.w*100/rate.p)+'%)']);
   if(pair)o.push(['Best pair (2+ games)',pair.label+' ('+pair.w+' of '+pair.p+')']);
+  monthExtras(key).forEach(e=>o.push([e[1],e[2]]));
   return o;
 }
 function monSpec(){
@@ -1157,7 +1243,7 @@ function highlightsHtml(r,key){
     ${li('\u{1F3C6} Player of the '+per,esc(top.name)+' ('+top.w+' won of '+top.p+')')}
     ${most?li('\u{1F3F8} Most games played',esc(most.name)+' ('+most.p+')'):''}
     ${rate?li('\u{1F4C8} Best win rate (3+ games)',esc(rate.name)+' ('+Math.round(rate.w*100/rate.p)+'%)'):''}
-    ${pair?li('\u{1F91D} Best pair (2+ games)',esc(pair.label)+' ('+pair.w+' of '+pair.p+')'):''}</ul>`;
+    ${pair?li('\u{1F91D} Best pair (2+ games)',esc(pair.label)+' ('+pair.w+' of '+pair.p+')'):''}${monthExtras(key).map(e=>li(e[0]+' '+e[1],esc(e[2]))).join('')}</ul>`;
 }
 function monText(key,r){
   return `\u{1F3F8} Points table, ${perLabel(key)}\nGames: ${r.games} in ${r.days} ${r.days===1?'day':'days'}\n\nWin / loss table\n`+r.rows.map((x,i)=>`${i+1}. ${x.name}: played ${x.p}, won ${x.w}, lost ${x.l}`).join('\n');
@@ -1172,6 +1258,7 @@ function viewExtra(){
   if(extraPage==='gcreate')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gcreatePage()}</div>`;
   if(extraPage==='gjoin')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gjoinPage()}</div>`;
   if(extraPage==='gmanage')return `<div class="stack"><button type="button" class="sesback" data-act="grpback">\u2039 Groups</button>${gmanagePage()}</div>`;
+  if(extraPage==='pstat')return `<div class="stack"><button type="button" class="sesback" data-act="pstatclose">\u2039 Back</button>${pstatPage()}</div>`;
   if(extraPage==='players')return viewPlayersPage();
   if(extraPage==='pays')return `<div class="stack"><div class="toprow">${back.replace('class="sesback"','class="sesback" style="flex:1"')}<button type="button" class="btn primary" data-act="newfrompay">+ New game</button></div>${paysPage()}</div>`;
   return viewMonth();
@@ -1254,7 +1341,7 @@ function monthCard(){
     <h3 style="margin:14px 0 0;font-size:18px">${ptPeriod==='week'?'Weekly':cu?'Custom':'Monthly'} points table</h3><p class="muted" style="margin:2px 0 0">${esc(perLabel(key))}</p>
     <div class="sumhead"><strong>${r.games} ${r.games===1?'game':'games'}</strong><span class="muted">${r.days} ${r.days===1?'day':'days'}</span></div>
     <div class="ptab nopts"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span></div>
-    ${r.rows.map((x,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(x.name)}</span><span>${x.p}</span><span>${x.w}</span><span>${x.l}</span></div>`).join('')}</div>
+    ${r.rows.map((x,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${nameBtn(x.name)}</span><span>${x.p}</span><span>${x.w}</span><span>${x.l}</span></div>`).join('')}</div>
     ${highlightsHtml(r,key)}
     <p class="hint">P = games played, W = won, L = lost. Players are matched by name. Only games with a winner marked are counted.</p>
     <pre class="share" id="monText" hidden>${esc(text)}</pre>
@@ -1375,7 +1462,7 @@ function viewPlayersPage(){
       <form id="playerForm" autocomplete="off" class="stack" style="gap:8px"><label class="lbl">Add players<input id="plNew" class="field" type="text" maxlength="80" placeholder="Name, or several separated by commas"></label>
       <p class="msg" id="plMsg" role="status"></p><button class="btn primary block" type="submit">Add</button></form></section>
     <section class="card"><h2>Everyone</h2>
-      ${names.length?names.map((n,i)=>`<div class="rrow"><span class="n">${esc(n)}${alsoIn(n)}</span><button type="button" class="btn small icon" data-act="prename" data-id="${i}" aria-label="Rename ${esc(n)}">\u270E</button><button type="button" class="btn small icon" data-act="pdel" data-id="${i}" aria-label="Remove ${esc(n)}">\u00D7</button></div>`).join(''):'<p class="muted">No players yet. Add the names above, or try some sample names.</p><button class="btn block" type="button" data-act="addsample">Add sample players</button>'}
+      ${names.length?names.map((n,i)=>`<div class="rrow"><span class="n">${nameBtn(n)}${alsoIn(n)}</span><button type="button" class="btn small icon" data-act="prename" data-id="${i}" aria-label="Rename ${esc(n)}">\u270E</button><button type="button" class="btn small icon" data-act="pdel" data-id="${i}" aria-label="Remove ${esc(n)}">\u00D7</button></div>`).join(''):'<p class="muted">No players yet. Add the names above, or try some sample names.</p><button class="btn block" type="button" data-act="addsample">Add sample players</button>'}
       <p class="hint">Renaming changes the name in all games. Removing hides the name from the new game list and from games not started yet. Games already started keep it.</p>
     </section></div>`;
 }
@@ -1860,7 +1947,7 @@ function ptsCard(){
     <h2>${S.pts?'Points table':'Win / loss table'}${S.ended?'':' so far'}</h2>
     <div class="sumhead"><strong>${n} ${n===1?'game':'games'}</strong><span class="muted">${date}</span></div>${playedStr()?`<p class="hint" style="margin:0 0 8px">Time played: <b>${playedStr()}</b></p>`:''}
     <div class="ptab${S.pts?'':' nopts'}"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span>${S.pts?'<span>Pts</span><span>+/-</span>':''}</div>
-    ${rows.map((r,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(r.name)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</span><span>${r.p}</span><span>${r.w}</span><span>${r.l}</span>${S.pts?`<span><b>${r.pf}</b></span><span>${r.d>0?'+':''}${r.d}</span>`:''}</div>`).join('')}</div>
+    ${rows.map((r,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${S.mode==='teams'?esc(r.name):nameBtn(r.name)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</span><span>${r.p}</span><span>${r.w}</span><span>${r.l}</span>${S.pts?`<span><b>${r.pf}</b></span><span>${r.d>0?'+':''}${r.d}</span>`:''}</div>`).join('')}</div>
     ${dayHlHtml()}
     <p class="hint">P = games played, W = won, L = lost${S.pts?', Pts = points scored, +/- = points scored minus points conceded':''}. ${S.pts?'':'Only games where a winner was marked are counted.'}</p>
     <div class="btns">
@@ -2801,6 +2888,8 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-tab],[data-act]');if(!el)return;
   if(el.dataset.tab){hideToast();contactOpen=false;helpOpen=false;extraPage='';S.tab=el.dataset.tab;render();window.scrollTo(0,0);return;}
   if(el.dataset.act==='acmode'){acct.mode=el.dataset.k;acct.msg='';render();return;}
+  if(el.dataset.act==='pstat'){if(extraPage!=='pstat')pstatBack=extraPage;pstatName=el.dataset.k;extraPage='pstat';render();window.scrollTo(0,0);return;}
+  if(el.dataset.act==='pstatclose'){extraPage=pstatBack||'';pstatBack='';render();window.scrollTo(0,0);return;}
   if(viewing&&roBlocked(el.dataset.act)){toast('View only. Only the owner can change this.');return;}
   if(acct.user&&gcur()&&!viewing){const ac=el.dataset.act;if(DEL_ACTS.has(ac)&&!gperm.d){toast('You do not have permission to delete.');return;}if(PAY_ACTS.has(ac)&&!gperm.p){toast('You do not have permission to change payments.');return;}}
   if(el.dataset.act==='ptperiod'){ptPeriod=el.dataset.k;monSel='';if(ptPeriod==='custom'&&!monFrom)monDefaults(7);render();return;}
