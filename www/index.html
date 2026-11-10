@@ -1815,8 +1815,8 @@ function dayHighlights(){
     if(best)o.push(['Best team of the day',best.label+' ('+best.w+' won of '+best.p+')']);
   }
   let top=null;
-  S.games.forEach((g,i)=>{if(g.sa==null||g.sb==null||g.sa===g.sb)return;const m=Math.abs(g.sa-g.sb),t=g.sa+g.sb;if(!top||m<top.m||(m===top.m&&t>top.t))top={i,m,t,g};});
-  if(top){const g=top.g,k=g.sa>g.sb?0:1;o.push(['Game of the day',`Game ${top.i+1}: ${side(g,k)} beat ${side(g,1-k)} ${Math.max(g.sa,g.sb)}\u2013${Math.min(g.sa,g.sb)}`+(top.m<=2?' (nail-biter)':'')]);}
+  S.games.forEach((g,i)=>{if(g.sa==null||g.sb==null||g.sa===g.sb)return;const m=Math.abs(g.sa-g.sb),t=g.sa+g.sb,dm=(P.showTime&&g.dur!=null)?Math.round(g.dur/60000):0,sc=t-2*m+dm;if(!top||sc>top.sc)top={i,m,t,g,sc};});
+  if(top){const g=top.g,k=g.sa>g.sb?0:1;o.push(['Game of the day',`Game ${top.i+1}: ${side(g,k)} beat ${side(g,1-k)} ${Math.max(g.sa,g.sb)}\u2013${Math.min(g.sa,g.sb)}`+(gameDur(g)?' \u00B7 '+gameDur(g):'')+(top.m<=2?' (nail-biter)':'')]);}
   return o;
 }
 function dayHlHtml(){
