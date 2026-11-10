@@ -949,6 +949,7 @@ function accountPage(){
         <label class="lbl">Password<input id="acPass" class="field" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
         <p class="msg" id="acMsg" role="status">${esc(acct.msg)}</p>
         <button class="btn primary block" type="submit">${up?'Create account':'Sign in'}</button></form>
+      ${googleOK()?`<p class="muted" style="text-align:center;margin:12px 0 8px">or</p>${isNativeApp()?'<button class="btn block" type="button" data-act="acgoogle"><b style="color:#4285F4;margin-right:8px">G</b>Continue with Google</button>':'<div id="gBtn" style="display:flex;justify-content:center;min-height:44px"></div>'}`:''}
       ${gate?'':''}
       ${up?'':'<button class="linkbtn" type="button" data-act="acreset" style="align-self:flex-start;margin-top:8px">Forgot password?</button>'}</section>`;
   }
@@ -1012,6 +1013,42 @@ async function acDo(fn){
 }
 function acAfterSignIn(){if(DEMO){DEMO=false;try{sessionStorage.removeItem('st-demo');}catch(e){}}acStart();}
 async function acStart(){acct.msg='';gsync.state='idle';render();await ensureGroups();if(dialog==='otheracct')return;if(store.sessions.every(isPlaceholder)){home=true;extraPage='';}if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();if(!DEMO&&acct.user){if(G.cur)leaveGroup();extraPage='groups';gFound=null;await loadAllReqs();}render();}
+const GOOGLE_CID='890320430529-9pm75gl0e3psjvgh6mirbg0kn0cjr47r.apps.googleusercontent.com';
+const isNativeApp=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+const googleWeb=()=>!isNativeApp()&&(/github\.io$/.test(location.hostname)||/[?&]gtest/.test(location.search));
+const googleOK=()=>isNativeApp()||googleWeb();
+async function googleNativeToken(){
+  const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.GoogleAuth;
+  if(!P)throw new Error('Google sign-in is not available in this version of the app.');
+  try{await P.initialize({clientId:GOOGLE_CID,scopes:['profile','email'],grantOfflineAccess:false});}catch(e){}
+  try{await P.signOut();}catch(e){}
+  let r;
+  try{r=await P.signIn();}
+  catch(e){const c=String((e&&(e.code||e.message))||'');
+    if(/12501|cancel/i.test(c))throw new Error('Google sign-in was cancelled.');
+    if(/\b10\b/.test(c))throw new Error('Google sign-in is not set up for this app yet (code 10). Please tell the app owner.');
+    if(/\b7\b|network/i.test(c))throw new Error('Could not reach Google. Check the internet and try again.');
+    throw new Error('Google sign-in failed ('+c.slice(0,60)+').');}
+  const t=r&&r.authentication&&r.authentication.idToken;
+  if(!t)throw new Error('Google did not return a sign-in token.');
+  return t;
+}
+async function acGoogle(t){
+  const j=await authCall('signInWithIdp',{postBody:'id_token='+encodeURIComponent(t)+'&providerId=google.com',requestUri:/^https?:/.test(location.origin)?location.origin:'http://localhost',returnSecureToken:true,returnIdpCredential:true});
+  if(j.needConfirmation||!j.idToken)throw new Error('This email already has an account. Sign in with your email and password.');
+  setSession(j);acct.user.verified=true;saveAuth();try{await lookupUser();}catch(e){}
+}
+function googleDone(t){acDo(async m=>{await acGoogle(t);m('');acAfterSignIn();});}
+let gsiLoad=null;
+function gsiRender(){
+  const box=$('#gBtn');if(!box||!googleWeb())return;
+  if(window.__gtest){box.innerHTML='<button type="button" class="btn block" id="gFake">Continue with Google</button>';box.firstChild.onclick=()=>googleDone(window.__gtest);return;}
+  if(!gsiLoad)gsiLoad=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);});
+  gsiLoad.then(()=>{const b=$('#gBtn');if(!b||!window.google||!google.accounts)return;
+    google.accounts.id.initialize({client_id:GOOGLE_CID,callback:r=>{if(r&&r.credential)googleDone(r.credential);},ux_mode:'popup'});
+    b.innerHTML='';google.accounts.id.renderButton(b,{theme:'outline',size:'large',text:'continue_with',shape:'pill',width:Math.min(360,b.clientWidth||300)});
+  }).catch(()=>{const b=$('#gBtn');if(b)b.innerHTML='<p class="hint" style="margin:0">Google sign-in could not load. Check the internet.</p>';gsiLoad=null;});
+}
 function acSubmit(){
   const email=$('#acEmail').value.trim().toLowerCase(),pass=$('#acPass').value;
   if(!email||!pass){acDo(async m=>{throw new Error(!email?'Enter your email.':'Enter a password.');});return;}
@@ -1138,6 +1175,22 @@ function playerStats(name){
   });
   return r;
 }
+function pstatSpec(){
+  const r=playerStats(pstatName);if(!r.p)return null;
+  const pct=Math.round(r.w*100/r.p),d=r.pf-r.pa;
+  const parts=[...r.part.values()].sort((a,b)=>b.p-a.p||b.w-a.w||a.name.localeCompare(b.name));
+  const opps=[...r.opp.values()];
+  const bestP=parts.filter(e=>e.p>=2).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p)[0];
+  const beat=opps.filter(e=>e.p>=2).sort((a,b)=>b.w-a.w||b.w/b.p-a.w/a.p)[0];
+  const tough=opps.filter(e=>e.p>=2).sort((a,b)=>(b.p-b.w)-(a.p-a.w)||(a.w/a.p)-(b.w/b.p))[0];
+  const hl=[['Played / Won / Lost',r.p+' / '+r.w+' / '+r.l+' ('+pct+'% wins)'],['Last '+Math.min(5,r.seq.length)+' games',r.seq.slice(-5).join('  ')],['Best winning streak',r.best+' in a row']];
+  if(r.sc)hl.push(['Points scored / conceded',r.pf+' / '+r.pa+' ('+(d>0?'+':'')+d+')']);
+  if(r.big)hl.push(['Biggest win',r.big.t]);
+  if(bestP)hl.push(['Best partner (2+ games)',bestP.name+' ('+bestP.w+' won of '+bestP.p+')']);
+  if(beat&&beat.w)hl.push(['Beats most often',beat.name+' ('+beat.w+' of '+beat.p+')']);
+  if(tough&&tough.p-tough.w)hl.push(['Toughest opponent',tough.name+' (lost '+(tough.p-tough.w)+' of '+tough.p+')']);
+  return {table:true,noPts:true,title:r.name.toUpperCase(),sub:'Player stats \u00B7 '+r.days+(r.days===1?' day':' days')+' played \u00B7 with each partner',rows:parts.map(e=>({name:e.name,p:e.p,w:e.w,l:e.p-e.w})),hl};
+}
 function pstatPage(){
   const r=playerStats(pstatName);
   if(!r.p)return `<section class="card"><h2>${esc(r.name)}</h2><p class="hint" style="margin:0">No finished games with a winner yet.</p></section>`;
@@ -1164,6 +1217,8 @@ function pstatPage(){
     </ul>
     ${parts.length?`<h3 style="margin:16px 0 6px;font-size:18px">With each partner</h3><div class="ptab nopts"><div class="ph"><span></span><span class="n">Partner</span><span>P</span><span>W</span><span>L</span></div>${parts.map((e,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${nameBtn(e.name)}</span><span>${e.p}</span><span>${e.w}</span><span>${e.p-e.w}</span></div>`).join('')}</div>`:''}
     <p class="hint">Counts all games in this group where a winner was marked. Tournament games are not included.</p>
+    <div class="btns"><button class="btn primary block" type="button" data-act="pstatshare">Share stats as image</button></div>
+    <p class="msg" id="shareMsg" role="status"></p>
   </section>`;
 }
 function monthRows(key){
@@ -2092,11 +2147,11 @@ function logCanvas(spec){
 }
 async function shareImage(kind){
   const say=m=>{shareMsg=m;const el=$('#shareMsg');if(el)el.textContent=m;};
-  if(kind!=='pay'&&kind!=='pend'&&kind!=='paysum'&&kind!=='mon'&&!S.games.length&&!S.tour)return;
+  if(kind!=='pay'&&kind!=='pend'&&kind!=='paysum'&&kind!=='mon'&&kind!=='pstat'&&!S.games.length&&!S.tour)return;
   let canvas;
-  try{canvas=kind==='mon'?logCanvas(monSpec()):kind==='paysum'?logCanvas(paySumSpec()):kind==='lineup'?logCanvas(lineupSpec()):kind==='pend'?pendCanvas(extraPage==='pays'?payView():undefined):kind==='pay'?payCanvas():logCanvas(S.mode==='tour'&&S.tour?tourSpec():(kind==='pts'&&hasRes()?pointsSpec():undefined));}catch(e){say('Could not draw the image.');return;}
+  try{canvas=kind==='pstat'?logCanvas(pstatSpec()):kind==='mon'?logCanvas(monSpec()):kind==='paysum'?logCanvas(paySumSpec()):kind==='lineup'?logCanvas(lineupSpec()):kind==='pend'?pendCanvas(extraPage==='pays'?payView():undefined):kind==='pay'?payCanvas():logCanvas(S.mode==='tour'&&S.tour?tourSpec():(kind==='pts'&&hasRes()?pointsSpec():undefined));}catch(e){say('Could not draw the image.');return;}
   const dataUrl=canvas.toDataURL('image/png');
-  const name=kind==='mon'?'badminton-'+(ptPeriod==='week'?'weekly':'monthly')+'-table.png':kind==='paysum'?'badminton-payment-summary.png':kind==='lineup'?'badminton-lineup.png':kind==='pend'?'badminton-pending-payments.png':kind==='pay'?'badminton-payments.png':(kind==='pts'&&S.mode!=='tour')?'badminton-points-table.png':'badminton-game-log.png';
+  const name=kind==='pstat'?'badminton-player-stats.png':kind==='mon'?'badminton-'+(ptPeriod==='week'?'weekly':'monthly')+'-table.png':kind==='paysum'?'badminton-payment-summary.png':kind==='lineup'?'badminton-lineup.png':kind==='pend'?'badminton-pending-payments.png':kind==='pay'?'badminton-payments.png':(kind==='pts'&&S.mode!=='tour')?'badminton-points-table.png':'badminton-game-log.png';
   const cap=window.Capacitor;
   try{
     const pl=cap&&cap.Plugins;
@@ -2567,7 +2622,7 @@ function render(){
     b.classList.toggle('on',on);
     b.setAttribute('aria-current',on?'page':'false');
   });
-  updateBell();applyReadOnlyUI();
+  updateBell();applyReadOnlyUI();gsiRender();
   const mb=$('#menuBtn');if(mb)mb.hidden=gateOn();const gb=$('#guideBtn');if(gb)gb.hidden=gateOn()||tour.on;
   $('#modal').innerHTML=dialogHtml();
   tourDraw();
@@ -2646,6 +2701,8 @@ const actions={
   shareimg(){shareImage();},
   shareptsimg(){shareImage('pts');},
   sharemonimg(){shareImage('mon');return false;},
+  pstatshare(){shareImage('pstat');return false;},
+  acgoogle(){acDo(async m=>{m('Opening Google\u2026');const t=await googleNativeToken();m('Signing in\u2026');await acGoogle(t);m('');acAfterSignIn();});return false;},
   sharelineup(){shareImage('lineup');},
   sharepaysum(){shareImage('paysum');},
   sharependimg(){shareImage('pend');},
@@ -2898,7 +2955,7 @@ document.addEventListener('click',e=>{
   if(el.dataset.act==='paystat'){const x=store.sessions.find(q=>q.id===+el.dataset.sid);if(x&&x.data.pay){const pid=el.dataset.pid;undoPoint();x.data.pay.paid[pid]=!x.data.pay.paid[pid];pfKeep.add(el.dataset.sid+':'+pid);undoToast(x.data.pay.paid[pid]?'Marked paid.':'Marked not paid.');}render();return;}
   if(el.dataset.act==='markall'){pdTarget=el.dataset.name;dialog='markall';render();return;}
   const f=actions[el.dataset.act];
-  if(f){const r=f(el.dataset.id?+el.dataset.id:undefined);if(r!==false&&!['copy','shareimg','shareptsimg','sharemonimg','sharependimg','sharelineup','sharepaysum'].includes(el.dataset.act))render();if(r!==false&&['start','nextgame','prev','confirmend','confirmreset','win','startko'].includes(el.dataset.act))window.scrollTo(0,0);}
+  if(f){const r=f(el.dataset.id?+el.dataset.id:undefined);if(r!==false&&!['copy','shareimg','shareptsimg','sharemonimg','pstatshare','sharependimg','sharelineup','sharepaysum'].includes(el.dataset.act))render();if(r!==false&&['start','nextgame','prev','confirmend','confirmreset','win','startko'].includes(el.dataset.act))window.scrollTo(0,0);}
 });
 document.addEventListener('submit',e=>{
   if(!e.target)return;

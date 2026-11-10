@@ -3,6 +3,17 @@
   "appName": "Shuttle Turns",
   "webDir": "www",
   "plugins": {
-    "CapacitorHttp": { "enabled": true }
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "GoogleAuth": {
+      "scopes": [
+        "profile",
+        "email"
+      ],
+      "androidClientId": "890320430529-9pm75gl0e3psjvgh6mirbg0kn0cjr47r.apps.googleusercontent.com",
+      "serverClientId": "890320430529-9pm75gl0e3psjvgh6mirbg0kn0cjr47r.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
+    }
   }
 }
