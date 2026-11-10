@@ -1802,10 +1802,32 @@ function stopClock(g){if(g&&g.at&&g.dur==null)g.dur=Date.now()-g.at;}
 function playedStr(){
   return '';
 }
+function dayHighlights(){
+  if(!hasRes())return [];
+  const isT=S.mode==='teams',rows=ptsRows(),o=[];
+  if(rows.length)o.push([isT?'Team of the day':'Player of the day',rows[0].name+' ('+rows[0].w+' won of '+rows[0].p+')']);
+  const side=(g,k)=>isT?tname(g.tm[k]):g.teams[k].map(nm).join(' & ');
+  if(!isT){
+    const pr=new Map();
+    S.games.forEach(g=>{const w=gameWin(g);if(w==null)return;[0,1].forEach(k=>{const ids=g.teams[k];if(ids.length!==2)return;const key=ids.slice().sort().join('|');
+      if(!pr.has(key))pr.set(key,{label:side(g,k),p:0,w:0,d:0});const e=pr.get(key);e.p++;if(w===k)e.w++;if(g.sa!=null&&g.sb!=null)e.d+=k===0?g.sa-g.sb:g.sb-g.sa;});});
+    const best=[...pr.values()].filter(e=>e.p>=2).sort((a,b)=>b.w/b.p-a.w/a.p||b.p-a.p||b.d-a.d)[0];
+    if(best)o.push(['Best team of the day',best.label+' ('+best.w+' won of '+best.p+')']);
+  }
+  let top=null;
+  S.games.forEach((g,i)=>{if(g.sa==null||g.sb==null||g.sa===g.sb)return;const m=Math.abs(g.sa-g.sb),t=g.sa+g.sb;if(!top||m<top.m||(m===top.m&&t>top.t))top={i,m,t,g};});
+  if(top){const g=top.g,k=g.sa>g.sb?0:1;o.push(['Game of the day',`Game ${top.i+1}: ${side(g,k)} beat ${side(g,1-k)} ${Math.max(g.sa,g.sb)}\u2013${Math.min(g.sa,g.sb)}`+(top.m<=2?' (nail-biter)':'')]);}
+  return o;
+}
+function dayHlHtml(){
+  const l=dayHighlights();if(!l.length)return '';
+  const ic=['\u{1F3C6}','\u{1F91D}','\u{1F525}'];
+  return `<h3 style="margin:16px 0 6px;font-size:18px">Highlights of the day</h3><ul class="log hl">${l.map(([t,v])=>`<li><span>${(t==='Player of the day'||t==='Team of the day'?ic[0]:t==='Best team of the day'?ic[1]:ic[2])+' '+esc(t)}</span><b>${esc(v)}</b></li>`).join('')}</ul>`;
+}
 function pointsSpec(){
   const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const n=scoredGames();
-  return {table:true,noPts:!S.pts,title:S.pts?'POINTS TABLE':'WIN / LOSS',sub:`${date} \u00B7 ${n} ${n===1?'game':'games'}${playedStr()?' \u00B7 '+playedStr():''}`,rows:ptsRows(),isT:S.mode==='teams'};
+  return {table:true,noPts:!S.pts,title:S.pts?'POINTS TABLE':'WIN / LOSS',sub:`${date} \u00B7 ${n} ${n===1?'game':'games'}${playedStr()?' \u00B7 '+playedStr():''}`,rows:ptsRows(),isT:S.mode==='teams',hl:dayHighlights()};
 }
 function summaryRows(){
   if(S.mode==='teams'){
@@ -1823,7 +1845,7 @@ function summaryText(){
   if(hasRes()){
     const d0=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
     const n=scoredGames();
-    return `\u{1F3F8} Badminton, ${d0}\nGames: ${n}${playedStr()?'\nTime played: '+playedStr():''}\n\n${S.pts?'Points table':'Win / loss table'}\n`+ptsRows().map((r,i)=>`${i+1}. ${r.name}${r.sub?' ('+r.sub+')':''}: played ${r.p}, won ${r.w}, lost ${r.l}`+(S.pts?`, points ${r.pf} (${r.d>0?'+':''}${r.d})`:'')).join('\n');
+    return `\u{1F3F8} Badminton, ${d0}\nGames: ${n}${playedStr()?'\nTime played: '+playedStr():''}\n\n${S.pts?'Points table':'Win / loss table'}\n`+ptsRows().map((r,i)=>`${i+1}. ${r.name}${r.sub?' ('+r.sub+')':''}: played ${r.p}, won ${r.w}, lost ${r.l}`+(S.pts?`, points ${r.pf} (${r.d>0?'+':''}${r.d})`:'')).join('\n')+(dayHighlights().length?'\n\nHighlights of the day\n'+dayHighlights().map(h=>h[0]+': '+h[1]).join('\n'):'');
   }
   const date=new Date(S.endedAt||Date.now()).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   const total=S.games.length;
@@ -1839,6 +1861,7 @@ function ptsCard(){
     <div class="sumhead"><strong>${n} ${n===1?'game':'games'}</strong><span class="muted">${date}</span></div>${playedStr()?`<p class="hint" style="margin:0 0 8px">Time played: <b>${playedStr()}</b></p>`:''}
     <div class="ptab${S.pts?'':' nopts'}"><div class="ph"><span></span><span class="n">Name</span><span>P</span><span>W</span><span>L</span>${S.pts?'<span>Pts</span><span>+/-</span>':''}</div>
     ${rows.map((r,i)=>`<div class="pr"><span class="rk">${i+1}</span><span class="n">${esc(r.name)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</span><span>${r.p}</span><span>${r.w}</span><span>${r.l}</span>${S.pts?`<span><b>${r.pf}</b></span><span>${r.d>0?'+':''}${r.d}</span>`:''}</div>`).join('')}</div>
+    ${dayHlHtml()}
     <p class="hint">P = games played, W = won, L = lost${S.pts?', Pts = points scored, +/- = points scored minus points conceded':''}. ${S.pts?'':'Only games where a winner was marked are counted.'}</p>
     <div class="btns">
       <button class="btn primary block" type="button" data-act="shareptsimg">Share table as image</button>
