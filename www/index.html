@@ -111,6 +111,10 @@ h2{font:600 16px/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppe
 #menuBtn[hidden]{display:none!important}.okmsg{color:var(--accent)!important;font-weight:700}.rowopen{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;padding:8px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}.rowopen .n{flex:1}.chev{font-size:26px;line-height:1;color:var(--muted)}.gpill{display:flex;align-items:center;gap:8px;margin:0 0 10px}.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.namebtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px}
 .stiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.stiles div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center}.stiles b{display:block;font-size:22px}.stiles small{color:var(--muted);font-size:12px}
 .form5 i{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:13px;color:#fff;margin-right:4px;background:var(--danger)}.form5 i.w{background:var(--accent)}
+#busy{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;padding:24px}#busy[hidden]{display:none}
+#busy .box{background:var(--surface);color:var(--text,inherit);border-radius:16px;padding:22px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;min-width:200px;max-width:300px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);font-weight:600}
+#busy .spin{width:38px;height:38px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#busy .spin{animation-duration:2.4s}}
 .ro-off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
 .viewbar.ro{position:sticky;top:0;z-index:6;border:2px solid var(--danger);background:color-mix(in srgb,var(--danger) 16%,var(--surface));font-weight:600}
 .viewbar.ro b.tag{background:var(--danger);color:#fff;border-radius:8px;padding:2px 8px;margin-right:6px;font-size:13px;letter-spacing:.04em}
@@ -310,6 +314,7 @@ textarea.field{height:auto;min-height:110px;padding-top:10px;font-family:inherit
 <div id="tourLayer" hidden></div>
 <input id="restoreFile" type="file" accept=".json,application/json,text/plain" hidden>
 <div id="toast" class="toast" role="status" hidden></div>
+<div id="busy" role="alert" aria-live="assertive" hidden><div class="box"><div class="spin" aria-hidden="true"></div><span id="busyMsg">Please wait…</span></div></div>
 
 <script>
 const KEY='shuttle-turns-v2';
@@ -1007,11 +1012,18 @@ function gmanagePage(){
     <form id="grpAdd" novalidate autocomplete="off" class="stack" style="gap:8px;margin-top:8px"><label class="lbl">Add by email<input id="grpEm" class="field" type="email" inputmode="email" autocapitalize="none" placeholder="name@example.com"></label><p class="msg" id="grpAMsg" role="status"></p><button class="btn block" type="submit">Add</button></form></section>
   <section class="card"><button class="btn block" type="button" data-act="grpdelask">Delete this group</button></section>`;
 }
+let busyN=0,busyTm=0;
+function busyOn(m){busyN++;const b=$('#busy');if(b){$('#busyMsg').textContent=m||'Please wait\u2026';b.hidden=false;}clearTimeout(busyTm);busyTm=setTimeout(()=>busyOff(true),25000);}
+function busyOff(force){busyN=force===true?0:Math.max(0,busyN-1);if(!busyN){const b=$('#busy');if(b)b.hidden=true;clearTimeout(busyTm);}}
+function busySay(m){if(busyN&&m){const e=$('#busyMsg');if(e)e.textContent=m;}}
+function busyUntil(done,m){busyOn(m);const t0=Date.now();const tick=()=>{if((Date.now()-t0>350&&done())||Date.now()-t0>9000)busyOff();else setTimeout(tick,120);};setTimeout(tick,120);}
 async function acDo(fn){
-  const msg=m=>{acct.msg=m;const e=$('#acMsg');if(e)e.textContent=m;};
-  try{msg('Please wait…');await fn(msg);}catch(e){msg(String((e&&e.message)||e));}
+  const msg=m=>{acct.msg=m;const e=$('#acMsg');if(e)e.textContent=m;busySay(m);};
+  busyOn('Please wait\u2026');
+  try{msg('Please wait\u2026');await fn(msg);}catch(e){msg(String((e&&e.message)||e));}
+  finally{busyOff();}
 }
-function acAfterSignIn(){if(DEMO){DEMO=false;try{sessionStorage.removeItem('st-demo');}catch(e){}}acStart();}
+function acAfterSignIn(){if(DEMO){DEMO=false;try{sessionStorage.removeItem('st-demo');}catch(e){}}busyOn('Loading your groups\u2026');acStart().catch(()=>{}).then(()=>busyOff());}
 async function acStart(){acct.msg='';gsync.state='idle';render();await ensureGroups();if(dialog==='otheracct')return;if(store.sessions.every(isPlaceholder)){home=true;extraPage='';}if(!tourSeen()&&!dialog)tourStart();else render();await syncNow();if(!DEMO&&acct.user){if(G.cur)leaveGroup();extraPage='groups';gFound=null;await loadAllReqs();}render();}
 const GOOGLE_CID='890320430529-9pm75gl0e3psjvgh6mirbg0kn0cjr47r.apps.googleusercontent.com';
 const isNativeApp=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
@@ -1571,6 +1583,8 @@ function tooFew(){if(S.mode==='teams')return S.teams.filter(teamActive).length<2
 function fixCurrent(){
   if(S.ended||S.tour||S.mode==='tour'||!S.games.length)return;
   const g=S.games[S.cur];if(!g)return;
+  /* Only the game being played now may change. Games already played, or looked at with Previous, stay as they were. */
+  if(S.cur!==S.games.length-1||gameWin(g)!=null)return;
   if(S.mode==='teams'){
     if(!g.tm)return;
     const tt=tallyT(S.cur+1);
@@ -1800,7 +1814,9 @@ function doSwapP(g,a,b,why,force){
   if(!force&&sub&&(why==='Injured'||why==='Has to leave')){const q=S.players.find(x=>x.id===out);if(q&&q.active&&!S.ended&&!S.tour){pendLeaveSwap={gi:S.games.indexOf(g),a,b,why,inn};leaveId=out;dialog='leave';return;}}
   undoPoint();setTimeout(()=>undoToast('Swapped '+nm(a)+' and '+nm(b)+'.'),0);
   g.teams=g.teams.map(t=>t.map(x=>x===a?b:x===b?a:x));
-  const onN=new Set(g.teams.flat());g.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id);
+  const onN=new Set(g.teams.flat());
+  if(g===S.games[S.games.length-1]&&gameWin(g)==null)g.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id);
+  else g.bench=[...new Set([...(g.bench||[]),...before])].filter(id=>!onN.has(id));
   if(sub){
     g.swaps=(g.swaps||[]).concat([{o:out,i:inn,w:why||''}]);
   }
@@ -1813,7 +1829,9 @@ function doSwapT(g,a,b){
   g.benchT=S.teams.filter(x=>teamActive(x)&&!g.tm.includes(x.id)).map(x=>x.id);
   g.bench=S.players.filter(q=>q.active&&!g.teams.flat().includes(q.id)).map(q=>q.id);
 }
-function dropPlanned(){if(S.games.length>S.cur+1)S.games.length=S.cur+1;}
+/* Games after the one on screen were once treated as 'planned' and deleted on any change. They are real games, so nothing is deleted now: changes always apply to the latest game. */
+function goLatest(){if(S.games.length&&!S.ended&&S.cur<S.games.length-1){S.cur=S.games.length-1;scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};return true;}return false;}
+function dropPlanned(){goLatest();}
 
 /* ---- rotation logic: individual players ---- */
 function tally(upto){
@@ -2051,7 +2069,10 @@ function tableCanvas(spec){
   const c=document.createElement('canvas');const ctx=c.getContext('2d');
   const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
   const rows=spec.rows,HEAD=250,TH=70,RH=spec.isT?112:92;
-  const hl=spec.hl||[],HLH=hl.length?(80+hl.length*104):0;
+  const hl=spec.hl||[];
+  ctx.font=`700 40px ${DISP}`;
+  const hlL=hl.map(h=>{const out=[];let line='';String(h[1]).split(' ').forEach(w=>{const t=line?line+' '+w:w;if(line&&ctx.measureText(t).width>IW-60){out.push(line);line=w;}else line=t;});if(line)out.push(line);return out.length?out:[''];});
+  const HLH=hl.length?(80+hlL.reduce((a,l)=>a+104+(l.length-1)*46,0)):0;
   const H=HEAD+30+TH+rows.length*RH+60+HLH+110;
   c.width=W;c.height=H;
   ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,W,H);
@@ -2089,11 +2110,12 @@ function tableCanvas(spec){
   });
   if(hl.length){
     y+=70;ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 52px ${DISP}`;ctx.fillText('HIGHLIGHTS',P,y);y+=24;
-    hl.forEach(h=>{
-      ctx.fillStyle='#ffffff';ctx.fillRect(P,y,IW,92);ctx.fillStyle='#1c6b4f';ctx.fillRect(P,y,10,92);
+    hl.forEach((h,hi)=>{
+      const L=hlL[hi],bh=92+(L.length-1)*46;
+      ctx.fillStyle='#ffffff';ctx.fillRect(P,y,IW,bh);ctx.fillStyle='#1c6b4f';ctx.fillRect(P,y,10,bh);
       ctx.textAlign='left';ctx.fillStyle='#587064';ctx.font=`600 26px ${BODY}`;ctx.fillText(h[0],P+30,y+36);
-      ctx.fillStyle='#13201a';ctx.font=`700 40px ${DISP}`;let v=h[1];while(ctx.measureText(v).width>IW-60&&v.length>3)v=v.slice(0,-1);ctx.fillText(v,P+30,y+76);
-      y+=104;
+      ctx.fillStyle='#13201a';ctx.font=`700 40px ${DISP}`;L.forEach((v,li)=>ctx.fillText(v,P+30,y+76+li*46));
+      y+=bh+12;
     });
     y-=12;
   }
@@ -2470,7 +2492,7 @@ function viewPlay(){
     noNext='At least 2 available teams are needed for the next game. Tap Back on the Players tab for anyone returning.';
   }else{
     onCourt=court('Pair 1','Pair 2')+(S.ended?'':`<p class="hint" style="margin:8px 0 0">${swapSel.i===S.cur&&swapSel.id?`Now tap the player to swap with ${esc(nm(swapSel.id))}.`:'To change partners or bring a resting player in, tap one player, then another to swap them.'}</p>`)+restHint();
-    if(!S.ended){const onN=new Set(cur.teams.flat());cur.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id);}
+    if(!S.ended&&S.cur===S.games.length-1&&gameWin(cur)==null){const onN=new Set(cur.teams.flat());cur.bench=S.players.filter(p=>p.active&&!onN.has(p.id)).map(p=>p.id);}
     restNow=cur.bench.length?cur.bench.map(id=>S.ended?`<span class="chip">${esc(nm(id))}</span>`:`<button type="button" class="chip pickc${swapSel.i===S.cur&&swapSel.id===id?' sel':''}" data-act="pickp" data-id="${id}" aria-pressed="${swapSel.i===S.cur&&swapSel.id===id}">${esc(nm(id))}</button>`).join(''):'<span class="muted">Nobody. All active players are on court.</span>';
     nextBody=nxt?`<div class="versus"><span>${pair(nxt.teams[0])}</span><em>vs</em><span>${pair(nxt.teams[1])}</span></div>`:'';
     restNext=nxt?chips(nxt.bench):'';
@@ -2479,15 +2501,17 @@ function viewPlay(){
   }
   const nextCard=nxt
     ?`<section class="card next">
-        <h2>Up next · Game ${n+1}</h2>
+        <h2>${planned.length?'After this':'Up next'} · Game ${n+1}</h2>
         ${nextBody}
         <div class="rest"><h3>Resting then</h3><div class="chips">${restNext||'<span class="muted">Nobody</span>'}</div></div>
         <button class="btn block" type="button" data-act="sharelineup" style="margin-top:12px">Share line-up as image</button>
       </section>`
     :`<section class="card next"><h2>Up next</h2><p>${noNext}</p></section>`;
-  const later=planned.slice(1);
+  const later=[];
   const laterCard=later.length?`<section class="card"><h2>Planned after that</h2><ul class="log">${later.map((g,i)=>`<li><span><b>Game ${n+2+i}</b> \u00B7 ${esc(gameWho(g))}</span><small>${esc(gameRest(g))}</small></li>`).join('')}</ul></section>`:'';
+  const oldBar=planned.length?`<div class="viewbar ro" style="position:static"><span><b class="tag">EARLIER GAME</b>You are looking at game ${n} of ${S.games.length}. It was already played and stays as it is.</span><button type="button" class="btn small" data-act="golatest">Go to current game</button></div>`:'';
   return `<div class="stack">
+    ${oldBar}
     <section>
       <div class="gamehead"><h2>Game ${n}</h2><span class="elapsed" id="elapsed">${elapsed(cur.at)}</span></div>
       ${onCourt}
@@ -2548,7 +2572,7 @@ function viewHistory(){
   const summary=spread<=1
     ?`<span class="pill">Even</span><span class="muted">Every ${unit} is within 1 turn of each other.</span>`
     :`<span class="pill rest-pill">Gap of ${spread}</span><span class="muted">Whoever rested will play next.</span>`;
-  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${g.sa!=null?` <b>${g.sa}-${g.sb}</b>`:''}${!S.ended&&i===S.cur?' <span class="pill">On court</span>':''}${i>S.cur?' <span class="pill rest-pill">Planned</span>':''}</span><small>${esc(gameRest(g))}</small>${swapNote(g)?`<small>${esc(swapNote(g))}</small>`:''}${gameDur(g)?`<small>Played ${gameDur(g)}</small>`:''}</li>`).join('');
+  const log=S.games.map((g,i)=>`<li><span><b>Game ${i+1}</b> \u00B7 ${esc(gameWho(g))}${g.sa!=null?` <b>${g.sa}-${g.sb}</b>`:''}${!S.ended&&i===S.games.length-1?' <span class="pill">On court</span>':''}</span><small>${esc(gameRest(g))}</small>${swapNote(g)?`<small>${esc(swapNote(g))}</small>`:''}${gameDur(g)?`<small>Played ${gameDur(g)}</small>`:''}</li>`).join('');
   return `<div class="stack">
     ${S.ended?summaryCard():(hasRes()?ptsCard():'')}
     <section class="card">
@@ -2581,7 +2605,7 @@ function dialogHtml(){
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Change the score of Game ${pendScore.i+1}?</h3><p>Game ${pendScore.i+1} is already finished with the score <b>${g?g.sa+' - '+g.sb:''}</b>. Change it to <b>${pendScore.a} - ${pendScore.b}</b>? The points table will be updated.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep it</button><button class="btn primary" type="button" data-act="confirmscoreedit">Yes, change</button></div></div></div>`;}
   if(dialog==='swapedit'&&pendSwap){const w=pendSwap,nmx=id=>w.t==='p'?nm(id):tname(id);
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Change players of Game ${w.i+1}?</h3><p>Game ${w.i+1} is already finished. Swap <b>${esc(nmx(w.a))}</b> and <b>${esc(nmx(w.b))}</b> in that game? This changes who played it and the turn counts for the later games.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">No, keep it</button><button class="btn primary" type="button" data-act="confirmswapedit">Yes, swap</button></div></div></div>`;}
-  if(dialog==='swapwhy'&&pendWhy){const w=pendWhy;return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Why is ${esc(nm(S.games[w.i].teams.flat().includes(w.a)?w.a:w.b))} coming off?</h3><p>${esc(nm(S.games[w.i].teams.flat().includes(w.a)?w.b:w.a))} takes the place. The reason shows in the game log.</p>${w.typing?`<label class="lbl">Reason<input id="whyText" class="field" type="text" maxlength="40" placeholder="Type the reason" autocomplete="off"></label><div class="dbtns" style="flex-direction:column"><button class="btn primary" type="button" data-act="whydone">Done</button><button class="btn" type="button" data-act="whyback">Back</button><button class="linkbtn" type="button" data-act="cancel">Cancel the swap</button></div>`:`<div class="dbtns" style="flex-direction:column">${SWAP_WHY.map((r,k)=>`<button class="btn" type="button" data-act="why" data-id="${k}">${r}</button>`).join('')}<button class="linkbtn" type="button" data-act="cancel">Cancel the swap</button></div>`}</div></div>`;}
+  if(dialog==='swapwhy'&&pendWhy){const w=pendWhy;return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">Why is ${esc(nm(S.games[w.i].teams.flat().includes(w.a)?w.a:w.b))} coming off?</h3><p>${esc(nm(S.games[w.i].teams.flat().includes(w.a)?w.b:w.a))} takes the place. The reason shows in the game log.</p>${w.typing?`<label class="lbl">Reason<input id="whyText" class="field" type="text" maxlength="40" placeholder="Type the reason" autocomplete="off"></label><div class="dbtns" style="flex-direction:column"><button class="btn" type="button" data-act="whyback">Back</button><button class="btn primary" type="button" data-act="whydone">Done</button><button class="linkbtn" type="button" data-act="cancel" style="grid-column:1/-1">Cancel the swap</button></div>`:`<div class="dbtns" style="flex-direction:column">${SWAP_WHY.map((r,k)=>`<button class="btn" type="button" data-act="why" data-id="${k}">${r}</button>`).join('')}<button class="linkbtn" style="grid-column:1/-1" type="button" data-act="cancel">Cancel the swap</button></div>`}</div></div>`;}
   if(dialog==='leave'){const q=S.players.find(x=>x.id===leaveId),onC=!!(q&&S.games[S.cur]&&S.games[S.cur].teams.flat().includes(q.id));
     return `<div class="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">${esc(q?q.name:'This player')} leaves the game?</h3><p>${pendLeaveSwap?`Nothing changes unless you tap Yes. If you do, ${esc(nm(pendLeaveSwap.inn))} takes their place and ${esc(q?q.name:'they')} is listed under Game left. You can bring them back with Back.`:(onC?'They are on court now, so a resting player will take their place straight away. ':'')+'They will be listed under Game left. You can bring them back with Back.'}</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">${pendLeaveSwap?'No, cancel the swap':'Cancel'}</button><button class="btn primary" type="button" data-act="confirmleave">Yes, leave</button></div></div></div>`;}
   if(dialog==='prename')return `<div class="scrim"><form id="prenameForm" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT" autocomplete="off"><h3 id="dlgT">Rename player</h3><input id="prenameIn" class="field" type="text" maxlength="24" value="${esc(prTarget)}" aria-label="Name"><p class="msg" id="prenameMsg" role="status"></p><p class="hint" style="margin:0">The name changes in all games.</p><div class="dbtns"><button class="btn" type="button" data-act="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
@@ -2763,7 +2787,9 @@ const actions={
   },
   autopair(){autopair();},
   removeteam(id){S.teams=S.teams.filter(x=>x.id!==id);},
+  golatest(){goLatest();window.scrollTo(0,0);},
   end(){
+    if(goLatest()){toast('Now showing the current game. Tap End again to finish.');return;}
     dropNote=false;
     if(S.pts&&!$('#scA')){const g=S.games[S.cur];if(S.cur>0&&g&&g.sa==null)dropNote=true;}
     else if(S.pts){
@@ -2774,7 +2800,7 @@ const actions={
     }
     dialog='end';
   },
-  confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else dropPlanned();dropNote=false;S.ended=true;S.endedAt=Date.now();stopClock(S.games[S.cur]);S.tab='history';},
+  confirmend(){dialog=null;copyMsg='';if(S.pts&&dropNote){S.games.length=S.cur;S.cur=Math.max(0,S.games.length-1);}else goLatest();dropNote=false;S.ended=true;S.endedAt=Date.now();stopClock(S.games[S.cur]);S.tab='history';},
   reopen(){S.ended=false;S.endedAt=null;copyMsg='';S.tab='play';},
   gohome(){hideToast();playersOpen=false;home=true;setOpen(false);contactOpen=false;helpOpen=false;extraPage='';window.scrollTo(0,0);},
   opensession(id){const x=store.sessions.find(q=>q.id===id);if(!x)return false;extraPage='';S=x.data;store.cur=id;home=false;setOpen(true);scDraft={k:-1,a:'',b:''};swapSel={i:-1,id:0};copyMsg='';shareMsg='';window.scrollTo(0,0);},
@@ -2837,7 +2863,7 @@ const actions={
   grpnotesclear(){G.notes=[];notesNew=0;saveG();},
   groupsopen(){if(acct.user&&!DEMO&&G.cur)leaveGroup();closeMenu();window.scrollTo(0,0);contactOpen=false;helpOpen=false;extraPage='groups';gFound=null;gJoinMsg='';if(acct.user)listGroups().then(()=>loadAllReqs()).then(()=>{if(extraPage==='groups'&&!busyNow())render();});},
   grpreload(){listGroups().then(()=>loadAllReqs()).then(()=>render());return false;},
-  grpswitch(i){const g=G.list[i];if(!g)return false;if(g.gid===G.cur){extraPage='';home=true;return;}switchGroup(g.gid);home=true;render();return false;},
+  grpswitch(i){const g=G.list[i];if(!g)return false;if(g.gid===G.cur){extraPage='';home=true;return;}switchGroup(g.gid);home=true;render();busyUntil(()=>!gsync.busy,'Opening '+g.name+'\u2026');return false;},
   grpmanage(i){const g=G.list[i];if(!g)return false;gmId=g.gid;extraPage='gmanage';window.scrollTo(0,0);loadReqs(g).then(()=>{if(extraPage==='gmanage')render();});},
   grpback(){extraPage='groups';gmId='';gFound=null;gJoinMsg='';},
   grpnew(){if(DEMO&&!acct.user){toast('Sign in first to create or join groups.');return false;}extraPage='gcreate';window.scrollTo(0,0);},
@@ -3086,6 +3112,8 @@ setInterval(()=>{
 applyPrefs();
 applyRole();
 if(acct.user&&!DEMO&&G.cur)extraPage='groups';
+{const wb=(fn,m)=>async function(){busyOn(m);try{return await fn.apply(this,arguments);}finally{busyOff();}};
+ createGroup=wb(createGroup,'Creating group\u2026');requestJoin=wb(requestJoin,'Sending request\u2026');deleteGroup=wb(deleteGroup,'Deleting group\u2026');cancelReq=wb(cancelReq,'Cancelling\u2026');renameGroup=wb(renameGroup,'Renaming\u2026');setPerm=wb(setPerm,'Saving\u2026');}
 render();
 if(acct.user){if(!G.cur||storeKey!==GPFX+G.cur)ensureGroups();else{if(viewing)refreshRO(true);else gsyncLater(800);listGroups().then(()=>loadAllReqs()).then(()=>render());}}
 </script>
