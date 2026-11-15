@@ -436,7 +436,10 @@ function payCanvas(){
   const W=1080,Pd=48,IW=W-2*Pd,HEAD=250,TH=70,RH=84,rows=c0.rows;
   const c=document.createElement('canvas');const ctx=c.getContext('2d');
   const BODY="'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif",DISP="'Barlow Condensed','Arial Narrow',sans-serif";
-  const H=HEAD+30+TH+rows.length*RH+170;c.width=W;c.height=H;
+  const note=`Bill: ${fmtM(c0.spent,false)}`+(c0.useG?`. Guest extra amounts (${fmtM(c0.credit,false)}) reduce the others' share`:'')+(c0.Hm<c0.H?` (court split over the ${hrTxt(c0.Hm)} actually played)`:'')+'.';
+  ctx.font=`500 30px ${BODY}`;
+  const noteL=[];{let line='';note.split(' ').forEach(w=>{const t=line?line+' '+w:w;if(line&&ctx.measureText(t).width>IW){noteL.push(line);line=w;}else line=t;});if(line)noteL.push(line);}
+  const H=HEAD+30+TH+rows.length*RH+(c0.shuttle?210:170)+noteL.length*40;c.width=W;c.height=H;
   ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1c6b4f';ctx.fillRect(0,0,W,HEAD);ctx.textBaseline='alphabetic';
   ctx.fillStyle='#dff3e7';ctx.font=`600 28px ${BODY}`;ctx.fillText('BADMINTON · DOUBLES',Pd,82);
   ctx.fillStyle='#ffffff';ctx.font=`700 96px ${DISP}`;ctx.fillText('PAYMENTS',Pd,170);
@@ -456,9 +459,10 @@ function payCanvas(){
     ctx.textAlign='right';ctx.fillStyle='#1c6b4f';ctx.font=`700 46px ${DISP}`;ctx.fillText(fmtM(r.total,c0.rd),W-Pd-22,y+58);
     y+=RH;
   });
-  ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 40px ${DISP}`;ctx.fillText(`Total: ${fmtM(c0.sum,c0.rd)}`,Pd,y+56);
+  ctx.textAlign='left';ctx.fillStyle='#13201a';ctx.font=`700 40px ${DISP}`;ctx.fillText(`Total to collect: ${fmtM(c0.sum,c0.rd)}`,Pd,y+56);
+  ctx.fillStyle='#33473d';ctx.font=`500 30px ${BODY}`;noteL.forEach((l,i)=>ctx.fillText(l,Pd,y+104+i*40));
   ctx.fillStyle='#587064';ctx.font=`500 26px ${BODY}`;
-  ctx.fillText(`Court ${fmtM(c0.court,false)}`+(c0.shuttle?` · shuttles ${fmtM(c0.shuttle,false)}`:'')+(c0.useG?` · guest extra amounts included`:''),Pd,y+100);
+  if(c0.shuttle)ctx.fillText(`Court ${fmtM(c0.court,false)} · shuttles ${fmtM(c0.shuttle,false)}`,Pd,y+104+noteL.length*40+8);
   ctx.fillText('Shuttle Turns',Pd,H-40);
   return c;
 }
